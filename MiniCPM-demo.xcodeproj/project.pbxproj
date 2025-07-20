@@ -1,0 +1,1037 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FA1ED0A52E2259DD00370614 /* MBImageVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1ED09F2E2259DD00370614 /* MBImageVideoViewController.swift */; };
+		FA1ED0A82E225D5A00370614 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = FA1ED0A72E225D5A00370614 /* ZipArchive */; };
+		FA201B372C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA201B362C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift */; };
+		FA24495E2C3D0B6B0012D624 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = FA24495D2C3D0B6B0012D624 /* SnapKit */; };
+		FA2449642C3D0B7B0012D624 /* HXPhotoPicker in Frameworks */ = {isa = PBXBuildFile; productRef = FA2449632C3D0B7B0012D624 /* HXPhotoPicker */; };
+		FA2BA6A92C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2BA6A82C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift */; };
+		FA35EE752C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA35EE742C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift */; };
+		FA36EE702C141E66002A2D02 /* MBHomeWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA36EE6F2C141E66002A2D02 /* MBHomeWelcomeView.swift */; };
+		FA36EE752C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA36EE742C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift */; };
+		FA36EE802C143602002A2D02 /* MBHomeWelcomeTipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA36EE7F2C143602002A2D02 /* MBHomeWelcomeTipsView.swift */; };
+		FA3D8FBB2C1FCF30003DACDA /* FDownLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3D8FB32C1FCF30003DACDA /* FDownLoader.m */; };
+		FA3D8FBC2C1FCF30003DACDA /* FDownLoaderManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3D8FB52C1FCF30003DACDA /* FDownLoaderManager.m */; };
+		FA3D8FBD2C1FCF30003DACDA /* FFileTool.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3D8FB72C1FCF30003DACDA /* FFileTool.m */; };
+		FA3D8FBE2C1FCF30003DACDA /* NSString+MD5.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3D8FB92C1FCF30003DACDA /* NSString+MD5.m */; };
+		FA3FA2672C1176E80077F732 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3FA2662C1176E80077F732 /* AppDelegate.swift */; };
+		FA3FA2682C1176E80077F733 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3FA2672C1176E80077F733 /* SceneDelegate.swift */; };
+		FA3FA26B2C1176E80077F732 /* MBHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3FA26A2C1176E80077F732 /* MBHomeViewController.swift */; };
+		FA3FA2702C1176E90077F732 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA3FA26F2C1176E90077F732 /* Assets.xcassets */; };
+		FA3FA2732C1176E90077F732 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = FA3FA2722C1176E90077F732 /* Base */; };
+		FA3FA27F2C1178440077F732 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA3FA27E2C1178440077F732 /* Accelerate.framework */; };
+		FA3FA2812C11784B0077F732 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA3FA2802C11784B0077F732 /* Metal.framework */; };
+		FA4350DD2C4A897900E94116 /* MBLiveCaptureVideoFrameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA4350DC2C4A897900E94116 /* MBLiveCaptureVideoFrameManager.swift */; };
+		FA47CD712C23F9F800A7D563 /* MBHomeViewController+LogTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA47CD702C23F9F800A7D563 /* MBHomeViewController+LogTimer.swift */; };
+		FA49BA0F2C32A18C005660C4 /* NSData+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA49BA0E2C32A18C005660C4 /* NSData+Extensions.swift */; };
+		FA49BA112C32A1DD005660C4 /* MBUtils+checkMD5.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA49BA102C32A1DD005660C4 /* MBUtils+checkMD5.swift */; };
+		FA4B77EB2C4A0C3800F31ED2 /* MBVideoSerialProcessQueueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA4B77EA2C4A0C3800F31ED2 /* MBVideoSerialProcessQueueManager.swift */; };
+		FA7517002C452A0500CFB066 /* MBVideoFrameExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7516FF2C452A0500CFB066 /* MBVideoFrameExtractor.swift */; };
+		FA7CC0332E26368600A480AD /* MBHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7CC0322E26368600A480AD /* MBHUD.swift */; };
+		FA7D16B82C45FE6300442536 /* MBConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7D16B72C45FE6300442536 /* MBConstants.swift */; };
+		FA7DDD7E2C537407001E61B7 /* MBLiveStreamVideoFrameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7DDD7D2C537407001E61B7 /* MBLiveStreamVideoFrameManager.swift */; };
+		FA812D2F2E21FC80000CE130 /* MBV26ModelDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */; };
+		FA812D302E21FC80000CE130 /* MB4V3BModelDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA812D2D2E21FC80000CE130 /* MB4V3BModelDetailViewController.swift */; };
+		FA845F2E2C2EC20800695029 /* NSTextAttachment+MBPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA845F2D2C2EC20800695029 /* NSTextAttachment+MBPath.swift */; };
+		FA8511352E20DCC000748053 /* MBSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8511322E20DCC000748053 /* MBSettingsViewController.swift */; };
+		FA8511372E20DCC000748053 /* MBSettingsTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8511302E20DCC000748053 /* MBSettingsTableViewCell.swift */; };
+		FA8511382E20DCC000748053 /* MBSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85112F2E20DCC000748053 /* MBSettingsModel.swift */; };
+		FA85113B2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */; };
+		FA9C4B5B2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9C4B5A2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift */; };
+		FAA2DE392E2283F000A41C8D /* UINavigationController+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA2DE382E2283F000A41C8D /* UINavigationController+Extensions.swift */; };
+		FAA2DE3B2E22845400A41C8D /* UIColor+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA2DE3A2E22845400A41C8D /* UIColor+Extensions.swift */; };
+		FAA3C9742E220A7F007FAD29 /* MB4V3BModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA3C9732E220A7F007FAD29 /* MB4V3BModelDownloadManager.swift */; };
+		FAA3C9762E220C30007FAD29 /* MBV26ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */; };
+		FAAC6D1D2E223B0F00D45121 /* MiniCPMModelConst.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAC6D1C2E223B0F00D45121 /* MiniCPMModelConst.swift */; };
+		FAAFDFF92C37F85B00BF35BE /* debugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAFDFF82C37F85B00BF35BE /* debugLog.swift */; };
+		FAC2A1D62C11B32500499465 /* MBChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC2A1D52C11B32500499465 /* MBChatModel.swift */; };
+		FAC2A1D92C11B3CF00499465 /* MBTextTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC2A1D82C11B3CF00499465 /* MBTextTableViewCell.swift */; };
+		FAC2A1DB2C11B3DD00499465 /* MBImageTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC2A1DA2C11B3DD00499465 /* MBImageTableViewCell.swift */; };
+		FACAC20A2C2D18B30085588E /* MBHomeViewController+CellToolBarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACAC2092C2D18B30085588E /* MBHomeViewController+CellToolBarEvent.swift */; };
+		FACAC20D2C2D34DD0085588E /* MBFloatingActionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACAC20C2C2D34DD0085588E /* MBFloatingActionView.swift */; };
+		FACAE97A2C40D37900C557D6 /* MBHomeViewController+SendAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACAE9792C40D37900C557D6 /* MBHomeViewController+SendAction.swift */; };
+		FACAE97C2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACAE97B2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift */; };
+		FACB0D162C157A3200AFA999 /* libswiftCoreAudio.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FACB0D152C157A3200AFA999 /* libswiftCoreAudio.tbd */; };
+		FAD5EEA62C5892BD003293BC /* UIImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD5EEA52C5892BD003293BC /* UIImage+Extensions.swift */; };
+		FAD642822E2A220500088528 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAD642802E2A21FA00088528 /* llama.xcframework */; };
+		FAD642832E2A220500088528 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FAD642802E2A21FA00088528 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FAD6428C2E2A223800088528 /* MTMDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642842E2A223800088528 /* MTMDError.swift */; };
+		FAD6428D2E2A223800088528 /* MTMDWrapperExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642882E2A223800088528 /* MTMDWrapperExample.swift */; };
+		FAD6428E2E2A223800088528 /* MTMDWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642872E2A223800088528 /* MTMDWrapper.swift */; };
+		FAD6428F2E2A223800088528 /* MTMDToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642862E2A223800088528 /* MTMDToken.swift */; };
+		FAD642902E2A223800088528 /* MTMDParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642852E2A223800088528 /* MTMDParams.swift */; };
+		FAD642B12E2A374900088528 /* MBModelDownloadHelperV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642B02E2A374900088528 /* MBModelDownloadHelperV2.swift */; };
+		FADE92CA2C3D1C36009FD00D /* MBHomeViewController+NavBarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADE92C92C3D1C36009FD00D /* MBHomeViewController+NavBarEvent.swift */; };
+		FAE69AA92C181F4500E6D095 /* MBUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE69AA82C181F4500E6D095 /* MBUtils.swift */; };
+		FAE7CE472C25526B0080570C /* MBHomeViewController+SubscribeMessageLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE7CE462C25526B0080570C /* MBHomeViewController+SubscribeMessageLog.swift */; };
+		FAE7CE492C25531F0080570C /* MBHomeViewController+UITextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE7CE482C25531F0080570C /* MBHomeViewController+UITextView.swift */; };
+		FAEFA80E2C48BAD3009C2AEF /* SwiftyCameraOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA8032C48BAD3009C2AEF /* SwiftyCameraOrientation.swift */; };
+		FAEFA80F2C48BAD3009C2AEF /* SwiftyCameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA8042C48BAD3009C2AEF /* SwiftyCameraPreviewView.swift */; };
+		FAEFA8102C48BAD3009C2AEF /* SwiftyCamButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA8052C48BAD3009C2AEF /* SwiftyCamButton.swift */; };
+		FAEFA8112C48BAD3009C2AEF /* SwiftyCamViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA8062C48BAD3009C2AEF /* SwiftyCamViewController.swift */; };
+		FAEFA8122C48BAD3009C2AEF /* SwiftyCamViewControllerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA8072C48BAD3009C2AEF /* SwiftyCamViewControllerDelegate.swift */; };
+		FAEFA8132C48BAD3009C2AEF /* SwiftyCameraPreviewPhotoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA8092C48BAD3009C2AEF /* SwiftyCameraPreviewPhotoViewController.swift */; };
+		FAEFA8142C48BAD3009C2AEF /* SwiftyCameraRecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA80A2C48BAD3009C2AEF /* SwiftyCameraRecordButton.swift */; };
+		FAEFA8152C48BAD3009C2AEF /* SwiftyCameraPreviewVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA80B2C48BAD3009C2AEF /* SwiftyCameraPreviewVideoViewController.swift */; };
+		FAEFA8162C48BAD3009C2AEF /* SwiftyCameraMainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEFA80C2C48BAD3009C2AEF /* SwiftyCameraMainViewController.swift */; };
+		FAFF168B2C50AD6E001D3279 /* MBPresetQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAFF168A2C50AD6E001D3279 /* MBPresetQuestionView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FA402A882C92D37C00E49E51 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				FAD642832E2A220500088528 /* llama.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		FA1ED09F2E2259DD00370614 /* MBImageVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBImageVideoViewController.swift; sourceTree = "<group>"; };
+		FA201B362C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SwiftyCameraMainViewController+LiveStream.swift"; sourceTree = "<group>"; };
+		FA2BA6A82C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+ImageProcess.swift"; sourceTree = "<group>"; };
+		FA35EE742C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+CaptureVideo.swift"; sourceTree = "<group>"; };
+		FA36EE6F2C141E66002A2D02 /* MBHomeWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBHomeWelcomeView.swift; sourceTree = "<group>"; };
+		FA36EE742C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBHomeTableViewHeaderView.swift; sourceTree = "<group>"; };
+		FA36EE7F2C143602002A2D02 /* MBHomeWelcomeTipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBHomeWelcomeTipsView.swift; sourceTree = "<group>"; };
+		FA3D8FB22C1FCF30003DACDA /* FDownLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FDownLoader.h; sourceTree = "<group>"; };
+		FA3D8FB32C1FCF30003DACDA /* FDownLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FDownLoader.m; sourceTree = "<group>"; };
+		FA3D8FB42C1FCF30003DACDA /* FDownLoaderManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FDownLoaderManager.h; sourceTree = "<group>"; };
+		FA3D8FB52C1FCF30003DACDA /* FDownLoaderManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FDownLoaderManager.m; sourceTree = "<group>"; };
+		FA3D8FB62C1FCF30003DACDA /* FFileTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFileTool.h; sourceTree = "<group>"; };
+		FA3D8FB72C1FCF30003DACDA /* FFileTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFileTool.m; sourceTree = "<group>"; };
+		FA3D8FB82C1FCF30003DACDA /* NSString+MD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+MD5.h"; sourceTree = "<group>"; };
+		FA3D8FB92C1FCF30003DACDA /* NSString+MD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+MD5.m"; sourceTree = "<group>"; };
+		FA3FA2632C1176E80077F732 /* MiniCPM-demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MiniCPM-demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA3FA2662C1176E80077F732 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		FA3FA2672C1176E80077F733 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		FA3FA26A2C1176E80077F732 /* MBHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBHomeViewController.swift; sourceTree = "<group>"; };
+		FA3FA26F2C1176E90077F732 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FA3FA2722C1176E90077F732 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		FA3FA2742C1176E90077F732 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FA3FA27E2C1178440077F732 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		FA3FA2802C11784B0077F732 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		FA4350DC2C4A897900E94116 /* MBLiveCaptureVideoFrameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBLiveCaptureVideoFrameManager.swift; sourceTree = "<group>"; };
+		FA47CD702C23F9F800A7D563 /* MBHomeViewController+LogTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+LogTimer.swift"; sourceTree = "<group>"; };
+		FA49BA0E2C32A18C005660C4 /* NSData+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSData+Extensions.swift"; sourceTree = "<group>"; };
+		FA49BA102C32A1DD005660C4 /* MBUtils+checkMD5.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBUtils+checkMD5.swift"; sourceTree = "<group>"; };
+		FA4B77EA2C4A0C3800F31ED2 /* MBVideoSerialProcessQueueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBVideoSerialProcessQueueManager.swift; sourceTree = "<group>"; };
+		FA7516FF2C452A0500CFB066 /* MBVideoFrameExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBVideoFrameExtractor.swift; sourceTree = "<group>"; };
+		FA7CC0322E26368600A480AD /* MBHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBHUD.swift; sourceTree = "<group>"; };
+		FA7D16B72C45FE6300442536 /* MBConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBConstants.swift; sourceTree = "<group>"; };
+		FA7DDD7D2C537407001E61B7 /* MBLiveStreamVideoFrameManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MBLiveStreamVideoFrameManager.swift; sourceTree = "<group>"; };
+		FA812D2D2E21FC80000CE130 /* MB4V3BModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MB4V3BModelDetailViewController.swift; sourceTree = "<group>"; };
+		FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV26ModelDetailViewController.swift; sourceTree = "<group>"; };
+		FA845F2D2C2EC20800695029 /* NSTextAttachment+MBPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSTextAttachment+MBPath.swift"; sourceTree = "<group>"; };
+		FA85112F2E20DCC000748053 /* MBSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsModel.swift; sourceTree = "<group>"; };
+		FA8511302E20DCC000748053 /* MBSettingsTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsTableViewCell.swift; sourceTree = "<group>"; };
+		FA8511322E20DCC000748053 /* MBSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsViewController.swift; sourceTree = "<group>"; };
+		FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBRealtimeUnderstandingViewController.swift; sourceTree = "<group>"; };
+		FA9C4B5A2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+CheckSupport.swift"; sourceTree = "<group>"; };
+		FAA1195C2C12BA9C00251EB6 /* MiniCPM-demo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MiniCPM-demo-Bridging-Header.h"; sourceTree = "<group>"; };
+		FAA2DE382E2283F000A41C8D /* UINavigationController+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UINavigationController+Extensions.swift"; sourceTree = "<group>"; };
+		FAA2DE3A2E22845400A41C8D /* UIColor+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extensions.swift"; sourceTree = "<group>"; };
+		FAA3C9732E220A7F007FAD29 /* MB4V3BModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MB4V3BModelDownloadManager.swift; sourceTree = "<group>"; };
+		FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV26ModelDownloadManager.swift; sourceTree = "<group>"; };
+		FAAC6D1C2E223B0F00D45121 /* MiniCPMModelConst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCPMModelConst.swift; sourceTree = "<group>"; };
+		FAAFDFF82C37F85B00BF35BE /* debugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = debugLog.swift; sourceTree = "<group>"; };
+		FAC283BF2C1AFD9300A4FD25 /* MiniCPM-demo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "MiniCPM-demo.entitlements"; sourceTree = "<group>"; };
+		FAC2A1D52C11B32500499465 /* MBChatModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBChatModel.swift; sourceTree = "<group>"; };
+		FAC2A1D82C11B3CF00499465 /* MBTextTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBTextTableViewCell.swift; sourceTree = "<group>"; };
+		FAC2A1DA2C11B3DD00499465 /* MBImageTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBImageTableViewCell.swift; sourceTree = "<group>"; };
+		FACAC2092C2D18B30085588E /* MBHomeViewController+CellToolBarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+CellToolBarEvent.swift"; sourceTree = "<group>"; };
+		FACAC20C2C2D34DD0085588E /* MBFloatingActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBFloatingActionView.swift; sourceTree = "<group>"; };
+		FACAE9792C40D37900C557D6 /* MBHomeViewController+SendAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+SendAction.swift"; sourceTree = "<group>"; };
+		FACAE97B2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+LoadModel.swift"; sourceTree = "<group>"; };
+		FACB0D132C15796000AFA999 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
+		FACB0D152C157A3200AFA999 /* libswiftCoreAudio.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftCoreAudio.tbd; path = usr/lib/swift/libswiftCoreAudio.tbd; sourceTree = SDKROOT; };
+		FAD5EEA52C5892BD003293BC /* UIImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extensions.swift"; sourceTree = "<group>"; };
+		FAD642802E2A21FA00088528 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = llama.xcframework; sourceTree = "<group>"; };
+		FAD642842E2A223800088528 /* MTMDError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDError.swift; sourceTree = "<group>"; };
+		FAD642852E2A223800088528 /* MTMDParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDParams.swift; sourceTree = "<group>"; };
+		FAD642862E2A223800088528 /* MTMDToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDToken.swift; sourceTree = "<group>"; };
+		FAD642872E2A223800088528 /* MTMDWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDWrapper.swift; sourceTree = "<group>"; };
+		FAD642882E2A223800088528 /* MTMDWrapperExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDWrapperExample.swift; sourceTree = "<group>"; };
+		FAD642B02E2A374900088528 /* MBModelDownloadHelperV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBModelDownloadHelperV2.swift; sourceTree = "<group>"; };
+		FADE92C92C3D1C36009FD00D /* MBHomeViewController+NavBarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+NavBarEvent.swift"; sourceTree = "<group>"; };
+		FAE69AA82C181F4500E6D095 /* MBUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBUtils.swift; sourceTree = "<group>"; };
+		FAE7CE462C25526B0080570C /* MBHomeViewController+SubscribeMessageLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+SubscribeMessageLog.swift"; sourceTree = "<group>"; };
+		FAE7CE482C25531F0080570C /* MBHomeViewController+UITextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+UITextView.swift"; sourceTree = "<group>"; };
+		FAEFA8032C48BAD3009C2AEF /* SwiftyCameraOrientation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCameraOrientation.swift; sourceTree = "<group>"; };
+		FAEFA8042C48BAD3009C2AEF /* SwiftyCameraPreviewView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCameraPreviewView.swift; sourceTree = "<group>"; };
+		FAEFA8052C48BAD3009C2AEF /* SwiftyCamButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCamButton.swift; sourceTree = "<group>"; };
+		FAEFA8062C48BAD3009C2AEF /* SwiftyCamViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCamViewController.swift; sourceTree = "<group>"; };
+		FAEFA8072C48BAD3009C2AEF /* SwiftyCamViewControllerDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCamViewControllerDelegate.swift; sourceTree = "<group>"; };
+		FAEFA8092C48BAD3009C2AEF /* SwiftyCameraPreviewPhotoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCameraPreviewPhotoViewController.swift; sourceTree = "<group>"; };
+		FAEFA80A2C48BAD3009C2AEF /* SwiftyCameraRecordButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCameraRecordButton.swift; sourceTree = "<group>"; };
+		FAEFA80B2C48BAD3009C2AEF /* SwiftyCameraPreviewVideoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCameraPreviewVideoViewController.swift; sourceTree = "<group>"; };
+		FAEFA80C2C48BAD3009C2AEF /* SwiftyCameraMainViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyCameraMainViewController.swift; sourceTree = "<group>"; };
+		FAFF168A2C50AD6E001D3279 /* MBPresetQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBPresetQuestionView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FA3FA2602C1176E80077F732 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FACB0D162C157A3200AFA999 /* libswiftCoreAudio.tbd in Frameworks */,
+				FA3FA2812C11784B0077F732 /* Metal.framework in Frameworks */,
+				FA2449642C3D0B7B0012D624 /* HXPhotoPicker in Frameworks */,
+				FA3FA27F2C1178440077F732 /* Accelerate.framework in Frameworks */,
+				FA24495E2C3D0B6B0012D624 /* SnapKit in Frameworks */,
+				FAD642822E2A220500088528 /* llama.xcframework in Frameworks */,
+				FA1ED0A82E225D5A00370614 /* ZipArchive in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FA1ED0A22E2259DD00370614 /* MBImageViewer */ = {
+			isa = PBXGroup;
+			children = (
+				FA1ED09F2E2259DD00370614 /* MBImageVideoViewController.swift */,
+			);
+			path = MBImageViewer;
+			sourceTree = "<group>";
+		};
+		FA36EE6D2C141E4B002A2D02 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				FACAC20B2C2D34BE0085588E /* FloatingActionView */,
+				FA36EE6E2C141E50002A2D02 /* WelcomeView */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		FA36EE6E2C141E50002A2D02 /* WelcomeView */ = {
+			isa = PBXGroup;
+			children = (
+				FA36EE6F2C141E66002A2D02 /* MBHomeWelcomeView.swift */,
+				FA36EE742C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift */,
+				FA36EE7F2C143602002A2D02 /* MBHomeWelcomeTipsView.swift */,
+			);
+			path = WelcomeView;
+			sourceTree = "<group>";
+		};
+		FA3D8FBA2C1FCF30003DACDA /* FDownloaderTools */ = {
+			isa = PBXGroup;
+			children = (
+				FA3D8FB22C1FCF30003DACDA /* FDownLoader.h */,
+				FA3D8FB32C1FCF30003DACDA /* FDownLoader.m */,
+				FA3D8FB42C1FCF30003DACDA /* FDownLoaderManager.h */,
+				FA3D8FB52C1FCF30003DACDA /* FDownLoaderManager.m */,
+				FA3D8FB62C1FCF30003DACDA /* FFileTool.h */,
+				FA3D8FB72C1FCF30003DACDA /* FFileTool.m */,
+				FA3D8FB82C1FCF30003DACDA /* NSString+MD5.h */,
+				FA3D8FB92C1FCF30003DACDA /* NSString+MD5.m */,
+			);
+			path = FDownloaderTools;
+			sourceTree = "<group>";
+		};
+		FA3FA25A2C1176E80077F732 = {
+			isa = PBXGroup;
+			children = (
+				FA3FA2652C1176E80077F732 /* MiniCPM-demo */,
+				FA3FA2642C1176E80077F732 /* Products */,
+				FA3FA27D2C1178440077F732 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		FA3FA2642C1176E80077F732 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FA3FA2632C1176E80077F732 /* MiniCPM-demo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FA3FA2652C1176E80077F732 /* MiniCPM-demo */ = {
+			isa = PBXGroup;
+			children = (
+				FAD6428A2E2A223800088528 /* MTMDWrapper */,
+				FAF0892D2E288CA10007CFD5 /* thirdparty */,
+				FAC283BF2C1AFD9300A4FD25 /* MiniCPM-demo.entitlements */,
+				FAA1195C2C12BA9C00251EB6 /* MiniCPM-demo-Bridging-Header.h */,
+				FA3FA2742C1176E90077F732 /* Info.plist */,
+				FA3FA2662C1176E80077F732 /* AppDelegate.swift */,
+				FA3FA2672C1176E80077F733 /* SceneDelegate.swift */,
+				FA3FA26F2C1176E90077F732 /* Assets.xcassets */,
+				FA3FA2712C1176E90077F732 /* LaunchScreen.storyboard */,
+				FA3FA2932C118A980077F732 /* Sources */,
+			);
+			path = "MiniCPM-demo";
+			sourceTree = "<group>";
+		};
+		FA3FA27D2C1178440077F732 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FACB0D152C157A3200AFA999 /* libswiftCoreAudio.tbd */,
+				FACB0D132C15796000AFA999 /* CoreAudioTypes.framework */,
+				FA3FA2802C11784B0077F732 /* Metal.framework */,
+				FA3FA27E2C1178440077F732 /* Accelerate.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FA3FA2932C118A980077F732 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				FA8511342E20DCC000748053 /* Settings */,
+				FAC2A1D32C11B30400499465 /* Base */,
+				FA72852B2C1199D200A7FD14 /* Home */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		FA49BA0D2C32A178005660C4 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				FAA2DE3A2E22845400A41C8D /* UIColor+Extensions.swift */,
+				FAA2DE382E2283F000A41C8D /* UINavigationController+Extensions.swift */,
+				FA49BA0E2C32A18C005660C4 /* NSData+Extensions.swift */,
+				FAD5EEA52C5892BD003293BC /* UIImage+Extensions.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		FA4B77E92C4A0C0A00F31ED2 /* VideoProcessQueue */ = {
+			isa = PBXGroup;
+			children = (
+				FA4B77EA2C4A0C3800F31ED2 /* MBVideoSerialProcessQueueManager.swift */,
+				FA4350DC2C4A897900E94116 /* MBLiveCaptureVideoFrameManager.swift */,
+			);
+			path = VideoProcessQueue;
+			sourceTree = "<group>";
+		};
+		FA72852B2C1199D200A7FD14 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				FA4B77E92C4A0C0A00F31ED2 /* VideoProcessQueue */,
+				FA845F2C2C2EC1E800695029 /* Extensions */,
+				FA36EE6D2C141E4B002A2D02 /* View */,
+				FA72852C2C1199D800A7FD14 /* ViewController */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		FA72852C2C1199D800A7FD14 /* ViewController */ = {
+			isa = PBXGroup;
+			children = (
+				FA3FA26A2C1176E80077F732 /* MBHomeViewController.swift */,
+				FA9C4B5A2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift */,
+				FA47CD702C23F9F800A7D563 /* MBHomeViewController+LogTimer.swift */,
+				FAE7CE462C25526B0080570C /* MBHomeViewController+SubscribeMessageLog.swift */,
+				FAE7CE482C25531F0080570C /* MBHomeViewController+UITextView.swift */,
+				FACAC2092C2D18B30085588E /* MBHomeViewController+CellToolBarEvent.swift */,
+				FA2BA6A82C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift */,
+				FADE92C92C3D1C36009FD00D /* MBHomeViewController+NavBarEvent.swift */,
+				FACAE9792C40D37900C557D6 /* MBHomeViewController+SendAction.swift */,
+				FACAE97B2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift */,
+				FA35EE742C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift */,
+			);
+			path = ViewController;
+			sourceTree = "<group>";
+		};
+		FA7516FE2C4529DC00CFB066 /* VideoFrameExtractor */ = {
+			isa = PBXGroup;
+			children = (
+				FA7516FF2C452A0500CFB066 /* MBVideoFrameExtractor.swift */,
+			);
+			path = VideoFrameExtractor;
+			sourceTree = "<group>";
+		};
+		FA7DDD7F2C53761F001E61B7 /* LiveStreamProcessManager */ = {
+			isa = PBXGroup;
+			children = (
+				FA7DDD7D2C537407001E61B7 /* MBLiveStreamVideoFrameManager.swift */,
+			);
+			path = LiveStreamProcessManager;
+			sourceTree = "<group>";
+		};
+		FA845F2C2C2EC1E800695029 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				FA845F2D2C2EC20800695029 /* NSTextAttachment+MBPath.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		FA8511342E20DCC000748053 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				FAA3C9702E220550007FAD29 /* DownloadManager */,
+				FAA3C96F2E21FDD2007FAD29 /* ViewControler */,
+				FAA3C96E2E21FDB4007FAD29 /* Model */,
+				FAA3C96D2E21FDA7007FAD29 /* SubViews */,
+				FAA3C96C2E21FD98007FAD29 /* RealTimeVC */,
+				FAA3C96B2E21FD83007FAD29 /* ModelDetail */,
+				FAE6DA542E210D2700A1E14E /* ModelConst */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		FA92FD6F2C58D2E300686A03 /* ViewController */ = {
+			isa = PBXGroup;
+			children = (
+				FAEFA80C2C48BAD3009C2AEF /* SwiftyCameraMainViewController.swift */,
+				FA201B362C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift */,
+			);
+			path = ViewController;
+			sourceTree = "<group>";
+		};
+		FA92FD702C58D30C00686A03 /* CameraButton */ = {
+			isa = PBXGroup;
+			children = (
+				FAEFA80A2C48BAD3009C2AEF /* SwiftyCameraRecordButton.swift */,
+			);
+			path = CameraButton;
+			sourceTree = "<group>";
+		};
+		FA92FD712C58D31800686A03 /* PreviewController */ = {
+			isa = PBXGroup;
+			children = (
+				FAEFA8092C48BAD3009C2AEF /* SwiftyCameraPreviewPhotoViewController.swift */,
+				FAEFA80B2C48BAD3009C2AEF /* SwiftyCameraPreviewVideoViewController.swift */,
+			);
+			path = PreviewController;
+			sourceTree = "<group>";
+		};
+		FAA3C96B2E21FD83007FAD29 /* ModelDetail */ = {
+			isa = PBXGroup;
+			children = (
+				FA812D2D2E21FC80000CE130 /* MB4V3BModelDetailViewController.swift */,
+				FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */,
+			);
+			path = ModelDetail;
+			sourceTree = "<group>";
+		};
+		FAA3C96C2E21FD98007FAD29 /* RealTimeVC */ = {
+			isa = PBXGroup;
+			children = (
+				FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */,
+			);
+			path = RealTimeVC;
+			sourceTree = "<group>";
+		};
+		FAA3C96D2E21FDA7007FAD29 /* SubViews */ = {
+			isa = PBXGroup;
+			children = (
+				FA8511302E20DCC000748053 /* MBSettingsTableViewCell.swift */,
+			);
+			path = SubViews;
+			sourceTree = "<group>";
+		};
+		FAA3C96E2E21FDB4007FAD29 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				FA85112F2E20DCC000748053 /* MBSettingsModel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		FAA3C96F2E21FDD2007FAD29 /* ViewControler */ = {
+			isa = PBXGroup;
+			children = (
+				FA8511322E20DCC000748053 /* MBSettingsViewController.swift */,
+			);
+			path = ViewControler;
+			sourceTree = "<group>";
+		};
+		FAA3C9702E220550007FAD29 /* DownloadManager */ = {
+			isa = PBXGroup;
+			children = (
+				FAA3C9732E220A7F007FAD29 /* MB4V3BModelDownloadManager.swift */,
+				FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */,
+			);
+			path = DownloadManager;
+			sourceTree = "<group>";
+		};
+		FABDD74B2C19655E00777198 /* ModelManager */ = {
+			isa = PBXGroup;
+			children = (
+				FAD642B02E2A374900088528 /* MBModelDownloadHelperV2.swift */,
+			);
+			path = ModelManager;
+			sourceTree = "<group>";
+		};
+		FAC2A1D32C11B30400499465 /* Base */ = {
+			isa = PBXGroup;
+			children = (
+				FA1ED0A22E2259DD00370614 /* MBImageViewer */,
+				FABDD74B2C19655E00777198 /* ModelManager */,
+				FAC2A1D72C11B3BE00499465 /* Cell */,
+				FA49BA0D2C32A178005660C4 /* Extensions */,
+				FA3D8FBA2C1FCF30003DACDA /* FDownloaderTools */,
+				FAC2A1D42C11B30B00499465 /* Model */,
+				FAEFA80D2C48BAD3009C2AEF /* SwiftyCamera */,
+				FAE69AA72C181F3100E6D095 /* Utils */,
+				FA7516FE2C4529DC00CFB066 /* VideoFrameExtractor */,
+			);
+			path = Base;
+			sourceTree = "<group>";
+		};
+		FAC2A1D42C11B30B00499465 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				FAC2A1D52C11B32500499465 /* MBChatModel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		FAC2A1D72C11B3BE00499465 /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				FAC2A1D82C11B3CF00499465 /* MBTextTableViewCell.swift */,
+				FAC2A1DA2C11B3DD00499465 /* MBImageTableViewCell.swift */,
+			);
+			path = Cell;
+			sourceTree = "<group>";
+		};
+		FACAC20B2C2D34BE0085588E /* FloatingActionView */ = {
+			isa = PBXGroup;
+			children = (
+				FACAC20C2C2D34DD0085588E /* MBFloatingActionView.swift */,
+			);
+			path = FloatingActionView;
+			sourceTree = "<group>";
+		};
+		FAD6428A2E2A223800088528 /* MTMDWrapper */ = {
+			isa = PBXGroup;
+			children = (
+				FAD642842E2A223800088528 /* MTMDError.swift */,
+				FAD642852E2A223800088528 /* MTMDParams.swift */,
+				FAD642862E2A223800088528 /* MTMDToken.swift */,
+				FAD642872E2A223800088528 /* MTMDWrapper.swift */,
+				FAD642882E2A223800088528 /* MTMDWrapperExample.swift */,
+			);
+			path = MTMDWrapper;
+			sourceTree = "<group>";
+		};
+		FAE69AA72C181F3100E6D095 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				FA7CC0322E26368600A480AD /* MBHUD.swift */,
+				FAAFDFF82C37F85B00BF35BE /* debugLog.swift */,
+				FAE69AA82C181F4500E6D095 /* MBUtils.swift */,
+				FA49BA102C32A1DD005660C4 /* MBUtils+checkMD5.swift */,
+				FA7D16B72C45FE6300442536 /* MBConstants.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		FAE6DA542E210D2700A1E14E /* ModelConst */ = {
+			isa = PBXGroup;
+			children = (
+				FAAC6D1C2E223B0F00D45121 /* MiniCPMModelConst.swift */,
+			);
+			path = ModelConst;
+			sourceTree = "<group>";
+		};
+		FAEFA8082C48BAD3009C2AEF /* SwiftyCameraSource */ = {
+			isa = PBXGroup;
+			children = (
+				FAEFA8032C48BAD3009C2AEF /* SwiftyCameraOrientation.swift */,
+				FAEFA8042C48BAD3009C2AEF /* SwiftyCameraPreviewView.swift */,
+				FAEFA8052C48BAD3009C2AEF /* SwiftyCamButton.swift */,
+				FAEFA8062C48BAD3009C2AEF /* SwiftyCamViewController.swift */,
+				FAEFA8072C48BAD3009C2AEF /* SwiftyCamViewControllerDelegate.swift */,
+			);
+			path = SwiftyCameraSource;
+			sourceTree = "<group>";
+		};
+		FAEFA80D2C48BAD3009C2AEF /* SwiftyCamera */ = {
+			isa = PBXGroup;
+			children = (
+				FA92FD712C58D31800686A03 /* PreviewController */,
+				FA92FD702C58D30C00686A03 /* CameraButton */,
+				FA92FD6F2C58D2E300686A03 /* ViewController */,
+				FA7DDD7F2C53761F001E61B7 /* LiveStreamProcessManager */,
+				FAFF16892C50AD4C001D3279 /* PresetQuestionView */,
+				FAEFA8082C48BAD3009C2AEF /* SwiftyCameraSource */,
+			);
+			path = SwiftyCamera;
+			sourceTree = "<group>";
+		};
+		FAF0892D2E288CA10007CFD5 /* thirdparty */ = {
+			isa = PBXGroup;
+			children = (
+				FAD642802E2A21FA00088528 /* llama.xcframework */,
+			);
+			path = thirdparty;
+			sourceTree = "<group>";
+		};
+		FAFF16892C50AD4C001D3279 /* PresetQuestionView */ = {
+			isa = PBXGroup;
+			children = (
+				FAFF168A2C50AD6E001D3279 /* MBPresetQuestionView.swift */,
+			);
+			path = PresetQuestionView;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FA3FA2622C1176E80077F732 /* MiniCPM-demo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA3FA2772C1176E90077F732 /* Build configuration list for PBXNativeTarget "MiniCPM-demo" */;
+			buildPhases = (
+				FA3FA25F2C1176E80077F732 /* Sources */,
+				FA3FA2602C1176E80077F732 /* Frameworks */,
+				FA3FA2612C1176E80077F732 /* Resources */,
+				FA402A882C92D37C00E49E51 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "MiniCPM-demo";
+			packageProductDependencies = (
+				FA24495D2C3D0B6B0012D624 /* SnapKit */,
+				FA2449632C3D0B7B0012D624 /* HXPhotoPicker */,
+				FA1ED0A72E225D5A00370614 /* ZipArchive */,
+			);
+			productName = "MiniCPM-demo";
+			productReference = FA3FA2632C1176E80077F732 /* MiniCPM-demo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FA3FA25B2C1176E80077F732 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					FA3FA2622C1176E80077F732 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = FA3FA25E2C1176E80077F732 /* Build configuration list for PBXProject "MiniCPM-demo" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FA3FA25A2C1176E80077F732;
+			packageReferences = (
+				FA3D8FCE2C1FE7ED003DACDA /* XCRemoteSwiftPackageReference "SnapKit" */,
+				FA3D8FD42C1FE80F003DACDA /* XCRemoteSwiftPackageReference "HXPhotoPicker" */,
+				FA1ED0A62E225D5A00370614 /* XCRemoteSwiftPackageReference "ZipArchive" */,
+			);
+			productRefGroup = FA3FA2642C1176E80077F732 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FA3FA2622C1176E80077F732 /* MiniCPM-demo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FA3FA2612C1176E80077F732 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA3FA2702C1176E90077F732 /* Assets.xcassets in Resources */,
+				FA3FA2732C1176E90077F732 /* Base in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FA3FA25F2C1176E80077F732 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FAEFA80F2C48BAD3009C2AEF /* SwiftyCameraPreviewView.swift in Sources */,
+				FA845F2E2C2EC20800695029 /* NSTextAttachment+MBPath.swift in Sources */,
+				FA9C4B5B2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift in Sources */,
+				FA201B372C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift in Sources */,
+				FAEFA8152C48BAD3009C2AEF /* SwiftyCameraPreviewVideoViewController.swift in Sources */,
+				FAD5EEA62C5892BD003293BC /* UIImage+Extensions.swift in Sources */,
+				FAFF168B2C50AD6E001D3279 /* MBPresetQuestionView.swift in Sources */,
+				FAA3C9742E220A7F007FAD29 /* MB4V3BModelDownloadManager.swift in Sources */,
+				FA3D8FBC2C1FCF30003DACDA /* FDownLoaderManager.m in Sources */,
+				FA3FA26B2C1176E80077F732 /* MBHomeViewController.swift in Sources */,
+				FAC2A1D62C11B32500499465 /* MBChatModel.swift in Sources */,
+				FACAE97C2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift in Sources */,
+				FAA2DE392E2283F000A41C8D /* UINavigationController+Extensions.swift in Sources */,
+				FAA2DE3B2E22845400A41C8D /* UIColor+Extensions.swift in Sources */,
+				FA49BA0F2C32A18C005660C4 /* NSData+Extensions.swift in Sources */,
+				FAEFA8112C48BAD3009C2AEF /* SwiftyCamViewController.swift in Sources */,
+				FAEFA8122C48BAD3009C2AEF /* SwiftyCamViewControllerDelegate.swift in Sources */,
+				FACAC20D2C2D34DD0085588E /* MBFloatingActionView.swift in Sources */,
+				FAEFA80E2C48BAD3009C2AEF /* SwiftyCameraOrientation.swift in Sources */,
+				FA3D8FBE2C1FCF30003DACDA /* NSString+MD5.m in Sources */,
+				FA7DDD7E2C537407001E61B7 /* MBLiveStreamVideoFrameManager.swift in Sources */,
+				FA4350DD2C4A897900E94116 /* MBLiveCaptureVideoFrameManager.swift in Sources */,
+				FA812D2F2E21FC80000CE130 /* MBV26ModelDetailViewController.swift in Sources */,
+				FA812D302E21FC80000CE130 /* MB4V3BModelDetailViewController.swift in Sources */,
+				FA1ED0A52E2259DD00370614 /* MBImageVideoViewController.swift in Sources */,
+				FAE69AA92C181F4500E6D095 /* MBUtils.swift in Sources */,
+				FAEFA8162C48BAD3009C2AEF /* SwiftyCameraMainViewController.swift in Sources */,
+				FACAC20A2C2D18B30085588E /* MBHomeViewController+CellToolBarEvent.swift in Sources */,
+				FA36EE802C143602002A2D02 /* MBHomeWelcomeTipsView.swift in Sources */,
+				FADE92CA2C3D1C36009FD00D /* MBHomeViewController+NavBarEvent.swift in Sources */,
+				FAD642B12E2A374900088528 /* MBModelDownloadHelperV2.swift in Sources */,
+				FA36EE702C141E66002A2D02 /* MBHomeWelcomeView.swift in Sources */,
+				FA7D16B82C45FE6300442536 /* MBConstants.swift in Sources */,
+				FA85113B2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift in Sources */,
+				FA36EE752C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift in Sources */,
+				FAEFA8102C48BAD3009C2AEF /* SwiftyCamButton.swift in Sources */,
+				FA4B77EB2C4A0C3800F31ED2 /* MBVideoSerialProcessQueueManager.swift in Sources */,
+				FAE7CE472C25526B0080570C /* MBHomeViewController+SubscribeMessageLog.swift in Sources */,
+				FA8511352E20DCC000748053 /* MBSettingsViewController.swift in Sources */,
+				FA8511372E20DCC000748053 /* MBSettingsTableViewCell.swift in Sources */,
+				FA8511382E20DCC000748053 /* MBSettingsModel.swift in Sources */,
+				FA7CC0332E26368600A480AD /* MBHUD.swift in Sources */,
+				FAAFDFF92C37F85B00BF35BE /* debugLog.swift in Sources */,
+				FA35EE752C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift in Sources */,
+				FAA3C9762E220C30007FAD29 /* MBV26ModelDownloadManager.swift in Sources */,
+				FA7517002C452A0500CFB066 /* MBVideoFrameExtractor.swift in Sources */,
+				FAAC6D1D2E223B0F00D45121 /* MiniCPMModelConst.swift in Sources */,
+				FACAE97A2C40D37900C557D6 /* MBHomeViewController+SendAction.swift in Sources */,
+				FA47CD712C23F9F800A7D563 /* MBHomeViewController+LogTimer.swift in Sources */,
+				FA3D8FBD2C1FCF30003DACDA /* FFileTool.m in Sources */,
+				FA3FA2672C1176E80077F732 /* AppDelegate.swift in Sources */,
+				FA3FA2682C1176E80077F733 /* SceneDelegate.swift in Sources */,
+				FA3D8FBB2C1FCF30003DACDA /* FDownLoader.m in Sources */,
+				FAC2A1D92C11B3CF00499465 /* MBTextTableViewCell.swift in Sources */,
+				FAD6428C2E2A223800088528 /* MTMDError.swift in Sources */,
+				FAD6428D2E2A223800088528 /* MTMDWrapperExample.swift in Sources */,
+				FAD6428E2E2A223800088528 /* MTMDWrapper.swift in Sources */,
+				FAD6428F2E2A223800088528 /* MTMDToken.swift in Sources */,
+				FAD642902E2A223800088528 /* MTMDParams.swift in Sources */,
+				FAE7CE492C25531F0080570C /* MBHomeViewController+UITextView.swift in Sources */,
+				FA2BA6A92C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift in Sources */,
+				FA49BA112C32A1DD005660C4 /* MBUtils+checkMD5.swift in Sources */,
+				FAC2A1DB2C11B3DD00499465 /* MBImageTableViewCell.swift in Sources */,
+				FAEFA8142C48BAD3009C2AEF /* SwiftyCameraRecordButton.swift in Sources */,
+				FAEFA8132C48BAD3009C2AEF /* SwiftyCameraPreviewPhotoViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		FA3FA2712C1176E90077F732 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FA3FA2722C1176E90077F732 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		FA3FA2752C1176E90077F732 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		FA3FA2762C1176E90077F732 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		FA3FA2782C1176E90077F732 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CODE_SIGN_ENTITLEMENTS = "MiniCPM-demo/MiniCPM-demo.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 77Y5JFSH6H;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/MiniCPM-demo",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = "MiniCPM-demo/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "MiniCPM-Demo";
+				INFOPLIST_KEY_NSCameraUsageDescription = "应用需要使用相机拍照才能进行内容识别。";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "应用需要录音功能才能进行内容识别。";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App需要您的同意，才能访问相册用于上传图片。";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "语音转文字。";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)/usr/lib/swift",
+				);
+				MARKETING_VERSION = 1.0.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.modelbest.minicpmdemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MiniCPM-demo/MiniCPM-demo-Bridging-Header.h";
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FA3FA2792C1176E90077F732 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CODE_SIGN_ENTITLEMENTS = "MiniCPM-demo/MiniCPM-demo.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 77Y5JFSH6H;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/MiniCPM-demo",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = "MiniCPM-demo/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "MiniCPM-Demo";
+				INFOPLIST_KEY_NSCameraUsageDescription = "应用需要使用相机拍照才能进行内容识别。";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "应用需要录音功能才能进行内容识别。";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App需要您的同意，才能访问相册用于上传图片。";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "语音转文字。";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)/usr/lib/swift",
+				);
+				MARKETING_VERSION = 1.0.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.modelbest.minicpmdemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MiniCPM-demo/MiniCPM-demo-Bridging-Header.h";
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FA3FA25E2C1176E80077F732 /* Build configuration list for PBXProject "MiniCPM-demo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA3FA2752C1176E90077F732 /* Debug */,
+				FA3FA2762C1176E90077F732 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FA3FA2772C1176E90077F732 /* Build configuration list for PBXNativeTarget "MiniCPM-demo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA3FA2782C1176E90077F732 /* Debug */,
+				FA3FA2792C1176E90077F732 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FA1ED0A62E225D5A00370614 /* XCRemoteSwiftPackageReference "ZipArchive" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ZipArchive/ZipArchive.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.6.0;
+			};
+		};
+		FA3D8FCE2C1FE7ED003DACDA /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = exactVersion;
+				version = 5.7.1;
+			};
+		};
+		FA3D8FD42C1FE80F003DACDA /* XCRemoteSwiftPackageReference "HXPhotoPicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SilenceLove/HXPhotoPicker.git";
+			requirement = {
+				kind = exactVersion;
+				version = 4.2.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FA1ED0A72E225D5A00370614 /* ZipArchive */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA1ED0A62E225D5A00370614 /* XCRemoteSwiftPackageReference "ZipArchive" */;
+			productName = ZipArchive;
+		};
+		FA24495D2C3D0B6B0012D624 /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA3D8FCE2C1FE7ED003DACDA /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+		FA2449632C3D0B7B0012D624 /* HXPhotoPicker */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA3D8FD42C1FE80F003DACDA /* XCRemoteSwiftPackageReference "HXPhotoPicker" */;
+			productName = HXPhotoPicker;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FA3FA25B2C1176E80077F732 /* Project object */;
+}

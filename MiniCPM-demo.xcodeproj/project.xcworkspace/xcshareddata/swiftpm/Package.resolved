@@ -1,0 +1,42 @@
+{
+  "originHash" : "27d090f638a338a894b5f83674c16aec84a3675d8342d4cb3b47acd6219d262e",
+  "pins" : [
+    {
+      "identity" : "hxphotopicker",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SilenceLove/HXPhotoPicker.git",
+      "state" : {
+        "revision" : "69510f1e0c9bd1470ee67dd4c765c1f94d872098",
+        "version" : "4.2.1"
+      }
+    },
+    {
+      "identity" : "kingfisher",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/onevcat/Kingfisher.git",
+      "state" : {
+        "revision" : "2ef543ee21d63734e1c004ad6c870255e8716c50",
+        "version" : "7.12.0"
+      }
+    },
+    {
+      "identity" : "snapkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SnapKit/SnapKit.git",
+      "state" : {
+        "revision" : "2842e6e84e82eb9a8dac0100ca90d9444b0307f4",
+        "version" : "5.7.1"
+      }
+    },
+    {
+      "identity" : "ziparchive",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ZipArchive/ZipArchive.git",
+      "state" : {
+        "revision" : "df35718ea19a94e015b91dc4881dee028ce4cdba",
+        "version" : "2.6.0"
+      }
+    }
+  ],
+  "version" : 3
+}
