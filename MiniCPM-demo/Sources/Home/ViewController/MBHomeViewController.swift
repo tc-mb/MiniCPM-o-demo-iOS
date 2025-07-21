@@ -375,12 +375,12 @@ import llama
             }
             
             if !modelDisplayedName.isEmpty {
-                self.title = "MiniCPM（当前模型：\(modelDisplayedName)）"
+                self.title = "MiniCPM-V（当前模型：\(modelDisplayedName)）"
             } else {
-                self.title = "MiniCPM（请先下载模型）"
+                self.title = "MiniCPM-V（请先下载模型）"
             }
         } else {
-            self.title = "MiniCPM"
+            self.title = "MiniCPM-V"
         }
     }
     

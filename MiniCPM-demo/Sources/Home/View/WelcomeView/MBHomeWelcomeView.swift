@@ -17,7 +17,7 @@ class MBHomeWelcomeView: UIView {
 
     lazy var titleLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "Welcome to MiniCPM"
+        lb.text = "Welcome to MiniCPM-V"
         lb.font = UIFont.systemFont(ofSize: 26, weight: .semibold)
         lb.textColor = UIColor.mb_color(with: "#333333")
         lb.textAlignment = .center
