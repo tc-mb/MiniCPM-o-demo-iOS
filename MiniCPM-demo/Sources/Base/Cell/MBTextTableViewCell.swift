@@ -63,6 +63,7 @@ class MBTextTableViewCell: UITableViewCell {
     /// 工具条：重新生成 icon
     lazy var toolbarRegenerateIcon : UIImageView = {
         let icon = UIImageView.init(image: UIImage(named: "toolbar_regenerate"))
+        icon.isHidden = true
         return icon
     }()
     
@@ -72,18 +73,21 @@ class MBTextTableViewCell: UITableViewCell {
         lbl.text = "重新生成"
         lbl.textColor = UIColor.mb_color(with: "#666666")
         lbl.font = UIFont.systemFont(ofSize: 14)
+        lbl.isHidden = true
         return lbl
     }()
 
     /// 工具条：赞同 icon
     lazy var toolbarVoteupIcon : UIImageView = {
         let icon = UIImageView.init(image: UIImage(named: "toolbar_voteup"))
+        icon.isHidden = true
         return icon
     }()
 
     /// 工具条：反对 icon
     lazy var toolbarVotedownIcon : UIImageView = {
         let icon = UIImageView.init(image: UIImage(named: "toolbar_votedown"))
+        icon.isHidden = true
         return icon
     }()
 

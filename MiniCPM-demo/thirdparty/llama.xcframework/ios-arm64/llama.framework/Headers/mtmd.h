@@ -196,6 +196,12 @@ MTMD_API int32_t mtmd_tokenize(mtmd_context * ctx,
                                const mtmd_bitmap ** bitmaps,
                                size_t n_bitmaps);
 
+MTMD_API int32_t mtmd_tokenize_video(mtmd_context * ctx,
+                               mtmd_input_chunks * output,
+                               const mtmd_input_text * text,
+                               const mtmd_bitmap ** bitmaps,
+                               size_t n_bitmaps);
+
 // returns 0 on success
 // TODO: deprecate
 MTMD_API int32_t mtmd_encode(mtmd_context * ctx,

@@ -51,6 +51,8 @@
 		FAA3C9762E220C30007FAD29 /* MBV26ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */; };
 		FAAC6D1D2E223B0F00D45121 /* MiniCPMModelConst.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAC6D1C2E223B0F00D45121 /* MiniCPMModelConst.swift */; };
 		FAAFDFF92C37F85B00BF35BE /* debugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAFDFF82C37F85B00BF35BE /* debugLog.swift */; };
+		FABA27252E2DD9B900651C44 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = FABA27232E2DD94B00651C44 /* llama.xcframework */; };
+		FABA27262E2DD9B900651C44 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FABA27232E2DD94B00651C44 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FAC2A1D62C11B32500499465 /* MBChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC2A1D52C11B32500499465 /* MBChatModel.swift */; };
 		FAC2A1D92C11B3CF00499465 /* MBTextTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC2A1D82C11B3CF00499465 /* MBTextTableViewCell.swift */; };
 		FAC2A1DB2C11B3DD00499465 /* MBImageTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC2A1DA2C11B3DD00499465 /* MBImageTableViewCell.swift */; };
@@ -60,8 +62,6 @@
 		FACAE97C2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACAE97B2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift */; };
 		FACB0D162C157A3200AFA999 /* libswiftCoreAudio.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FACB0D152C157A3200AFA999 /* libswiftCoreAudio.tbd */; };
 		FAD5EEA62C5892BD003293BC /* UIImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD5EEA52C5892BD003293BC /* UIImage+Extensions.swift */; };
-		FAD642822E2A220500088528 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAD642802E2A21FA00088528 /* llama.xcframework */; };
-		FAD642832E2A220500088528 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FAD642802E2A21FA00088528 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FAD6428C2E2A223800088528 /* MTMDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642842E2A223800088528 /* MTMDError.swift */; };
 		FAD6428D2E2A223800088528 /* MTMDWrapperExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642882E2A223800088528 /* MTMDWrapperExample.swift */; };
 		FAD6428E2E2A223800088528 /* MTMDWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642872E2A223800088528 /* MTMDWrapper.swift */; };
@@ -91,7 +91,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				FAD642832E2A220500088528 /* llama.xcframework in Embed Frameworks */,
+				FABA27262E2DD9B900651C44 /* llama.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -147,6 +147,7 @@
 		FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV26ModelDownloadManager.swift; sourceTree = "<group>"; };
 		FAAC6D1C2E223B0F00D45121 /* MiniCPMModelConst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCPMModelConst.swift; sourceTree = "<group>"; };
 		FAAFDFF82C37F85B00BF35BE /* debugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = debugLog.swift; sourceTree = "<group>"; };
+		FABA27232E2DD94B00651C44 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = llama.xcframework; sourceTree = "<group>"; };
 		FAC283BF2C1AFD9300A4FD25 /* MiniCPM-demo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "MiniCPM-demo.entitlements"; sourceTree = "<group>"; };
 		FAC2A1D52C11B32500499465 /* MBChatModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBChatModel.swift; sourceTree = "<group>"; };
 		FAC2A1D82C11B3CF00499465 /* MBTextTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBTextTableViewCell.swift; sourceTree = "<group>"; };
@@ -158,7 +159,6 @@
 		FACB0D132C15796000AFA999 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		FACB0D152C157A3200AFA999 /* libswiftCoreAudio.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftCoreAudio.tbd; path = usr/lib/swift/libswiftCoreAudio.tbd; sourceTree = SDKROOT; };
 		FAD5EEA52C5892BD003293BC /* UIImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extensions.swift"; sourceTree = "<group>"; };
-		FAD642802E2A21FA00088528 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = llama.xcframework; sourceTree = "<group>"; };
 		FAD642842E2A223800088528 /* MTMDError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDError.swift; sourceTree = "<group>"; };
 		FAD642852E2A223800088528 /* MTMDParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDParams.swift; sourceTree = "<group>"; };
 		FAD642862E2A223800088528 /* MTMDToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDToken.swift; sourceTree = "<group>"; };
@@ -191,7 +191,7 @@
 				FA2449642C3D0B7B0012D624 /* HXPhotoPicker in Frameworks */,
 				FA3FA27F2C1178440077F732 /* Accelerate.framework in Frameworks */,
 				FA24495E2C3D0B6B0012D624 /* SnapKit in Frameworks */,
-				FAD642822E2A220500088528 /* llama.xcframework in Frameworks */,
+				FABA27252E2DD9B900651C44 /* llama.xcframework in Frameworks */,
 				FA1ED0A82E225D5A00370614 /* ZipArchive in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -568,7 +568,7 @@
 		FAF0892D2E288CA10007CFD5 /* thirdparty */ = {
 			isa = PBXGroup;
 			children = (
-				FAD642802E2A21FA00088528 /* llama.xcframework */,
+				FABA27232E2DD94B00651C44 /* llama.xcframework */,
 			);
 			path = thirdparty;
 			sourceTree = "<group>";
@@ -872,7 +872,7 @@
 				CODE_SIGN_ENTITLEMENTS = "MiniCPM-demo/MiniCPM-demo.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 5.3;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 77Y5JFSH6H;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -884,7 +884,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "MiniCPM-demo/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "MiniCPM-Demo";
+				INFOPLIST_KEY_CFBundleDisplayName = "MiniCPM-V-Demo";
 				INFOPLIST_KEY_NSCameraUsageDescription = "应用需要使用相机拍照才能进行内容识别。";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "应用需要录音功能才能进行内容识别。";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App需要您的同意，才能访问相册用于上传图片。";
@@ -923,7 +923,7 @@
 				CODE_SIGN_ENTITLEMENTS = "MiniCPM-demo/MiniCPM-demo.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 5.3;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 77Y5JFSH6H;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -935,7 +935,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "MiniCPM-demo/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "MiniCPM-Demo";
+				INFOPLIST_KEY_CFBundleDisplayName = "MiniCPM-V-Demo";
 				INFOPLIST_KEY_NSCameraUsageDescription = "应用需要使用相机拍照才能进行内容识别。";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "应用需要录音功能才能进行内容识别。";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App需要您的同意，才能访问相册用于上传图片。";

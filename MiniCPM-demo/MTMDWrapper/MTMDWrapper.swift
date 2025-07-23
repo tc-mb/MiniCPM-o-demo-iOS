@@ -84,19 +84,27 @@ public class MTMDWrapper: ObservableObject {
         
         updateInitializationState(.initializing)
         
-        // 在主线程执行初始化
-        var cParams = params.toCParams()
-        let ctx = mtmd_ios_init(&cParams)
-        
-        if ctx == nil {
-            throw MTMDError.initializationFailed("无法创建 MTMD 上下文")
+        // 在后台线程执行初始化
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var cParams = params.toCParams()
+                let ctx = mtmd_ios_init(&cParams)
+                
+                if ctx == nil {
+                    continuation.resume(throwing: MTMDError.initializationFailed("无法创建 MTMD 上下文"))
+                    return
+                }
+                
+                // 回到主线程更新状态
+                Task { @MainActor in
+                    self.context = ctx
+                    self.params = params
+                    self.initializationState = .initialized
+                    print("MTMDWrapper: 初始化成功")
+                    continuation.resume()
+                }
+            }
         }
-        
-        // 在主线程更新状态
-        self.context = ctx
-        self.params = params
-        self.initializationState = .initialized
-        print("MTMDWrapper: 初始化成功")
     }
 
     /// 在后台线程中添加图片（非 @MainActor 版本）
@@ -114,6 +122,35 @@ public class MTMDWrapper: ObservableObject {
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 let result = mtmd_ios_prefill_image(ctx, std.string(imagePath))
+                
+                if result != 0 {
+                    let errorMessage = mtmd_ios_get_last_error(ctx)
+                    let error = errorMessage != nil ? String(cString: errorMessage!) : "Unknown error"
+                    continuation.resume(throwing: MTMDError.imageLoadFailed(error))
+                } else {
+                    // 回到主线程更新状态
+                    Task { @MainActor in
+                        self.hasContent = true
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+
+    public func addFrameInBackground(_ imagePath: String) async throws {
+        guard initializationState == .initialized else {
+            throw MTMDError.contextNotInitialized
+        }
+        
+        guard let ctx = context else {
+            throw MTMDError.contextNotInitialized
+        }
+        
+        // 在后台线程执行 C 函数调用
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let result = mtmd_ios_prefill_frame(ctx, std.string(imagePath))
                 
                 if result != 0 {
                     let errorMessage = mtmd_ios_get_last_error(ctx)
@@ -196,7 +233,7 @@ public class MTMDWrapper: ObservableObject {
         generationTask = nil
         // 只有在当前状态不是 completed 时才重置为 idle
         if generationState != .completed {
-            updateGenerationState(.idle)
+            updateGenerationState(.completed)
         }
         print("MTMDWrapper: 生成已停止")
     }
@@ -240,36 +277,38 @@ public class MTMDWrapper: ObservableObject {
         
         // 生成循环
         while !Task.isCancelled {
-            // 在主线程执行 C 函数调用
-            let cToken = mtmd_ios_loop(ctx)
+            
+            // 在后台线程执行 C 函数调用
+            let cToken = await withCheckedContinuation { continuation in
+                DispatchQueue.global(qos: .userInitiated).async {
+                    let token = mtmd_ios_loop(ctx)
+                    continuation.resume(returning: token)
+                }
+            }
             
             let tokenString = cToken.token != nil ? String(cString: cToken.token) : ""
             
-            // 更新状态
+            // 在主线程更新状态
             currentToken = MTMDToken(content: tokenString, isEnd: cToken.is_end)
             fullOutput += tokenString
             
             // 释放 C 字符串
             if cToken.token != nil {
-                mtmd_ios_string_free(cToken.token)
+                // mtmd_ios_string_free(cToken.token)
             }
             
             // 检查是否生成完成
             if cToken.is_end {
                 updateGenerationState(.completed)
-                print("MTMDWrapper: 生成完成")
+                print("MTMDWrapper: 生成完成: \(fullOutput)")
                 // 清理任务引用但不重置状态，让状态保持为 completed
                 generationTask = nil
+                mtmd_ios_clean_kv_cache(ctx)
                 return
             }
             
             // 避免过度占用 CPU
             try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
-        }
-        
-        // 只有在任务被取消时才设置为 cancelled 状态
-        if Task.isCancelled {
-            updateGenerationState(.cancelled)
         }
     }
     

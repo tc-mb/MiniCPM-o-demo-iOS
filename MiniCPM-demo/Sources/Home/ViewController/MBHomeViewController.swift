@@ -370,7 +370,7 @@ import llama
                 // V-2.6 8B 多模态模型
                 modelDisplayedName = MiniCPMModelConst.modelQ4_K_MDisplayedName
             } else if lastSelectedModelString == "V4V3BMultiModel" {
-                // V-4 3.4B 多模态模型
+                // V-4.0 4B 多模态模型
                 modelDisplayedName = MiniCPMModelConst.model4v3b_Q4_K_M_DisplayedName
             }
             
@@ -495,11 +495,13 @@ import llama
         }
 
         // 实时捕获视频 button
-        self.inputRoundCornerView.addSubview(self.captureVideoButton)
-        self.captureVideoButton.snp.makeConstraints { make in
-            make.bottom.equalTo(-14)
-            make.width.height.equalTo(40)
-            make.right.equalTo(self.chooseImageButton.snp.left).offset(-16)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            self.inputRoundCornerView.addSubview(self.captureVideoButton)
+            self.captureVideoButton.snp.makeConstraints { make in
+                make.bottom.equalTo(-14)
+                make.width.height.equalTo(40)
+                make.right.equalTo(self.chooseImageButton.snp.left).offset(-16)
+            }
         }
 
         /// 免责声明

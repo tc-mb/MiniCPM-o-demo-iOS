@@ -327,12 +327,6 @@ class SwiftyCameraMainViewController: SwiftyCamViewController, SwiftyCamViewCont
             // 触发切换事件
             self.switchSegmentValueChanged(self.switchStreamControl)
         }
-        
-        // 强制更新一下 UI，为了 fix 外接摄像头的效果
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            self.viewDidLayoutSubviews()
-        }
-        
     }
     
     /// 隐藏状态栏

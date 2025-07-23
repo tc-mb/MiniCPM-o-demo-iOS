@@ -231,8 +231,8 @@ extension MBSettingsViewController: UITableViewDelegate {
                 // 跳转到 MiniCPM-V 2.6 8B 详情页面
                 let detailVC = MBV26ModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
-            } else if title == "MiniCPM-V 4 3.4B" {
-                // 跳转到 MiniCPM-V 4 3.4B 详情页面
+            } else if title == "MiniCPM-V 4.0 4B" {
+                // 跳转到 MiniCPM-V 4.0 4B 详情页面
                 let detailVC = MB4V3BModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
             }
@@ -263,7 +263,13 @@ extension MBSettingsViewController: UITableViewDelegate {
     
     private func showAboutUs() {
         // 显示关于我们的页面
-        let alert = UIAlertController(title: "关于", message: "MiniCPM Demo App\n版本 1.0.4", preferredStyle: .alert)
+        let appName = Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
+        Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "MiniCPM Demo App"
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+        let appBuildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
+        let versionInfo = "\(appVersion) (\(appBuildNumber))"
+        let message = "\(appName)\n版本 \(versionInfo)"
+        let alert = UIAlertController(title: "关于", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "确定", style: .default))
         present(alert, animated: true)
     }
@@ -312,11 +318,11 @@ extension MBSettingsViewController {
             debugLog("-->> SettingsVC: V26模型设置为未选中状态")
         }
         
-        sectionA.append(model1)
+        // sectionA.append(model1)
         
-        // MiniCPM-V 4 3.4B
+        // MiniCPM-V 4.0 4B
         let model2 = MBSettingsModel()
-        model2.title = "MiniCPM-V 4 3.4B"
+        model2.title = "MiniCPM-V 4.0 4B"
         model2.icon = UIImage(systemName: "cpu")
         model2.accessoryIcon = UIImage(named: "setting_accessory_icon")
         model2.selectedIcon = UIImage(systemName: "checkmark.circle.fill")

@@ -115,7 +115,7 @@ extension MBHomeViewController {
         
         if tmpURL?.absoluteString.lowercased().contains(".heic") == true {
             if let url = self.saveImageToCache(image: iv,
-                                               fileName: "myImage_heic_\(self.outputImageFileSize)_\(arc4random()).png") {
+                                               fileName: "myImage_heic_\(self.outputImageFileSize)_\(arc4random()).jpeg", compressionQuality: 0.6) {
                 self.outputImageURL = url
                 debugLog("选择了 .heic 格式图片。")
             }
@@ -161,7 +161,7 @@ extension MBHomeViewController {
         
         config.maximumSelectedCount = 1
         config.maximumSelectedPhotoCount = 1
-        config.isSelectedOriginal = true
+        config.isSelectedOriginal = false
         
         // 方法三：
         Photo.picker(

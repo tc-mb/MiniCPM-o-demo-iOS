@@ -43,7 +43,7 @@ class MBVideoSerialProcessQueueManager: NSObject {
         
         if let imgURL = self.saveImageToCache(image: img, fileName: filename) {
             debugLog("-->> index = \(index), begin.embed.video.frame = \(imgURL.pathComponents.last ?? "")")
-            let ret = await mtmdWrapperExample.addImageInBackground(imgURL.path)
+            let ret = await mtmdWrapperExample.addFrameInBackground(imgURL.path)
             debugLog("-->> index = \(index), end.input.video.frame = \(imgURL.pathComponents.last ?? "")，并且 input 给模型, ret = \(ret)")
             return ret
         }

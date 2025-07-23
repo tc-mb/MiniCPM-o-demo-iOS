@@ -72,7 +72,7 @@ public class MTMDWrapperExample: ObservableObject {
     /// 如果是加载多模态模型，是否加载完成
     public var multiModelLoadingSuccess = false
     
-    /// 当前生效的模型，预计会支持 V-2.6 8B 以及 V-4 3.4B 两个多模态模型
+    /// 当前生效的模型，预计会支持 V-2.6 8B 以及 V-4.0 4B 两个多模态模型
     var currentUsingModelType: CurrentUsingModelTypeV2 = .Unknown
 
     /// 性能日志的输出
@@ -150,6 +150,18 @@ public class MTMDWrapperExample: ObservableObject {
         } catch {
             await MainActor.run {
                 errorMessage = "图片添加失败: \(error.localizedDescription)"
+            }
+            return false
+        }
+    }
+
+    public func addFrameInBackground(_ imagePath: String) async -> Bool {
+        do {
+            try await mtmdWrapper.addFrameInBackground(imagePath)
+            return true
+        } catch {
+            await MainActor.run {
+                errorMessage = "帧添加失败: \(error.localizedDescription)"
             }
             return false
         }

@@ -13,7 +13,7 @@ import SnapKit
 @objc public class MBV26ModelDetailViewController: UIViewController, UIGestureRecognizerDelegate {
     
     /// 模型名称
-    var modelName: String = "MiniCPM-V2.6 8B"
+    var modelName: String = "MiniCPM-V 2.6 8B"
     
     /// V26 下载管理器
     private let downloadManager = MBV26ModelDownloadManager.shared
@@ -88,8 +88,6 @@ import SnapKit
         // Enable the interactive pop gesture recognizer
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         self.navigationController?.interactivePopGestureRecognizer?.delegate = self
-        
-        testNetwork()
     }
 
     public override func viewWillDisappear(_ animated: Bool) {
@@ -635,14 +633,5 @@ extension MBV26ModelDetailViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.navigationController?.popViewController(animated: true)
         }
-    }
-    
-    func testNetwork() {
-        // 通过访问本地网络地址触发本地网络权限弹窗
-        guard let url = URL(string: "http://192.168.11.125:5081/test.html") else { return }
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            // 这里只是触发权限弹窗，不需要处理返回
-        }
-        task.resume()
     }
 }
