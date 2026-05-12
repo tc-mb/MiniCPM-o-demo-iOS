@@ -557,6 +557,19 @@ class LlamaEngine private constructor(
                 }
                 _state.value = LlamaState.Initializing
                 Log.i(TAG, "Loading native library...")
+                Log.i(TAG, CpuFeatures.summary())
+
+                val variant = CpuFeatures.bestGgmlCpuVariant()
+                if (variant != null) {
+                    try {
+                        Log.i(TAG, "Pre-loading optimised ggml-cpu ($variant)")
+                        System.loadLibrary("ggml-cpu-$variant")
+                        Log.i(TAG, "Optimised ggml-cpu ($variant) loaded successfully")
+                    } catch (e: UnsatisfiedLinkError) {
+                        Log.w(TAG, "Optimised ggml-cpu-$variant not available, using baseline", e)
+                    }
+                }
+
                 System.loadLibrary("minicpm_v_demo")
                 init(nativeLibDir)
                 _state.value = LlamaState.Initialized
