@@ -38,7 +38,7 @@ android {
 
                 arguments += "-DGGML_NATIVE=OFF"
                 arguments += "-DGGML_LLAMAFILE=ON"
-                arguments += "-DGGML_CPU_ARM_ARCH=armv8.6-a+dotprod+i8mm+fp16+bf16"
+                arguments += "-DGGML_CPU_ARM_ARCH=armv8.2-a+dotprod+fp16"
             }
         }
     }
@@ -115,4 +115,71 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic CPU dispatch: build an additional libggml-cpu.so optimised for
+// ARMv8.6-a (i8mm + bf16) and package it alongside the baseline build.
+// At runtime the Kotlin CpuFeatures helper detects hardware capabilities
+// and pre-loads the best variant before the rest of the native chain.
+// ---------------------------------------------------------------------------
+
+fun runCmd(vararg args: String) {
+    val proc = ProcessBuilder(*args).inheritIO().start()
+    val rc = proc.waitFor()
+    if (rc != 0) error("Command failed (rc=$rc): ${args.joinToString(" ")}")
+}
+
+val sdkRoot: String = System.getenv("ANDROID_HOME")
+    ?: file("../local.properties").takeIf { it.exists() }?.readLines()
+        ?.firstOrNull { it.startsWith("sdk.dir=") }?.substringAfter("=")
+    ?: error("Cannot locate Android SDK — set ANDROID_HOME or local.properties")
+
+tasks.register("buildGgmlCpu_v86") {
+    group = "native"
+    description = "Build libggml-cpu optimised for armv8.6-a+i8mm+bf16"
+
+    val destSo = file("src/main/jniLibs/arm64-v8a/libggml-cpu-v86.so")
+    outputs.file(destSo)
+
+    doLast {
+        val cmake = "$sdkRoot/cmake/3.22.1/bin/cmake"
+        val toolchain = "$sdkRoot/ndk/27.0.12077973/build/cmake/android.toolchain.cmake"
+        val bd = File(project.layout.buildDirectory.asFile.get(), "v86-cmake/arm64-v8a")
+        bd.mkdirs()
+
+        runCmd(
+            cmake,
+            "-DCMAKE_TOOLCHAIN_FILE=$toolchain",
+            "-DANDROID_ABI=arm64-v8a",
+            "-DANDROID_PLATFORM=android-24",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DBUILD_SHARED_LIBS=ON",
+            "-DLLAMA_BUILD_COMMON=ON",
+            "-DLLAMA_OPENSSL=OFF",
+            "-DGGML_NATIVE=OFF",
+            "-DGGML_LLAMAFILE=ON",
+            "-DGGML_CPU_ARM_ARCH=armv8.6-a+dotprod+i8mm+fp16+bf16",
+            "-S", file("src/main/cpp").absolutePath,
+            "-B", bd.absolutePath,
+        )
+
+        runCmd(
+            cmake,
+            "--build", bd.absolutePath,
+            "--target", "ggml-cpu",
+            "-j", Runtime.getRuntime().availableProcessors().toString(),
+        )
+
+        val builtSo = fileTree(bd).matching { include("**/libggml-cpu.so") }.singleFile
+        destSo.parentFile.mkdirs()
+        builtSo.copyTo(destSo, overwrite = true)
+        logger.lifecycle("Copied v86 ggml-cpu -> ${destSo.absolutePath} (${destSo.length() / 1024}K)")
+    }
+}
+
+afterEvaluate {
+    listOf("Debug", "Release").forEach { buildType ->
+        tasks.findByName("merge${buildType}JniLibFolders")?.dependsOn("buildGgmlCpu_v86")
+    }
 }
