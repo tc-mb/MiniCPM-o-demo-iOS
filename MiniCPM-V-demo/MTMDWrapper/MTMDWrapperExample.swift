@@ -119,7 +119,8 @@ public class MTMDWrapperExample: ObservableObject {
     /// - Parameters:
     ///   - modelPath: 模型路径（可选，默认使用文档目录中的模型）
     ///   - mmprojPath: 多模态投影模型路径（可选，默认使用文档目录中的模型）
-    ///   - coremlPath: CoreML 模型路径（可选，用于 ANE 加速）
+    ///   - coremlPath: 已废弃。迁移到 upstream master 后 CoreML / ANE 路径暂时下线，
+    ///     该参数仅为保持调用方签名而保留，会被忽略。
     ///   - nCtx: 上下文长度（可选，nil 表示用 MTMDParams 的默认值 4096）。
     ///     V4.6 视频路径建议显式传 8192：v46 视频帧 prefill 在 slice=1 下，
     ///     64 帧 × 64 visual token = 4096 token，4096 ctx 必然溢出 KV。
@@ -135,24 +136,34 @@ public class MTMDWrapperExample: ObservableObject {
             
             let finalModelPath = modelPath ?? defaultModelPath
             let finalMmprojPath = mmprojPath ?? defaultMmprojPath
-            
-            // 仅当当前加载的是 V4.0 mmproj 时，才自动使用文档目录下的 V4.0 CoreML。
-            // 若对 V4.6 / 2.6 等误用此处回退，会把 V4.0 ANE 与 V4.6 merger 混用，视觉 embedding 完全错误。
-            var finalCoremlPath = coremlPath ?? ""
-            if finalCoremlPath.isEmpty {
-                let mmprojName = URL(fileURLWithPath: finalMmprojPath).lastPathComponent
-                if mmprojName == MiniCPMModelConst.mmprojv4_FileName {
-                    let defaultCoremlDir = documentsDir.appendingPathComponent("coreml_minicpmv40_vit_f16.mlmodelc").path
-                    if FileManager.default.fileExists(atPath: defaultCoremlDir) {
-                        finalCoremlPath = defaultCoremlDir
-                    }
-                }
+
+            // CoreML 暂时下线：保留 coremlPath 形参为了让调用方（LoadModel）签名不动，
+            // 但不再传给 MTMDParams / native bridge，也不再做"看到 V4.0 mmproj 就自动 pick
+            // 文档目录下 mlmodelc"的 fallback。后续重新引入 ANE 时再恢复这一段。
+            if let cp = coremlPath, !cp.isEmpty {
+                print("MTMDWrapperExample: 收到 coremlPath=\(cp)，但当前 master 适配版本忽略 ANE 路径")
             }
-            
+
             // Seed the slice cap from the persisted user preference so
             // the new mtmd_context picks it up on init.  Live updates
             // afterwards go through `setImageMaxSliceNums` (no reload).
             let sliceCap = ImageSliceSetting.current
+
+            // 启动时按机型挑 n_ubatch / image_max_tokens 两组档位：
+            //   - n_ubatch          决定 LLM decode/prefill 的 GPU compute buffer
+            //   - image_max_tokens  决定 vision encoder slice 数上限，进一步压
+            //                       低端机多 slice 大图 prefill 期间的内存峰值
+            // 详见 MBDeviceMemoryProbe 文件头注释。
+            let tier        = MBDeviceMemoryProbe.currentTier
+            let nUbatch     = tier.recommendedUbatch
+            let imgMaxTok   = tier.recommendedImageMaxTokens
+
+            // iOS Simulator 的 MTLSimDevice 在 mmproj 那种 1+ GiB 的 buffer 上
+            // 直接 _xpc_api_misuse → SIGTRAP（参见 MBDeviceMemoryProbe.isSimulator
+            // 注释）。在 sim 上强制全 CPU 路径走完整调用链，真机仍然 GPU。
+            let useGPU       = !MBDeviceMemoryProbe.isSimulator
+            let mmprojUseGPU = !MBDeviceMemoryProbe.isSimulator
+
             // nCtx 走"显式优先、缺省 fallback 到 MTMDParams 默认"的两段策略。
             // 调用方（LoadModel）按模型类型决定要不要抬高，避免老模型默认翻倍 KV。
             let params: MTMDParams = {
@@ -160,23 +171,28 @@ public class MTMDWrapperExample: ObservableObject {
                     return MTMDParams(
                         modelPath: finalModelPath,
                         mmprojPath: finalMmprojPath,
-                        coremlPath: finalCoremlPath,
                         nCtx: n,
-                        imageMaxSliceNums: sliceCap
+                        useGPU: useGPU,
+                        mmprojUseGPU: mmprojUseGPU,
+                        nUbatch: nUbatch,
+                        imageMaxSliceNums: sliceCap,
+                        imageMaxTokens: imgMaxTok
                     )
                 } else {
                     return MTMDParams(
                         modelPath: finalModelPath,
                         mmprojPath: finalMmprojPath,
-                        coremlPath: finalCoremlPath,
-                        imageMaxSliceNums: sliceCap
+                        useGPU: useGPU,
+                        mmprojUseGPU: mmprojUseGPU,
+                        nUbatch: nUbatch,
+                        imageMaxSliceNums: sliceCap,
+                        imageMaxTokens: imgMaxTok
                     )
                 }
             }()
             self.params = params
             try await mtmdWrapper.initialize(with: params)
-            print("MTMDWrapperExample: n_ctx = \(params.nCtx), image_max_slice_nums = \(sliceCap)")
-            print("初始化成功, CoreML: \(finalCoremlPath.isEmpty ? "未启用" : "已启用")")
+            print("MTMDWrapperExample: n_ctx = \(params.nCtx), n_ubatch = \(nUbatch) (tier=\(tier.displayName)), useGPU = \(useGPU), image_max_slice_nums(UI) = \(sliceCap), image_max_tokens(bridge) = \(imgMaxTok), CoreML: 已下线")
             self.multiModelLoadingSuccess = true
         } catch {
             errorMessage = error.localizedDescription

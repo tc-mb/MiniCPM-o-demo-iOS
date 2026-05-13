@@ -641,7 +641,10 @@ extension MBV26ModelDetailViewController {
         
         // 保存到UserDefaults
         UserDefaults.standard.setValue("V26MultiModel", forKey: "current_selected_model")
-        
+
+        // 通知首页：选择已变更，需要 reset + reload wrapper（原因见 MBConstants 的 mbModelSelectionChanged 注释）
+        NotificationCenter.default.post(name: .mbModelSelectionChanged, object: nil)
+
         // 显示成功提示
         let hud = MBHUD.showAdded(to: self.view, animated: true)
         hud.mode = .text

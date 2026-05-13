@@ -276,9 +276,32 @@ import llama
                                                selector: #selector(registVideoProcessCompleteNotification(notification:)),
                                                name: NSNotification.Name("video.process.complete"), object: nil)
 
+        // 模型选择变更：用户在设置页 V2.6 / V4 / V4.6 详情页点了"使用该模型"。
+        // 这条路径需要强制 reset + reload，否则 didStartInitialModelLoad 一次性
+        // 标志会让首次启动失败的"未加载"状态永远固化，用户选完图就出现
+        // `[UI]addImage skip: model not loaded yet`。详见 mbModelSelectionChanged 注释。
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(handleModelSelectionChanged(_:)),
+                                               name: .mbModelSelectionChanged, object: nil)
+
         // 不在这里调 checkMultiModelLoadStatusAndLoadIt —— 推迟到 viewDidAppear
         // 首次回调，让 vc 的 view 先 layout + 显示第一帧，再开始 mtmd init。
         // 见 didStartInitialModelLoad 的注释。
+    }
+
+    /// 用户在 V2.6 / V4 / V4.6 详情页点了"使用该模型"，把 wrapper reset 后再 load。
+    ///
+    /// 不能只判断 multiModelLoadingSuccess，因为切换路径里可能从一个加载好的
+    /// 模型切到另一个，wrapper 当前 success 但下次 prefill 走的还是旧 ctx。
+    /// 一律 reset + 重置 didStartInitialModelLoad + 立即触发 load。
+    @objc private func handleModelSelectionChanged(_ notification: Notification) {
+        debugLog("-->> 模型选择已变更，强制 reset + reload wrapper")
+        Task { @MainActor in
+            await self.mtmdWrapperExample?.reset()
+            self.didStartInitialModelLoad = false
+            self.checkMultiModelLoadStatusAndLoadIt()
+            self.didStartInitialModelLoad = true
+        }
     }
 
     public override func viewWillAppear(_ animated: Bool) {

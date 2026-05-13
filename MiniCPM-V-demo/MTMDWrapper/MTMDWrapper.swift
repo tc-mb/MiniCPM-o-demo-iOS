@@ -61,7 +61,7 @@ public class MTMDWrapper: ObservableObject {
         
         // 清理资源
         if let ctx = context {
-            mtmd_ios_free(ctx)
+            mb_mtmd_free(ctx)
             context = nil
         }
         
@@ -87,8 +87,14 @@ public class MTMDWrapper: ObservableObject {
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 var cParams = params.toCParams()
-                let ctx = mtmd_ios_init(&cParams)
-                
+                // 路径在新 bridge 里作为 mb_mtmd_init 的独立参数传，
+                // 避免把 const char * 字段塞进结构体后 Swift 闭包外指针失效。
+                let ctx = params.modelPath.withCString { modelCStr in
+                    params.mmprojPath.withCString { mmprojCStr in
+                        mb_mtmd_init(modelCStr, mmprojCStr, &cParams)
+                    }
+                }
+
                 if ctx == nil {
                     continuation.resume(throwing: MTMDError.initializationFailed("无法创建 MTMD 上下文"))
                     return
@@ -116,7 +122,7 @@ public class MTMDWrapper: ObservableObject {
     /// 在后台线程中添加图片（非 @MainActor 版本）
     /// - Parameters:
     ///   - imagePath: 图片路径
-    ///   - timeoutSeconds: 等待 mtmd_ios_prefill_image 的最长时间。超时即抛
+    ///   - timeoutSeconds: 等待 mb_mtmd_prefill_image 的最长时间。超时即抛
     ///     `MTMDError.timeout`，让上层（cell 进度条 / "预处理耗时" 文本）能
     ///     走兜底分支，而不是永远卡在没有耗时的状态。
     ///     注意：由于 C++ 同步 API 没法被中断，超时后底层调用仍会在后台跑完，
@@ -136,10 +142,10 @@ public class MTMDWrapper: ObservableObject {
             timeoutMessage: "addImageInBackground timed out after \(Int(timeoutSeconds))s (image=\(imagePath))"
         ) { resumeOnce in
             DispatchQueue.global(qos: .userInitiated).async {
-                let result = mtmd_ios_prefill_image(ctx, std.string(imagePath))
+                let result = imagePath.withCString { mb_mtmd_prefill_image(ctx, $0) }
 
                 if result != 0 {
-                    let errorMessage = mtmd_ios_get_last_error(ctx)
+                    let errorMessage = mb_mtmd_get_last_error(ctx)
                     let error = errorMessage != nil ? String(cString: errorMessage!) : "Unknown error"
                     print("MTMDWrapper: addImageInBackground failed, imagePath=\(imagePath), error=\(error)")
                     resumeOnce(.failure(MTMDError.imageLoadFailed(error)))
@@ -168,10 +174,10 @@ public class MTMDWrapper: ObservableObject {
             timeoutMessage: "addFrameInBackground timed out after \(Int(timeoutSeconds))s (frame=\(imagePath))"
         ) { resumeOnce in
             DispatchQueue.global(qos: .userInitiated).async {
-                let result = mtmd_ios_prefill_frame(ctx, std.string(imagePath))
+                let result = imagePath.withCString { mb_mtmd_prefill_frame(ctx, $0) }
 
                 if result != 0 {
-                    let errorMessage = mtmd_ios_get_last_error(ctx)
+                    let errorMessage = mb_mtmd_get_last_error(ctx)
                     let error = errorMessage != nil ? String(cString: errorMessage!) : "Unknown error"
                     print("MTMDWrapper: addFrameInBackground failed, imagePath=\(imagePath), error=\(error)")
                     resumeOnce(.failure(MTMDError.imageLoadFailed(error)))
@@ -201,10 +207,14 @@ public class MTMDWrapper: ObservableObject {
         // 在后台线程执行 C 函数调用
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                let result = mtmd_ios_prefill_text(ctx, std.string(text), std.string(role))
-                
+                let result = text.withCString { textCStr in
+                    role.withCString { roleCStr in
+                        mb_mtmd_prefill_text(ctx, textCStr, roleCStr)
+                    }
+                }
+
                 if result != 0 {
-                    let errorMessage = mtmd_ios_get_last_error(ctx)
+                    let errorMessage = mb_mtmd_get_last_error(ctx)
                     let error = errorMessage != nil ? String(cString: errorMessage!) : "Unknown error"
                     continuation.resume(throwing: MTMDError.textAddFailed(error))
                 } else {
@@ -268,8 +278,11 @@ public class MTMDWrapper: ObservableObject {
             print("MTMDWrapper: setImageMaxSliceNums 调用时上下文未就绪，nop")
             return
         }
-        mtmd_ios_set_image_max_slice_nums(ctx, Int32(n))
-        print("MTMDWrapper: image_max_slice_nums 已切换为 \(n)")
+        mb_mtmd_set_image_max_slice_nums(ctx, Int32(n))
+        // 注意：迁移到 master 后此调用是 nop（master 已删除运行时 slice 调整 API）。
+        // Slice 实际值在 init 时通过 MTMDParams.imageMaxSliceNums →
+        // mb_mtmd_params.image_max_tokens 决定，要切换必须 reset 模型。
+        print("MTMDWrapper: setImageMaxSliceNums(\(n)) 已调用（master 适配后为 nop，需 reset 才生效）")
     }
 
     /// 重置上下文
@@ -278,7 +291,7 @@ public class MTMDWrapper: ObservableObject {
         
         // 清理资源
         if let ctx = context {
-            mtmd_ios_free(ctx)
+            mb_mtmd_free(ctx)
             context = nil
         }
         
@@ -315,23 +328,25 @@ public class MTMDWrapper: ObservableObject {
             // 在后台线程执行 C 函数调用
             let cToken = await withCheckedContinuation { continuation in
                 DispatchQueue.global(qos: .userInitiated).async {
-                    let token = mtmd_ios_loop(ctx)
+                    let token = mb_mtmd_loop(ctx)
                     continuation.resume(returning: token)
                 }
             }
-            
-            var tokenString = cToken.token != nil ? String(cString: cToken.token) : ""
-            
+
+            var tokenString = cToken.token != nil ? String(cString: cToken.token!) : ""
+
             // 在主线程更新状态
             currentToken = MTMDToken(content: tokenString, isEnd: cToken.is_end)
             if fullOutput.isEmpty && tokenString == "\n" {
                 tokenString = ""
             }
             fullOutput += tokenString
-            
-            // 释放 C 字符串
-            if cToken.token != nil {
-                // mtmd_ios_string_free(cToken.token)
+
+            // 释放 native bridge 在 mb_mtmd_loop 里 malloc 出来的 token 字符串。
+            // 这个 free 是必须的；旧 mtmd-ios 时代被注释掉是因为当时漏 free，
+            // 长会话下会持续涨内存。新 bridge 必须显式归还。
+            if let tokenPtr = cToken.token {
+                mb_mtmd_string_free(tokenPtr)
             }
             
             // 检查是否生成完成
@@ -359,7 +374,7 @@ public class MTMDWrapper: ObservableObject {
     ///   如果 body 的 success / failure 已经先到，watchdog 是 no-op。
     /// - 反过来如果 watchdog 先到，body 后到的 resumeOnce 是 no-op，但 C 调用
     ///   仍会在后台跑完。这是有意为之 —— 我们没法中断同步 C API，但至少不
-    ///   让 UI 永远等。下一次进入会先 `mtmd_ios_clean_kv_cache` / reset，
+    ///   让 UI 永远等。下一次进入会先 `mb_mtmd_clean_kv_cache` / reset，
     ///   被孤儿化的那次推理对状态没有持续污染。
     private func runWithWatchdog(
         timeoutSeconds: TimeInterval,

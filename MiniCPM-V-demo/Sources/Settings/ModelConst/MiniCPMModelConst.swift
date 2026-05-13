@@ -108,32 +108,58 @@ struct MiniCPMModelConst {
     
     // MARK: - MiniCPM-V 4.6 多模态语言模型
 
-    /// V4.6 主模型文件名（落盘到 Documents/，命名带 v4.6 前缀以避免与 v2.6 / v4.0 同目录平铺时撞名）
+    /// V4.6 主模型文件名（落盘到 Documents/，命名带 v4.6 前缀以避免与 v2.6 / v4.0 同目录平铺时撞名）。
+    /// 注意：这一份 LLM 在 OBS / HF / ModelScope 三方完全同源（同 MD5），切换下载源不会影响老用户已下载的本地文件，
+    /// 也不需要 bump 文件名 / MD5。
     static let modelv46_FileName = "MiniCPM-V-4_6-Q4_K_M.gguf"
 
     /// V4.6 显示名
     static let modelv46_DisplayedName = "MiniCPM-V 4.6 LLM INT4"
 
-    /// V4.6 主模型下载地址（华为云中转 OSS）
-    static let modelv46_Q4_K_M_URLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/minicpmv46-instruct/MiniCPM-V-4_6-Q4_K_M.gguf"
+    /// V4.6 主模型下载地址（HuggingFace 主源，对齐 v4 的源策略）
+    static let modelv46_Q4_K_M_URLString = "https://huggingface.co/openbmb/MiniCPM-V-4.6-gguf/resolve/main/MiniCPM-V-4_6-Q4_K_M.gguf"
 
-    /// V4.6 主模型 md5
+    /// V4.6 主模型备用下载地址（ModelScope 国内镜像，HF 不通时由 MBModelDownloadHelperV2 自动 fallback）
+    static let modelv46_Q4_K_M_BackUpURLString = "https://modelscope.cn/api/v1/models/OpenBMB/MiniCPM-V-4.6-gguf/repo?Revision=master&FilePath=MiniCPM-V-4_6-Q4_K_M.gguf"
+
+    /// V4.6 主模型 md5（OBS / HF / ModelScope 三源同源，无需 bump）
     static let modelv46_Q4_K_M_MD5 = "fd778481dd56b6036dd8f9cf7c1519cf"
 
 
     // MARK: - MiniCPM-V 4.6 mmproj VIT 模型
 
-    /// V4.6 mmproj 文件名（落盘到 Documents/，命名带 v4.6 前缀以避免与 v2.6 同名 mmproj-model-f16.gguf 撞名）
-    static let mmprojv46_FileName = "MiniCPM-V-4_6-mmproj-f16.gguf"
+    /// V4.6 mmproj 文件名（落盘到 Documents/）。
+    ///
+    /// 这里**有意带 `-master-` 后缀**，与老的 `MiniCPM-V-4_6-mmproj-f16.gguf` 区分开：
+    /// - 旧名：OBS 上 demo fork 转出的 `clip.projector_type=merger` 版本
+    /// - 新名：HF / ModelScope 上 OpenBMB 官方转出的 `minicpmv4_6` 版本（与 upstream master 兼容）
+    ///
+    /// 两份文件互不兼容（master 加载老 mmproj 会 fail；demo fork 加载新 mmproj 走 unknown projector
+    /// 也会 fail）。换名让两份在 Documents/ 中可以共存且 modelsExist() 不会误用残留旧文件。
+    /// 老文件名登记在 `staleMMProjv46_FileNames` 里，启动时由 MBV46ModelDownloadManager
+    /// 主动 purge —— 否则那 1.1GB 旧文件会一直占着磁盘。
+    static let mmprojv46_FileName = "MiniCPM-V-4_6-mmproj-master-f16.gguf"
 
     /// V4.6 mmproj 显示名
     static let modelMMProjv46_DisplayedName = "MiniCPM-V 4.6 VPM"
 
-    /// V4.6 mmproj 下载地址（华为云中转 OSS，objectKey 与上游 HF 一致）
-    static let mmprojv46_URLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/minicpmv46-instruct/mmproj-model-f16.gguf"
+    /// V4.6 mmproj 下载地址（HuggingFace 主源）
+    static let mmprojv46_URLString = "https://huggingface.co/openbmb/MiniCPM-V-4.6-gguf/resolve/main/mmproj-model-f16.gguf"
 
-    /// V4.6 mmproj md5（demo 分支转出版本：clip.projector_type=merger，与封板 HF 权重一致）
-    static let modelMMProjv46_MD5 = "aad0d36e43a35412d72ed27a1248c7ef"
+    /// V4.6 mmproj 备用下载地址（ModelScope 国内镜像，HF 不通时由 MBModelDownloadHelperV2 自动 fallback）
+    static let mmprojv46_BackUpURLString = "https://modelscope.cn/api/v1/models/OpenBMB/MiniCPM-V-4.6-gguf/repo?Revision=master&FilePath=mmproj-model-f16.gguf"
+
+    /// V4.6 mmproj md5（HF / ModelScope 上的 OpenBMB 官方版本，跟 upstream master 兼容）
+    static let modelMMProjv46_MD5 = "54aea6e04d752f47309a48f12795a1a3"
+
+    /// 启动时主动 purge 的老 mmproj 文件名集合。
+    ///
+    /// 用途：处理"老用户从 OBS 下载过旧 demo-fork mmproj"的迁移场景。这份旧 mmproj 在 master
+    /// 适配版本里已经不能用，但 modelsExist() fast-path 只看文件存在不校 MD5，会把残留文件直接
+    /// 喂给 native 加载导致闪退（参照 AGENTS.md《客户端 ↔ OBS 模型一致性》一节）。
+    static let staleMMProjv46_FileNames: [String] = [
+        "MiniCPM-V-4_6-mmproj-f16.gguf",  // OBS demo-fork merger 版本，master 加载 fail
+    ]
     
     
     // MARK: - MiniCPM-V 4.6 ANE 模块
