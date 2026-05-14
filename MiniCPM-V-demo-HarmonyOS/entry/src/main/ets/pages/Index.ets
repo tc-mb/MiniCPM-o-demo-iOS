@@ -14,7 +14,7 @@ import router from '@ohos.router';
 import hilog from '@ohos.hilog';
 import fs from '@ohos.file.fs';
 
-import { LlamaEngine, DEFAULT_PREDICT_LENGTH, DEFAULT_SYSTEM_PROMPT, TokenStream } from '../engine/LlamaEngine';
+import { LlamaEngine, DEFAULT_PREDICT_LENGTH, TokenStream } from '../engine/LlamaEngine';
 import { LlamaState, LlamaStateName } from '../engine/LlamaState';
 import { ChatMessage } from '../data/ChatMessage';
 import { ChatMessageList } from '../components/ChatMessageList';
@@ -169,7 +169,7 @@ struct Index {
     try {
       const mm = fs.accessSync(mmprojPath) ? mmprojPath : null;
       await this.engine.loadModel(modelPath, mm);
-      await this.engine.setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+      // No default system prompt: aligned with iOS opt-r1 (see LlamaEngine.ets).
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'loadDefaultModel failed: %{public}s', `${e}`);
       this.engine.resetToInitialized();
@@ -208,7 +208,7 @@ struct Index {
     if (!this.engine) return;
     try {
       await this.engine.clearContext();
-      await this.engine.setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+      // No default system prompt: aligned with iOS opt-r1.
       this.messageList.clear();
       this.messageList.push(ChatMessage.welcome());
       this.messageIdCounter = 1;
@@ -240,7 +240,7 @@ struct Index {
       // Reset context first so each debug image starts in a clean state and
       // does not get confused with previously prefilled debug images.
       await this.engine!.clearContext();
-      await this.engine!.setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+      // No default system prompt: aligned with iOS opt-r1.
       this.messageList.clear();
       this.messageList.push(ChatMessage.welcome());
       this.messageIdCounter = 1;

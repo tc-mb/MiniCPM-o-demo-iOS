@@ -60,8 +60,13 @@ export const MODEL_SUBDIR = 'models';
 // of single-turn answers; the n_ctx=4096 buffer plus shift_context() in
 // llama_napi.cpp still keeps multi-turn chats stable.
 export const DEFAULT_PREDICT_LENGTH = 512;
-export const DEFAULT_SYSTEM_PROMPT =
-  '你是一个有用且诚实的AI助手。当用户发送图片时，请仔细观察图片内容并准确回答用户的问题。';
+// No default system prompt — aligned with iOS opt-r1 (see MBMtmd.mm). The
+// reference Python pipeline (`AutoModel.chat(...)` / `apply_chat_template`)
+// does not insert one either when the caller passes only a user message,
+// and an English-only system string was observed to bias MiniCPM-V into
+// answering Chinese queries in English. If a caller wants a system prompt
+// they should pass it explicitly to setSystemPrompt() before the first
+// user turn.
 
 export type StateListener = (s: LlamaState) => void;
 

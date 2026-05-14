@@ -278,8 +278,8 @@ class ModelManagerActivity : AppCompatActivity() {
 
                 val mmprojFile = File(mmprojPath)
                 engine.loadModel(modelPath, if (mmprojFile.exists()) mmprojPath else null)
-
-                engine.setSystemPrompt("你是一个有用且诚实的AI助手。当用户发送图片时，请仔细观察图片内容并准确回答用户的问题。")
+                // No default system prompt: aligned with iOS opt-r1. See
+                // MainActivity.clearChat() for the rationale.
 
                 withContext(Dispatchers.Main) {
                     btnLoadModel.isEnabled = true

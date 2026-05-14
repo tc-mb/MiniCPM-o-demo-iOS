@@ -6,7 +6,7 @@ import router from '@ohos.router';
 import fs from '@ohos.file.fs';
 import hilog from '@ohos.hilog';
 
-import { LlamaEngine, DEFAULT_SYSTEM_PROMPT } from '../engine/LlamaEngine';
+import { LlamaEngine } from '../engine/LlamaEngine';
 import { LlamaState, LlamaStateName } from '../engine/LlamaState';
 import {
   ModelInfo,
@@ -128,7 +128,7 @@ struct ModelManager {
       }
       const mm = fs.accessSync(mmprojPath) ? mmprojPath : null;
       await this.engine.loadModel(modelPath, mm);
-      await this.engine.setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+      // No default system prompt: aligned with iOS opt-r1.
       promptAction.showToast({ message: '模型加载成功!', duration: 1500 });
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'load failed: %{public}s', `${e}`);

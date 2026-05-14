@@ -219,7 +219,13 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 engine.clearContext()
-                engine.setSystemPrompt("你是一个有用且诚实的AI助手。当用户发送图片时，请仔细观察图片内容并准确回答用户的问题。")
+                // No default system prompt: aligned with iOS opt-r1 (see
+                // MBMtmd.mm top-of-file note). The reference Python pipeline
+                // (`AutoModel.chat(...)` / `apply_chat_template`) does not
+                // insert one either, and an English-only system string biases
+                // MiniCPM-V into answering Chinese queries in English.
+                // If a caller wants a system prompt, call setSystemPrompt
+                // explicitly here before the first user turn.
                 withContext(Dispatchers.Main) {
                     messages.clear()
                     messages.add(ChatMessage.WelcomeCard())
@@ -324,7 +330,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 engine.loadModel(ggufFile.absolutePath, mmprojFile.absolutePath)
-                engine.setSystemPrompt("你是一个有用且诚实的AI助手。当用户发送图片时，请仔细观察图片内容并准确回答用户的问题。")
+                // No default system prompt: aligned with iOS opt-r1. See
+                // clearChat() above for the rationale.
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading model", e)
                 engine.resetToInitialized()
