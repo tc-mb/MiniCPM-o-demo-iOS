@@ -4,11 +4,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +26,8 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 sealed class LlamaState {
     object Uninitialized : LlamaState()
@@ -153,18 +157,27 @@ class LlamaEngine private constructor(
             )
         )
 
-        // For mmproj specifically we cannot trust the on-disk content of any
-        // historical filename: the OBS object behind v4.6 was rotated through
-        // multiple incompatible revisions (pre-release / sealed-minicpmv4_6 /
-        // demo-merger), so a file with one of these names may have *any* of
-        // those payloads. We therefore delete them outright on app start.
-        // Combined with the new [ModelInfo.mmprojFileName] (which is unique
-        // to the demo-merger revision), [modelsExist] will then report
-        // "missing" and the user is prompted to re-download a clean copy.
+        // Pre-v2.0 the v4.6 mmproj came from a temporary OBS bucket and went
+        // through several incompatible revisions (pre-release / sealed
+        // minicpmv4_6 / demo-merger). To keep the rollout clean we purge any
+        // file that matches a known stale name; modelsExist() then reports
+        // "missing" and the new HF/MS racing download fetches the canonical
+        // OpenBMB-published `mmproj-model-f16.gguf` (whose MD5 is pinned in
+        // ModelInfo and verified after download).
         private val STALE_MMPROJ_NAMES: Map<String, List<String>> = mapOf(
             "minicpm-v-4_6-instruct" to listOf(
                 "mmproj-v46-model-f16.gguf",
-                "mmproj-model-f16.gguf"
+                // v1.7-v1.9 demo: bytes converted on the Support-iOS-Demo
+                // branch (clip.projector_type=merger). Upstream master mtmd
+                // accepts the original minicpmv4_6 projector natively so we
+                // no longer need this re-conversion; the file would also
+                // fail the new MD5 anyway.
+                "mmproj-model-merger-f16.gguf"
+                // Intentionally NOT listing "mmproj-model-f16.gguf" here:
+                // that IS the canonical name from v2.0 onwards. If a user
+                // has a stale copy from an even earlier OBS revision sitting
+                // under that name, the MD5 check inside downloadFile will
+                // delete it and re-download cleanly.
             )
         )
 
@@ -233,6 +246,38 @@ class LlamaEngine private constructor(
             }
         }
 
+        // Maps a selected [ModelInfo] to the matching MiniCPM-V family version
+        // tag that the (legacy) fork mtmd-ios.h would have returned via
+        // mtmd_get_minicpmv_version.  Used in [loadModel] to push the value
+        // down to native after loadMmproj.
+        //   - 46  : MiniCPM-V-4.6 instruct (the demo's only V-4.6 build)
+        //   - 5   : MiniCPM-V-4 (corresponds to upstream `clip.minicpmv_version=5`)
+        //   - 0   : no match / unknown -> native treats as "no vision-version
+        //           gating; use default n_ctx + plain assistant prefix"
+        // Kept in the companion object so [downloadModels] / [loadModel] /
+        // any future callers can reuse the same mapping without re-grepping
+        // model ids in three places.
+        fun inferMinicpmvVersion(model: ModelInfo): Int = when (model.id) {
+            "minicpm-v-4_6-instruct" -> 46
+            "minicpm-v-4"            -> 5
+            else                     -> 0
+        }
+
+        // Per-file source descriptor used by [downloadFileMultiSource] / racing.
+        private data class FileSource(val label: String, val url: URL)
+
+        // Racing winner state passed from header-probe goroutines to the
+        // body-streaming logic. [conn] is the still-open HttpURLConnection
+        // whose response headers we accepted; the loser connections are
+        // disconnected before [body] is reached.
+        private data class RaceWinner(
+            val index: Int,
+            val source: String,
+            val conn: HttpURLConnection,
+            val responseCode: Int,
+            val contentLength: Long,
+        )
+
         suspend fun downloadModels(
             context: Context,
             onProgress: (String) -> Unit
@@ -241,72 +286,300 @@ class LlamaEngine private constructor(
             val dir = File(modelDirFor(context, model))
             if (!dir.exists()) dir.mkdirs()
 
-            // Each entry describes one file to fetch: (display source, name,
-            // download URL, expected MD5 or null).
-            // Direct-URL models (e.g. MiniCPM-V-4.6, served from a temporary
-            // OBS bucket) bypass HF/MS probing entirely and mirror the iOS
-            // demo. Repo-based models keep the HF-then-ModelScope fallback.
-            data class Job(val source: String, val name: String, val url: URL, val md5: String?)
+            // Per file, build the *full* candidate-source list. HF + MS run
+            // in parallel; directGgufUrl/directMmprojUrl, if present, are
+            // registered as a third candidate. The first source to deliver
+            // valid response headers wins, the others get disconnected.
+            // Mirrors iOS opt-r1's MBModelDownloadHelperV2.downloadV2.
+            data class FileSpec(
+                val name: String,
+                val sources: List<FileSource>,
+                val md5: String?,
+            )
 
-            val jobs: List<Job> = if (model.hasDirectUrls) {
-                onProgress("使用直链下载 (与 iOS 同源)...")
-                listOf(
-                    Job("直链", model.ggufFileName, URL(model.directGgufUrl), model.ggufMd5),
-                    Job("直链", model.mmprojFileName, URL(model.directMmprojUrl), model.mmprojMd5)
-                )
-            } else {
-                val hfRepo = requireNotNull(model.hfRepo) {
-                    "Model ${model.id} has neither hfRepo nor direct URLs"
-                }
-                val msRepo = requireNotNull(model.msRepo) {
-                    "Model ${model.id} has neither msRepo nor direct URLs"
-                }
-                val hfBase = "https://huggingface.co/$hfRepo/resolve/${model.hfBranch}"
-                val msBase = "https://www.modelscope.cn/models/$msRepo/resolve/${model.msBranch}"
+            val ggufSources = mutableListOf<FileSource>()
+            val mmprojSources = mutableListOf<FileSource>()
 
-                onProgress("正在连接 HuggingFace...")
-                val hfOk = probeReachable(URL("$hfBase/${model.ggufFileName}"))
-
-                val (baseUrl, source) = if (hfOk) {
-                    onProgress("HuggingFace 连接成功，开始下载...")
-                    Pair(hfBase, "HuggingFace")
-                } else {
-                    onProgress("HuggingFace 连接失败，切换到 ModelScope...")
-                    val msOk = probeReachable(URL("$msBase/${model.ggufFileName}"))
-                    if (!msOk) {
-                        throw RuntimeException("HuggingFace 和 ModelScope 均无法连接，请检查网络后重试")
-                    }
-                    onProgress("ModelScope 连接成功，开始下载...")
-                    Pair(msBase, "ModelScope")
-                }
-                listOf(
-                    Job(source, model.ggufFileName, URL("$baseUrl/${model.ggufFileName}"), model.ggufMd5),
-                    Job(source, model.mmprojFileName, URL("$baseUrl/${model.mmprojFileName}"), model.mmprojMd5)
-                )
+            if (model.hasHfMsSources) {
+                val hfBase = "https://huggingface.co/${model.hfRepo}/resolve/${model.hfBranch}"
+                val msBase = "https://www.modelscope.cn/models/${model.msRepo}/resolve/${model.msBranch}"
+                ggufSources.add(FileSource("HuggingFace", URL("$hfBase/${model.ggufRemotePath}")))
+                ggufSources.add(FileSource("ModelScope", URL("$msBase/${model.ggufRemotePath}")))
+                mmprojSources.add(FileSource("HuggingFace", URL("$hfBase/${model.mmprojRemotePath}")))
+                mmprojSources.add(FileSource("ModelScope", URL("$msBase/${model.mmprojRemotePath}")))
+            }
+            // Optional direct-mirror escape hatch (e.g. OBS during TestFlight).
+            // Registered as an extra race candidate; not exclusive of HF/MS.
+            if (!model.directGgufUrl.isNullOrBlank()) {
+                ggufSources.add(FileSource("直链", URL(model.directGgufUrl)))
+            }
+            if (!model.directMmprojUrl.isNullOrBlank()) {
+                mmprojSources.add(FileSource("直链", URL(model.directMmprojUrl)))
             }
 
-            for (job in jobs) {
-                downloadFile(dir, job.name, job.url, job.source, job.md5, onProgress)
+            if (ggufSources.isEmpty() || mmprojSources.isEmpty()) {
+                throw RuntimeException("Model ${model.id} has no download source configured")
+            }
+
+            val files = listOf(
+                FileSpec(model.ggufFileName, ggufSources, model.ggufMd5),
+                FileSpec(model.mmprojFileName, mmprojSources, model.mmprojMd5),
+            )
+
+            val racedLabel = files.first().sources.joinToString("+") { it.label }
+            onProgress("$racedLabel 多源 race 启动...")
+
+            for (file in files) {
+                downloadFileMultiSource(dir, file.name, file.sources, file.md5, onProgress)
             }
 
             onProgress("所有模型文件下载完成!")
         }
 
-        private fun probeReachable(url: URL): Boolean {
-            return try {
-                val conn = (url.openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 5000
-                    readTimeout = 5000
-                    requestMethod = "HEAD"
-                    instanceFollowRedirects = true
-                    setRequestProperty("User-Agent", "MiniCPMV-demo/1.0")
+        /**
+         * Multi-source racing download.
+         *
+         * Launches one HttpURLConnection GET per [sources] entry in parallel.
+         * The first connection whose response headers indicate success
+         * (HTTP 200/206 with positive Content-Length, or 416 with a valid
+         * Content-Range matching the local `.tmp`) wins; the others are
+         * disconnected immediately. The winner's body is streamed to disk
+         * exactly the same way [downloadFile] does it for the single-source
+         * path, including resume semantics, MD5 verification, and progress
+         * reporting tagged with the winning source label.
+         *
+         * If every source fails before any of them produces headers, the
+         * race surfaces a single combined RuntimeException to the caller.
+         *
+         * Mirrors iOS opt-r1's MBModelDownloadHelperV2.downloadV2 (race the
+         * URLSessionDownloadTask `didReceiveResponse` callbacks). Implementing
+         * this on Android uses `HttpURLConnection.responseCode` as the
+         * synchronous header gate — it blocks the worker dispatcher thread
+         * until the server sends the first byte of the status line, which is
+         * the exact moment we want to compare for a winner.
+         */
+        private suspend fun downloadFileMultiSource(
+            dir: File,
+            fileName: String,
+            sources: List<FileSource>,
+            expectedMd5: String?,
+            onProgress: (String) -> Unit,
+        ) {
+            require(sources.isNotEmpty()) { "downloadFileMultiSource: empty sources" }
+
+            // Single source -> bypass race plumbing entirely.
+            if (sources.size == 1) {
+                val (label, url) = sources.first()
+                downloadFile(dir, fileName, url, label, expectedMd5, onProgress)
+                return
+            }
+
+            val targetFile = File(dir, fileName)
+            val tmpFile = File(dir, "$fileName.tmp")
+
+            // Fast path: same as downloadFile - if target already exists and
+            // MD5 matches the manifest, treat as done.
+            if (targetFile.exists() && expectedMd5 != null) {
+                onProgress("校验已存在的 $fileName ...")
+                val actual = computeMd5(targetFile)
+                if (actual.equals(expectedMd5, ignoreCase = true)) {
+                    onProgress("$fileName 已就绪 (MD5 校验通过)")
+                    Log.i(TAG, "$fileName already present and MD5 matches, skipping download")
+                    if (tmpFile.exists()) tmpFile.delete()
+                    return
                 }
-                val code = conn.responseCode
-                conn.disconnect()
-                code == HttpURLConnection.HTTP_OK
-            } catch (e: Exception) {
-                Log.w(TAG, "Reachability probe failed for $url: ${e.message}")
-                false
+                Log.w(TAG, "$fileName already present but MD5 mismatch (got $actual, want $expectedMd5); re-downloading")
+                targetFile.delete()
+                if (tmpFile.exists()) tmpFile.delete()
+            }
+
+            val resumeFrom = if (tmpFile.exists()) tmpFile.length() else 0L
+            if (resumeFrom > 0) {
+                onProgress("续传 $fileName，已下 ${resumeFrom / (1024 * 1024)} MB...")
+                Log.i(TAG, "Resuming $fileName from $resumeFrom bytes via ${sources.size}-way race")
+            } else {
+                onProgress("${sources.joinToString("+") { it.label }} race 拉取 $fileName...")
+                Log.i(TAG, "Race-downloading $fileName from ${sources.size} sources")
+            }
+
+            coroutineScope {
+                val winnerSlot = CompletableDeferred<RaceWinner>()
+                val failedCount = AtomicInteger(0)
+                val totalSources = sources.size
+                val openConns = ConcurrentHashMap<Int, HttpURLConnection>()
+
+                val jobs = sources.mapIndexed { idx, src ->
+                    launch(Dispatchers.IO) {
+                        var conn: HttpURLConnection? = null
+                        try {
+                            conn = (src.url.openConnection() as HttpURLConnection).apply {
+                                connectTimeout = 10_000
+                                readTimeout = 120_000
+                                requestMethod = "GET"
+                                instanceFollowRedirects = true
+                                setRequestProperty("User-Agent", "MiniCPMV-demo/1.0")
+                                if (resumeFrom > 0) {
+                                    setRequestProperty("Range", "bytes=$resumeFrom-")
+                                }
+                            }
+                            openConns[idx] = conn
+                            Log.i(TAG, "race[$idx] ${src.label} -> ${src.url} start")
+
+                            val code = conn.responseCode
+
+                            // 416 == server thinks we already have everything.
+                            // Treat as a valid winner with len=-1 so the body
+                            // loop short-circuits and just finalises .tmp.
+                            if (code == 416) {
+                                val totalLen = parseContentRangeTotal(conn.getHeaderField("Content-Range"))
+                                if (totalLen != null && tmpFile.length() == totalLen) {
+                                    if (winnerSlot.complete(RaceWinner(idx, src.label, conn!!, 416, -1L))) return@launch
+                                    conn.disconnect()
+                                    return@launch
+                                }
+                                throw RuntimeException("$src.label: HTTP 416 but local .tmp size ${tmpFile.length()} != server $totalLen")
+                            }
+
+                            if (code !in 200..206) {
+                                throw RuntimeException("${src.label}: HTTP $code")
+                            }
+                            val contentLen = conn.contentLength.toLong()
+                            if (contentLen <= 0L) {
+                                // Some mirrors return chunked-encoded responses
+                                // without Content-Length. Still acceptable, the
+                                // streaming loop just won't show a percentage.
+                                Log.w(TAG, "race[$idx] ${src.label}: headers OK but no Content-Length")
+                            }
+                            Log.i(TAG, "race[$idx] ${src.label} headers OK: code=$code len=$contentLen")
+
+                            if (!winnerSlot.complete(RaceWinner(idx, src.label, conn!!, code, contentLen))) {
+                                // Lost the race - drop the connection so the
+                                // server-side socket is closed promptly.
+                                conn.disconnect()
+                            }
+                        } catch (e: CancellationException) {
+                            conn?.disconnect()
+                            throw e
+                        } catch (e: Throwable) {
+                            try { conn?.disconnect() } catch (_: Throwable) {}
+                            val fc = failedCount.incrementAndGet()
+                            Log.w(TAG, "race[$idx] ${src.label} failed (${fc}/${totalSources}): ${e.message}")
+                            if (fc >= totalSources && !winnerSlot.isCompleted) {
+                                winnerSlot.completeExceptionally(
+                                    RuntimeException("$fileName: all $totalSources sources failed")
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val winner = winnerSlot.await()
+                onProgress("[${winner.source}] 胜出，开始下载 $fileName...")
+                Log.i(TAG, "race winner for $fileName: idx=${winner.index} source=${winner.source} code=${winner.responseCode}")
+
+                // Cancel everyone else first so their sockets stop pulling
+                // bytes before we start streaming the winner.
+                jobs.forEachIndexed { idx, job ->
+                    if (idx != winner.index) {
+                        openConns[idx]?.disconnect()
+                        job.cancel()
+                    }
+                }
+
+                streamWinnerToDisk(winner, tmpFile, targetFile, fileName, expectedMd5, resumeFrom, onProgress)
+            }
+        }
+
+        /**
+         * Streams a successful [winner] connection body into [tmpFile], then
+         * promotes to [targetFile] and verifies MD5. Carries the resume
+         * semantics from [downloadFile] (206 -> append, 200 -> truncate, 416
+         * -> finalise as-is) so race winners are observationally equivalent
+         * to single-source downloads.
+         */
+        private fun streamWinnerToDisk(
+            winner: RaceWinner,
+            tmpFile: File,
+            targetFile: File,
+            fileName: String,
+            expectedMd5: String?,
+            resumeFrom: Long,
+            onProgress: (String) -> Unit,
+        ) {
+            val source = winner.source
+            val conn = winner.conn
+            try {
+                if (winner.responseCode == 416) {
+                    Log.i(TAG, "$fileName: server reports complete (HTTP 416 via race)")
+                } else {
+                    val acceptedResume = winner.responseCode == HttpURLConnection.HTTP_PARTIAL // 206
+                    val effectiveStart = if (acceptedResume) resumeFrom else 0L
+                    val totalSize = if (winner.contentLength > 0) winner.contentLength + effectiveStart else -1L
+
+                    if (winner.responseCode == HttpURLConnection.HTTP_OK && resumeFrom > 0) {
+                        Log.w(TAG, "$fileName: server returned 200 instead of 206; restarting from 0")
+                        if (tmpFile.exists()) tmpFile.delete()
+                    }
+
+                    conn.inputStream.use { input ->
+                        FileOutputStream(tmpFile, acceptedResume && resumeFrom > 0).use { output ->
+                            val buffer = ByteArray(64 * 1024)
+                            var totalRead = effectiveStart
+                            var lastProgressTime = 0L
+                            while (true) {
+                                val read = input.read(buffer)
+                                if (read == -1) break
+                                output.write(buffer, 0, read)
+                                totalRead += read
+                                val now = System.currentTimeMillis()
+                                if (now - lastProgressTime > 500) {
+                                    lastProgressTime = now
+                                    val msg = if (totalSize > 0) {
+                                        val pct = totalRead * 100 / totalSize
+                                        val mb = totalRead / (1024 * 1024)
+                                        val totalMb = totalSize / (1024 * 1024)
+                                        "$fileName: $pct% ($mb/$totalMb MB) [$source]"
+                                    } else {
+                                        val mb = totalRead / (1024 * 1024)
+                                        "$fileName: $mb MB [$source]"
+                                    }
+                                    onProgress(msg)
+                                }
+                            }
+                            output.flush()
+                            try {
+                                output.fd.sync()
+                            } catch (e: Throwable) {
+                                Log.w(TAG, "fsync failed for $fileName (continuing): ${e.message}")
+                            }
+                        }
+                    }
+                }
+
+                if (targetFile.exists()) targetFile.delete()
+                if (!tmpFile.renameTo(targetFile)) {
+                    tmpFile.copyTo(targetFile, overwrite = true)
+                    tmpFile.delete()
+                }
+
+                if (expectedMd5 != null) {
+                    onProgress("[$source] 校验 $fileName MD5...")
+                    val actual = computeMd5(targetFile)
+                    if (!actual.equals(expectedMd5, ignoreCase = true)) {
+                        Log.e(TAG, "$fileName MD5 mismatch: expected $expectedMd5, got $actual")
+                        targetFile.delete()
+                        if (tmpFile.exists()) tmpFile.delete()
+                        throw RuntimeException(
+                            "$fileName MD5 校验失败 (期望 $expectedMd5, 实际 $actual)，文件已删除，请重试"
+                        )
+                    }
+                    Log.i(TAG, "$fileName MD5 OK ($actual)")
+                }
+
+                onProgress("$fileName 下载完成 (${targetFile.length() / (1024 * 1024)} MB)")
+                Log.i(TAG, "$fileName saved to ${targetFile.absolutePath} (winner=$source)")
+            } finally {
+                try { conn.disconnect() } catch (_: Throwable) {}
             }
         }
 
@@ -538,6 +811,11 @@ class LlamaEngine private constructor(
     // setImageMaxSliceNumsNative to avoid the name collision with the
     // public suspend wrapper above.
     private external fun setImageMaxSliceNumsNative(n: Int)
+    // Pushes the MiniCPM-V family version (5 / 46 / 100045 / ...) down to
+    // native so prepare()'s n_ctx selection and the assistant-turn prefix
+    // logic see the right value.  Required since upstream master mtmd
+    // dropped mtmd_get_minicpmv_version().  See LlamaEngine.loadModel.
+    private external fun setMinicpmvVersionNative(version: Int)
     // 0 if no mmproj is loaded.  46 / 460 / 461 = MiniCPM-V-4.6 family.
     // Used by [isVideoUnderstandingSupported] to gate the video path.
     private external fun getMinicpmvVersionNative(): Int
@@ -620,7 +898,16 @@ class LlamaEngine private constructor(
                             Log.w(TAG, "Failed to load mmproj (code: $it), continuing without vision support")
                         } else {
                             _mmprojLoaded = true
-                            Log.i(TAG, "mmproj loaded successfully!")
+                            // Upstream master mtmd dropped mtmd_get_minicpmv_version, so the
+                            // native side can no longer auto-detect which MiniCPM-V family
+                            // an mmproj belongs to.  Push the version down from Kotlin based
+                            // on the selected ModelInfo id; native uses this to (a) flip
+                            // n_ctx to V46_CONTEXT_SIZE on prepare() and (b) pick the right
+                            // assistant-turn prefix.  Mirrors iOS opt-r1, which routes the
+                            // same hint through the MBMtmd bridge / MTMDParams.
+                            val mv = inferMinicpmvVersion(getSelectedModel(context))
+                            setMinicpmvVersionNative(mv)
+                            Log.i(TAG, "mmproj loaded successfully! minicpmv_version=$mv")
                         }
                     }
                 }

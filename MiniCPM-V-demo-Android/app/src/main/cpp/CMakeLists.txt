@@ -69,11 +69,17 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ${LLAMA_SRC}/include
         ${LLAMA_SRC}/ggml/include
         ${LLAMA_SRC}/ggml/src
-        ${LLAMA_SRC}/tools/mtmd)
+        ${LLAMA_SRC}/tools/mtmd
+        # llama-common/peg-parser pulls in <nlohmann/json_fwd.hpp> via chat.h.
+        # The vendored nlohmann headers live under llama.cpp/vendor.
+        ${LLAMA_SRC}/vendor)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
         llama
-        common
+        # Upstream master renamed the common target from `common` to
+        # `llama-common` to avoid colliding with downstream projects that
+        # already export a `common` target. Stay in sync.
+        llama-common
         mtmd
         android
         log)

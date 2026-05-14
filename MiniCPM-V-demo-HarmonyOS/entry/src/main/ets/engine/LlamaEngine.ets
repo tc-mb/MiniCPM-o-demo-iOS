@@ -30,6 +30,7 @@ import {
   AVAILABLE_MODELS,
   DEFAULT_MODEL,
   LEGACY_FILE_RENAMES,
+  STALE_MMPROJ_NAMES,
   findModelById,
 } from './ModelInfo';
 import { downloadModelsForSelected, ProgressListener } from '../utils/DownloadManager';
@@ -233,9 +234,36 @@ export class LlamaEngine {
         if (mrc !== 0) {
           hilog.warn(DOMAIN, TAG,
                      'Failed to load mmproj (code: %{public}d), continuing without vision', mrc);
+          // Load failure usually means stale bytes from an earlier demo
+          // revision survived the legacy-rename pass (e.g. v1.3's `merger`
+          // bytes living under the v1.4 canonical name). Delete the file so
+          // modelsExist() reports the model as needing a download on the
+          // next start and the user is routed into the HF + ModelScope
+          // race instead of looping on this same failure.
+          try {
+            if (fs.accessSync(mmprojPath)) {
+              fs.unlinkSync(mmprojPath);
+              hilog.info(DOMAIN, TAG,
+                         'Purged unloadable mmproj at %{public}s; re-download required',
+                         mmprojPath);
+            }
+          } catch (e) {
+            hilog.warn(DOMAIN, TAG, 'unlink mmproj after load failure failed: %{public}s', `${e}`);
+          }
         } else {
           this.mmprojLoaded = true;
-          hilog.info(DOMAIN, TAG, 'mmproj loaded successfully!');
+          // Upstream master mtmd dropped mtmd_get_minicpmv_version, so the
+          // native side can no longer auto-detect which MiniCPM-V family an
+          // mmproj belongs to. Push the version down from ArkTS based on the
+          // selected ModelInfo id; native uses this to flip n_ctx to
+          // V46_CONTEXT_SIZE on prepare() and pick the right assistant-turn
+          // prefix. Mirrors Android (setMinicpmvVersionNative) and iOS
+          // opt-r1 (MBHomeViewController+LoadModel).
+          const selectedModel = LlamaEngine.getSelectedModel(this.context);
+          const mv = LlamaEngine.inferMinicpmvVersion(selectedModel);
+          nativeEngine.setMinicpmvVersion(mv);
+          hilog.info(DOMAIN, TAG,
+                     'mmproj loaded successfully! minicpmv_version=%{public}d', mv);
         }
       }
 
@@ -559,6 +587,21 @@ export class LlamaEngine {
     });
   }
 
+  // Maps a selected [ModelInfo] to the matching MiniCPM-V family version
+  // tag that the (legacy) fork mtmd-ios.h would have returned via
+  // mtmd_get_minicpmv_version(). The native layer uses the value pushed
+  // through setMinicpmvVersion() to (a) flip n_ctx to V46_CONTEXT_SIZE in
+  // Prepare() and (b) pick the right assistant-turn prefix. Mirrors the
+  // Android companion [LlamaEngine.inferMinicpmvVersion].
+  //   - 46  : MiniCPM-V-4.6 instruct (the demo's only V-4.6 build)
+  //   - 5   : MiniCPM-V-4   (corresponds to upstream clip.minicpmv_version=5)
+  //   - 0   : no match / unknown
+  static inferMinicpmvVersion(model: ModelInfo): number {
+    if (model.id === 'minicpm-v-4_6-instruct') return 46;
+    if (model.id === 'minicpm-v-4')            return 5;
+    return 0;
+  }
+
   static getSelectedModel(context: common.Context): ModelInfo {
     if (LlamaEngine.cachedSelectedId == null) {
       // Best-effort sync read: use whatever's been cached, fall back to default.
@@ -688,6 +731,30 @@ export class LlamaEngine {
             catch (e) {
               hilog.warn(DOMAIN, TAG, 'rename %{public}s -> %{public}s failed: %{public}s',
                          r.oldName, r.newName, `${e}`);
+            }
+          }
+        }
+      }
+
+      // Purge stale mmproj files (older demo builds shipped projector
+      // variants that the current master-mtmd loader cannot consume). After
+      // deletion modelsExist() reports the model as needing a download,
+      // which routes the user into the HF + ModelScope race in
+      // DownloadManager. Mirrors Android's STALE_MMPROJ_NAMES handling.
+      const staleNames = STALE_MMPROJ_NAMES[model.id];
+      if (staleNames) {
+        const perModelDir = `${root}/${model.id}`;
+        if (!fs.accessSync(perModelDir)) continue;
+        for (const name of staleNames) {
+          const p = `${perModelDir}/${name}`;
+          if (fs.accessSync(p)) {
+            try {
+              fs.unlinkSync(p);
+              hilog.info(DOMAIN, TAG, 'Purged stale mmproj %{public}s under %{public}s',
+                         name, model.id);
+            } catch (e) {
+              hilog.warn(DOMAIN, TAG, 'unlink stale %{public}s failed: %{public}s',
+                         name, `${e}`);
             }
           }
         }

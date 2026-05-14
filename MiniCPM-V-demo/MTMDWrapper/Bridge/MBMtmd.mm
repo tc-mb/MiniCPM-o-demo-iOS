@@ -40,9 +40,17 @@ namespace {
 // common_chat_format because the GGUF-embedded chat_template doesn't encode
 // the instruct variant's `enable_thinking=false` prefix
 // (`<think>\n\n</think>\n\n` between assistant header and content), and the
-// non-jinja apply path doesn't know how to splice it in either.  Same string
-// layout we used in the legacy mtmd-ios.cpp.
-constexpr const char * kSystemDefault = "You are a helpful assistant.";
+// non-jinja apply path doesn't know how to splice it in either.
+//
+// We deliberately do NOT inject any default system prompt here.  The
+// reference Python pipeline (`AutoModel.chat(...)` / `apply_chat_template`)
+// does not insert one either when the caller passes only a user message,
+// and any English-only system string ("You are a helpful assistant.") was
+// observed to bias MiniCPM-V into answering Chinese queries in English —
+// which is exactly the bug we hit on iOS after porting the legacy bridge.
+// If a caller really wants a system prompt, it should be requested
+// explicitly via `mb_mtmd_prefill_text(..., role="system")` before the
+// first user turn.
 
 // One-shot helper for llama_token -> std::string using only public llama.h API.
 // Mirrors what common_token_to_piece does, minus the std::vector roundtrip.
@@ -395,16 +403,11 @@ int mb_mtmd_prefill_text(mb_mtmd_context * ctx, const char * text_in, const char
     const std::string text = text_in;
     const std::string role = role_in;
 
-    // MiniCPM-V 4.6 instruct chatml template fragment, identical to what
-    // mtmd-ios.cpp produced.  Kept hand-rolled because the GGUF-embedded
-    // template doesn't encode the enable_thinking=false prefix.
+    // MiniCPM-V 4.6 instruct chatml template fragment.  Hand-rolled because
+    // the GGUF-embedded template does not encode the enable_thinking=false
+    // prefix.  No default system prompt is injected — see top-of-file note.
     std::string formatted;
     if (role == "user") {
-        if (ctx->n_past == 0) {
-            formatted += "<|im_start|>system\n";
-            formatted += kSystemDefault;
-            formatted += "<|im_end|>\n";
-        }
         formatted += "<|im_start|>user\n" + text + "<|im_end|>\n";
         formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";
     } else if (role == "assistant") {
