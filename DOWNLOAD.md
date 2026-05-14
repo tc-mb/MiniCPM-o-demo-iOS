@@ -17,8 +17,8 @@ Pre-built apps for **iOS**, **Android**, and **HarmonyOS** are listed below. All
 | Platform | Latest | Package | Size | Min OS | Recommended RAM |
 | --- | --- | --- | --- | --- | --- |
 | 🍎 **iOS / iPadOS** | [TestFlight (rolling)](https://testflight.apple.com/join/yNKyFZwW) | — | — | iOS / iPadOS 16+ | ≥ 6 GB |
-| 🤖 **Android** | [v1.9](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/android-v1.9) | APK | ~17 MB | Android 8.0 (API 26)+ | ≥ 6 GB |
-| 📱 **HarmonyOS** | [v1.3](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/harmonyos-v1.3) | HAP | ~31 MB | HarmonyOS API 12+ | ≥ 6 GB |
+| 🤖 **Android** | [v2.0](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/android-v2.0) | APK | ~17 MB | Android 8.0 (API 26)+ | ≥ 6 GB |
+| 📱 **HarmonyOS** | [v2.0](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/harmonyos-v2.0) | HAP | ~39 MB | HarmonyOS API 12+ | ≥ 6 GB |
 
 All packages target **64-bit ARM** (`arm64-v8a`).
 
@@ -46,11 +46,11 @@ All packages target **64-bit ARM** (`arm64-v8a`).
 
 ## 🤖 Android — APK
 
-**Latest release:** [**v1.9**](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/android-v1.9) &nbsp;|&nbsp; [Download APK](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/download/android-v1.9/MiniCPM-V-demo-Android-v1.9.apk) &nbsp;|&nbsp; [All Android releases](https://github.com/OpenBMB/MiniCPM-V-Apps/releases?q=tag%3Aandroid)
+**Latest release:** [**v2.0**](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/android-v2.0) &nbsp;|&nbsp; [Download APK](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/download/android-v2.0/MiniCPM-V-demo-Android-v2.0.apk) &nbsp;|&nbsp; [All Android releases](https://github.com/OpenBMB/MiniCPM-V-Apps/releases?q=tag%3Aandroid)
 
 | File | Size | MD5 |
 | --- | --- | --- |
-| `MiniCPM-V-demo-Android-v1.9.apk` | ~17 MB | `b83f105d9ecce57f48f2afca2b5cdb69` |
+| `MiniCPM-V-demo-Android-v2.0.apk` | ~17 MB | `43576791bfe8c24ed6909f33d8e94b63` |
 
 ### Requirements
 
@@ -67,11 +67,11 @@ All packages target **64-bit ARM** (`arm64-v8a`).
 
 ## 📱 HarmonyOS — HAP
 
-**Latest release:** [**v1.3**](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/harmonyos-v1.3) &nbsp;|&nbsp; [Download HAP](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/download/harmonyos-v1.3/MiniCPM-V-demo-HarmonyOS-v1.3.hap) &nbsp;|&nbsp; [All HarmonyOS releases](https://github.com/OpenBMB/MiniCPM-V-Apps/releases?q=tag%3Aharmonyos)
+**Latest release:** [**v2.0**](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/tag/harmonyos-v2.0) &nbsp;|&nbsp; [Download HAP](https://github.com/OpenBMB/MiniCPM-V-Apps/releases/download/harmonyos-v2.0/MiniCPM-V-demo-HarmonyOS-v2.0.hap) &nbsp;|&nbsp; [All HarmonyOS releases](https://github.com/OpenBMB/MiniCPM-V-Apps/releases?q=tag%3Aharmonyos)
 
 | File | Size | MD5 |
 | --- | --- | --- |
-| `MiniCPM-V-demo-HarmonyOS-v1.3.hap` | ~31 MB | `da495528a67d90554f51b08a3ae221b8` |
+| `MiniCPM-V-demo-HarmonyOS-v2.0.hap` | ~39 MB | `9aff126a47b651bce1d33890a289f319` |
 
 ### Requirements
 
@@ -85,7 +85,7 @@ All packages target **64-bit ARM** (`arm64-v8a`).
 2. Connect to a PC with `hdc` installed, then run:
 
    ```bash
-   hdc install MiniCPM-V-demo-HarmonyOS-v1.3.hap
+   hdc install MiniCPM-V-demo-HarmonyOS-v2.0.hap
    ```
 
 3. Open the installed app and tap **Download** in the in-app **Model Manager** to fetch the model files.
