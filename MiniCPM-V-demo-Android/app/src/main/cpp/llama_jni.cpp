@@ -596,11 +596,14 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_processUserPrompt(
 
     std::string formatted_user_prompt;
     if (g_ctx_vision) {
-        // Fallback only when nothing has been prefilled yet (no setSystemPrompt() called).
-        // Mirrors iOS mtmd-ios.cpp prefill_text(role=user) behaviour for first turn.
-        if (current_position == 0) {
-            formatted_user_prompt += "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n";
-        }
+        // No default system prompt: aligned with iOS opt-r1's MBMtmd.mm.
+        // An English-only "You are a helpful assistant." was observed to
+        // bias MiniCPM-V into answering Chinese queries in English. The
+        // reference Python pipeline (`AutoModel.chat(...)` /
+        // `apply_chat_template`) does not inject one either when the
+        // caller passes only a user message. If a system message is
+        // required it must be added through processSystemPrompt()
+        // *before* the first processUserPrompt() call.
         formatted_user_prompt += "<|im_start|>user\n" + content_for_format + "<|im_end|>\n";
         formatted_user_prompt += assistant_turn_prefix();
 
