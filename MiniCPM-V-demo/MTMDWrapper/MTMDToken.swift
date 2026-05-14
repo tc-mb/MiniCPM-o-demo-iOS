@@ -35,10 +35,10 @@ import llama
         self.timestamp = Date()
     }
     
-    /// 从 C 结构体创建
+    /// 从 native bridge 的 C 结构体创建
     /// - Parameter cToken: C 结构体 token
     /// - Returns: Swift Token 对象
-    internal static func from(_ cToken: mtmd_ios_token, index: Int? = nil) -> MTMDToken {
+    internal static func from(_ cToken: mb_mtmd_token, index: Int? = nil) -> MTMDToken {
         let content = cToken.token != nil ? String(cString: cToken.token) : ""
         return MTMDToken(content: content, isEnd: cToken.is_end, index: index)
     }

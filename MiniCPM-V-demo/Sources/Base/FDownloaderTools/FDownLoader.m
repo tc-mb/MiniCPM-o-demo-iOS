@@ -8,9 +8,43 @@
 
 #import "FDownLoader.h"
 #import "FFileTool.h"
+#import "NSString+MD5.h"
 
 #define kCachePath NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject
 #define kTmpPath NSTemporaryDirectory()
+
+// Build a cache-safe filename for a download URL.
+//
+// We MUST NOT use `url.lastPathComponent` as the filename, because some
+// hosting backends (notably ModelScope) put the actual filename in the
+// query string and route every request through a fixed `/repo` path:
+//
+//     https://modelscope.cn/api/v1/models/OpenBMB/MiniCPM-V-4.6-gguf/repo
+//                                                                  ^^^^^^
+//                                  ?Revision=master&FilePath=mmproj-model-f16.gguf
+//
+// `lastPathComponent` for the URL above is "repo", which is the SAME for
+// every ModelScope download in this app — v2.6 / v4 / v4.6 LLMs and
+// mmprojs all collide on `kCachePath/repo` and `kTmpPath/repo`.  When a
+// previous download leaves a partial file behind, the next download sees
+// `_tmpSize > _totalSize` (or worse, equal) in didReceiveResponse and
+// gets stuck in an infinite cancel-and-retry loop.
+//
+// Hashing the full absolute URL gives us a stable, unique-per-URL key
+// while keeping the `<extension>` so debugging via Files.app etc. still
+// shows what the file is.
+static NSString * MBSafeCacheFileName(NSURL *url) {
+    NSString *base = [url.absoluteString md5];
+    if (base.length == 0) {
+        // md5 should never fail; fall back so we at least keep working.
+        base = [NSString stringWithFormat:@"dl-%lu", (unsigned long)url.absoluteString.hash];
+    }
+    NSString *ext = url.pathExtension;
+    if (ext.length == 0) {
+        ext = @"bin";
+    }
+    return [NSString stringWithFormat:@"%@.%@", base, ext];
+}
 
 @interface FDownLoader () <NSURLSessionDataDelegate>
 {
@@ -44,6 +78,31 @@
 -(NSURLSession *)session {
     if (!_session) {
         NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+        // Big-model downloads are 0.5–1.5 GiB and take 30–90 s on a fast
+        // domestic mirror.  We need three different timeouts on three
+        // different scopes — collapsing them into one knob always loses:
+        //
+        //   timeoutIntervalForRequest=60   — socket inactivity timeout: kill
+        //                                    a request only after 60 s of NO
+        //                                    bytes flowing.  Generous enough
+        //                                    that a brief LTE / Wi-Fi stall
+        //                                    in the middle of a 1 GiB
+        //                                    download doesn't blow it up.
+        //   timeoutIntervalForResource=0   — no upper bound on TOTAL download
+        //                                    time.  GB-scale downloads on a
+        //                                    7 day default are technically
+        //                                    fine but we make this explicit
+        //                                    so future tuning of the request
+        //                                    timeout above doesn't silently
+        //                                    re-impose a per-resource cap.
+        //
+        // The "wait for first byte" / response timeout is set per-request via
+        // NSURLRequest.timeoutInterval (see -downLoadWithURL:offset:) — we
+        // keep it tighter (~30 s) so that an HF main-mirror that's blocked
+        // by GFW falls back to the ModelScope backup quickly instead of
+        // making the user stare at a stuck UI for two minutes.
+        config.timeoutIntervalForRequest = 60;
+        config.timeoutIntervalForResource = 0;
         _session = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:[NSOperationQueue mainQueue]];
     }
     return _session;
@@ -90,7 +149,13 @@
     [self resumeCurrentTask];
     
     //1.文件的存放
-    NSString *fileName = url.lastPathComponent;
+    //
+    // Use a URL-hashed filename, NOT url.lastPathComponent — see the
+    // MBSafeCacheFileName comment at the top of this file for why.  Two
+    // ModelScope downloads with different ?FilePath= queries used to
+    // collide on `kCachePath/repo` + `kTmpPath/repo` and trigger an
+    // infinite cancel-and-retry loop in didReceiveResponse.
+    NSString *fileName = MBSafeCacheFileName(url);
     /// 下载完成的路径
     self.downLoaderPath = [kCachePath stringByAppendingPathComponent:fileName];
     /// 临时文件路径
@@ -253,8 +318,25 @@ didReceiveResponse:(NSHTTPURLResponse *)response
  @param offset 开始字节
  */
 - (void)downLoadWithURL:(NSURL *)url offset:(long long)offset {
-    
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
+
+    // NSURLRequest.timeoutInterval here is the "wait for server response"
+    // timeout — i.e. how long we wait for didReceiveResponse to fire.  We
+    // KEEP this short (30 s) for two reasons:
+    //
+    //   1) An HF main-mirror that's GFW-blocked typically fails the TCP /
+    //      TLS handshake within ~10–15 s; 30 s is a generous upper bound so
+    //      that downloadV2's failed-callback fallback to ModelScope kicks
+    //      in promptly instead of leaving the user staring at a stuck UI.
+    //
+    //   2) Once didReceiveResponse fires, the SOCKET-INACTIVITY timeout
+    //      (session.timeoutIntervalForRequest = 60 s, see -session) takes
+    //      over.  That one is what lets a 1 GiB download keep flowing
+    //      across mobile-network stalls.
+    //
+    // Earlier this was 10 (too short — even a healthy server can't always
+    // respond in 10 s) and then 120 (too long — every demo first-launch
+    // sat for 2 minutes on the doomed HF attempt before falling back).
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:30];
     [request setValue:[NSString stringWithFormat:@"bytes=%lld-",offset] forHTTPHeaderField:@"Range"];
 
     // session 分配的task,默认挂起状态

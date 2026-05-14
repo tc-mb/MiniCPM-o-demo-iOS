@@ -1,4 +1,4 @@
 [submodule "llama.cpp"]
 	path = llama.cpp
 	url = https://github.com/tc-mb/llama.cpp.git
-	branch = Support-iOS-Demo
+	branch = MiniCPM-V

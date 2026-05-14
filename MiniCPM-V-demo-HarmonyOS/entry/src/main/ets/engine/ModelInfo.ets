@@ -1,20 +1,16 @@
-// Direct port of MiniCPM-V-demo-Android/.../ModelInfo.kt.
+// Mirror of Android ModelInfo.kt (opt-r1): HF + ModelScope are both
+// registered for every model and the downloader runs them in a race.
 //
-// Two download strategies, in priority order:
+// `directGgufUrl` / `directMmprojUrl` remain as an optional escape hatch for
+// temporary mirrors during a TestFlight period; for the current release
+// lineup they stay null and the V-4.6 release is fetched from openbmb/* on
+// HF and OpenBMB/* on ModelScope, just like the iOS opt-r1 demo.
 //
-//  1. Direct URL (directGgufUrl / directMmprojUrl) — used as-is. This is how
-//     the iOS demo handles MiniCPM-V-4.6 today: GGUFs are not yet on
-//     HuggingFace, so a temporary OBS link is used during the TestFlight
-//     period. Whenever both direct URLs are non-null, HF/MS are skipped
-//     entirely.
-//
-//  2. HuggingFace + ModelScope fallback (hfRepo / msRepo) — the standard path
-//     for already-published models such as MiniCPM-V-4. The downloader probes
-//     HF first and falls back to ModelScope on failure.
-//
-// When ggufMd5 / mmprojMd5 are provided, the downloader verifies the
-// downloaded file's MD5 and deletes + raises on mismatch. Mirrors the iOS
-// demo's MBV4ModelDownloadManager / MBV46ModelDownloadManager behaviour.
+// `ggufRemoteName` / `mmprojRemoteName` decouple the on-disk filename from
+// the path segment served by HF/MS. For instance MiniCPM-V-4.6 keeps mmproj
+// locally as `mmproj-model-merger-f16.gguf` (to avoid colliding with stale
+// pre-release files in the per-model directory) but the upstream object is
+// `mmproj-model-f16.gguf`.
 
 export class ModelInfo {
   readonly id: string;
@@ -26,6 +22,8 @@ export class ModelInfo {
   readonly msRepo: string | null;
   readonly hfBranch: string;
   readonly msBranch: string;
+  readonly ggufRemoteName: string | null;
+  readonly mmprojRemoteName: string | null;
   readonly directGgufUrl: string | null;
   readonly directMmprojUrl: string | null;
   readonly ggufMd5: string | null;
@@ -41,6 +39,8 @@ export class ModelInfo {
     msRepo: string | null = null,
     hfBranch: string = 'main',
     msBranch: string = 'master',
+    ggufRemoteName: string | null = null,
+    mmprojRemoteName: string | null = null,
     directGgufUrl: string | null = null,
     directMmprojUrl: string | null = null,
     ggufMd5: string | null = null,
@@ -55,22 +55,32 @@ export class ModelInfo {
     this.msRepo = msRepo;
     this.hfBranch = hfBranch;
     this.msBranch = msBranch;
+    this.ggufRemoteName = ggufRemoteName;
+    this.mmprojRemoteName = mmprojRemoteName;
     this.directGgufUrl = directGgufUrl;
     this.directMmprojUrl = directMmprojUrl;
     this.ggufMd5 = ggufMd5;
     this.mmprojMd5 = mmprojMd5;
   }
 
+  /** Path segment to request on HF/MS for the gguf, falling back to local name. */
+  ggufRemotePath(): string {
+    return this.ggufRemoteName ?? this.ggufFileName;
+  }
+
+  /** Path segment to request on HF/MS for the mmproj, falling back to local name. */
+  mmprojRemotePath(): string {
+    return this.mmprojRemoteName ?? this.mmprojFileName;
+  }
+
   hasDirectUrls(): boolean {
     return !!this.directGgufUrl && !!this.directMmprojUrl;
   }
-}
 
-// Direct URL base for the V-4.6 release GGUFs hosted on Huawei Cloud OBS.
-// MUST match MiniCPMModelConst.swift on iOS and ModelInfo.kt on Android so
-// all three demos pull the exact same bytes.
-const V46_OBS_BASE =
-  'https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/minicpmv46-instruct';
+  hasHfMsSources(): boolean {
+    return !!this.hfRepo && !!this.msRepo;
+  }
+}
 
 export const AVAILABLE_MODELS: ModelInfo[] = [
   new ModelInfo(
@@ -82,32 +92,36 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     'openbmb/MiniCPM-V-4-gguf',
     'OpenBMB/MiniCPM-V-4-gguf'
     // No MD5 here on purpose: HF / ModelScope serve via git-LFS which already
-    // provides hash-based integrity checks. The iOS demo's MD5 (8fc4cc88...)
-    // refers to ggml-model-Q4_0.gguf, a different quant from the Q4_K_M used
-    // here.
+    // provides hash-based integrity checks.
   ),
-  // MiniCPM-V-4.6 (release / instruct): direct OBS link, identical to iOS /
-  // Android. File names follow the upstream HF naming for the released
-  // GGUFs. ID kept as "minicpm-v-4_6-instruct" so the per-model subdirectory
-  // layout is unchanged from previous demo builds; LEGACY_FILE_RENAMES handles
-  // the old filenames.
+  // MiniCPM-V-4.6 (release / instruct): HF (primary) + ModelScope (backup)
+  // racing, aligned with iOS opt-r1's MBV46ModelDownloadManager. Upstream
+  // master mtmd accepts the OpenBMB-published `minicpmv4_6` projector type
+  // natively, so we no longer need the demo-private "merger" re-conversion;
+  // both the local and the remote file names are the upstream-canonical
+  // `mmproj-model-f16.gguf`. The LEGACY_FILE_RENAMES below maps the
+  // historical demo names (including v1.3's `*-merger-*`) onto this canonical
+  // name so an upgrading user's bytes are either accepted (MD5 OK) or cleanly
+  // re-downloaded (MD5 mismatch).
   new ModelInfo(
     'minicpm-v-4_6-instruct',
     'MiniCPM-V-4.6 (Q4_K_M)',
     '新一代多模态模型，支持图文理解 (1.2B)',
     'MiniCPM-V-4_6-Q4_K_M.gguf',
     'mmproj-model-f16.gguf',
-    null,
-    null,
+    'openbmb/MiniCPM-V-4.6-gguf',
+    'OpenBMB/MiniCPM-V-4.6-gguf',
     'main',
     'master',
-    `${V46_OBS_BASE}/MiniCPM-V-4_6-Q4_K_M.gguf`,
-    `${V46_OBS_BASE}/mmproj-model-f16.gguf`,
+    null,
+    null,
+    null,
+    null,
     'fd778481dd56b6036dd8f9cf7c1519cf',
-    // mmproj is converted on the Support-iOS-Demo branch (writes
-    // clip.projector_type=merger, which the demo's clip.cpp accepts);
-    // the upstream-branch conversion would write minicpmv4_6 and fail to load.
-    'aad0d36e43a35412d72ed27a1248c7ef'
+    // OpenBMB original (projector_type=minicpmv4_6), as served by both
+    // HuggingFace and ModelScope. Replaces the previous OBS-only
+    // `aad0d36e..` merger-converted variant.
+    '54aea6e04d752f47309a48f12795a1a3'
   ),
 ];
 
@@ -127,7 +141,31 @@ export const LEGACY_FILE_RENAMES: Record<string, LegacyRename[]> = {
   'minicpm-v-4_6-instruct': [
     { oldName: 'MiniCPM-V4.6-instruct-Q4_K_M.gguf', newName: 'MiniCPM-V-4_6-Q4_K_M.gguf' },
     { oldName: 'minicpmv46-llm-Q4_K_M.gguf',         newName: 'MiniCPM-V-4_6-Q4_K_M.gguf' },
-    { oldName: 'mmproj-v46-model-f16.gguf',          newName: 'mmproj-model-f16.gguf'    },
+  ],
+};
+
+// Files that may exist on disk from earlier demo builds but whose bytes are
+// NOT compatible with the current master-mtmd loader (different projector
+// type / a sealed pre-release revision / OBS-converted "merger" variant).
+// Renaming them would silently feed bad bytes into native and break with a
+// load-time error 2; we therefore delete them outright on app start so
+// modelsExist() reports "missing" and the user is funnelled into the new
+// HF + ModelScope race download. Mirrors Android's STALE_MMPROJ_NAMES.
+export const STALE_MMPROJ_NAMES: Record<string, string[]> = {
+  'minicpm-v-4_6-instruct': [
+    // v1.0-v1.1 pre-release: clip.projector_type bound to the demo's
+    // private clip.cpp, not loadable by master mtmd.
+    'mmproj-v46-model-f16.gguf',
+    // v1.3 demo: bytes converted on the Support-iOS-Demo branch (projector
+    // type `merger`). Master mtmd accepts upstream OpenBMB's
+    // `minicpmv4_6` projector natively, but does NOT recognise the
+    // demo-private `merger` variant; the file would also fail the new
+    // MD5 verification anyway.
+    'mmproj-model-merger-f16.gguf',
+    // Intentionally NOT listing 'mmproj-model-f16.gguf' here: that IS the
+    // canonical name from v1.4 / v2.0 onwards. If a user has a stale copy
+    // of an earlier OBS revision sitting under that name, the MD5 check
+    // inside downloadFile will delete it and re-download cleanly.
   ],
 };
 

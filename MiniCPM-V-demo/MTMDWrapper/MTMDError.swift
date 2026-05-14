@@ -46,7 +46,7 @@ import Foundation
     /// 内存不足
     case outOfMemory
 
-    /// 调用超时（典型场景：mtmd_ios_prefill_image 内部 ANE/CoreML 阻塞过久）
+    /// 调用超时（典型场景：mb_mtmd_prefill_image 在大切片图上内部 mtmd_helper_eval_chunks 时间过长）
     case timeout(String)
 
     /// 未知错误

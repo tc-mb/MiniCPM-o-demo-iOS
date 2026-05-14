@@ -40,3 +40,16 @@ class MBConstants {
     var kTabBarHeight: CGFloat { isPhoneXSeries ? 83.0 : 49.0 }
     var kBottomSafeHeight: CGFloat { isPhoneXSeries ? 34 : 0 }
 }
+
+/// Cross-VC notifications.  Keeping the names here so we don't grep for
+/// stringly-typed identifiers across the project later.
+extension Notification.Name {
+    /// Posted by V2.6 / V4 / V4.6 model-detail VCs after the user taps
+    /// "使用该模型" and the UserDefault `current_selected_model` has been
+    /// updated.  MBHomeViewController listens for this and forces a
+    /// reset + reload of the MTMD wrapper so the next image / chat turn
+    /// runs on the freshly-selected model — without this, the home VC's
+    /// one-shot `didStartInitialModelLoad` flag swallows the change and
+    /// the user sees `[UI]addImage skip: model not loaded yet`.
+    static let mbModelSelectionChanged = Notification.Name("com.mb.minicpmv.modelSelectionChanged")
+}

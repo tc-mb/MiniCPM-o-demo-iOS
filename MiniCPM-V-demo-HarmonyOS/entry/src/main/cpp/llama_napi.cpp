@@ -203,13 +203,16 @@ napi_value LoadMmproj(napi_env env, napi_callback_info info) {
     mtmd_context_params mparams = mtmd_context_params_default();
     mparams.use_gpu             = false;
     mparams.print_timings       = false;
-    // Slice cap is now driven by the chat page's slider and persisted in
-    // app preferences (see LlamaEngine.ets).  1 = no slicing, 9 =
-    // MiniCPM-V upper bound (most detail, slowest).  -1 reverts to the
-    // model default.
-    g_image_max_slice_nums       = image_max_slice_nums;
-    mparams.image_max_slice_nums = image_max_slice_nums;
-    mparams.n_threads           = N_THREADS;
+    // Upstream master mtmd replaced the runtime slice-count knob with a
+    // token-budget knob (`image_max_tokens`) decided at mtmd_context init
+    // time.  The chat-page slider is therefore advisory only on this
+    // build; we still remember its value in g_image_max_slice_nums for
+    // logging but pass -1 (= model default) to upstream mtmd.  The
+    // SetImageMaxSliceNums NAPI hook stays so existing ArkTS callers
+    // compile; see iOS opt-r1's MBMtmd for the same downgrade.
+    g_image_max_slice_nums     = image_max_slice_nums;
+    mparams.image_max_tokens   = -1;
+    mparams.n_threads          = N_THREADS;
 
     g_ctx_vision = mtmd_init_from_file(mmproj_path.c_str(), g_model, mparams);
     if (!g_ctx_vision) {
@@ -217,28 +220,52 @@ napi_value LoadMmproj(napi_env env, napi_callback_info info) {
         return napi_make_int(env, 2);
     }
 
-    g_minicpmv_version = mtmd_get_minicpmv_version(g_ctx_vision);
-    LOGi("LoadMmproj: mmproj loaded! Vision: %{public}s, minicpmv_version: %{public}d, "
-         "image_max_slice_nums: %{public}d",
+    // mtmd_get_minicpmv_version() was a fork-only API removed by upstream
+    // master mtmd.  The ArkTS layer now infers the MiniCPM-V family
+    // version from the selected ModelInfo id and pushes it down via
+    // setMinicpmvVersion() right after this call returns.  Symmetric with
+    // Android (setMinicpmvVersionNative) and iOS opt-r1
+    // (MBHomeViewController+LoadModel).
+
+    LOGi("LoadMmproj: mmproj loaded! Vision: %{public}s, slice-cap-hint: %{public}d "
+         "(advisory only on master mtmd; effective slicing follows model default)",
          mtmd_support_vision(g_ctx_vision) ? "yes" : "no",
-         g_minicpmv_version,
          g_image_max_slice_nums);
     return napi_make_int(env, 0);
 }
 
-// Returns the MiniCPM-V family version of the currently loaded mmproj
-// (0 if no mmproj is loaded).  Used by the ArkTS layer to decide
-// whether the video-understanding path is available (only V-4.6:
-// 46 / 460 / 461).  Mirrors getMinicpmvVersionNative on Android and
-// mtmd_get_minicpmv_version on iOS.
+// Returns the MiniCPM-V family version most recently set by the ArkTS
+// layer (0 = unset / no vision).  Backs the video-understanding gate in
+// LlamaEngine.ets.  Replaces the legacy mtmd_get_minicpmv_version
+// introspection that the fork mtmd-ios.h used to expose but upstream
+// master mtmd removed.
 napi_value GetMinicpmvVersion(napi_env env, napi_callback_info /*info*/) {
     return napi_make_int(env, g_minicpmv_version);
 }
 
-// Live update of the per-image slice cap (no mmproj reload).  Slicing
-// decision happens at encode time so the next image picks up the new
-// value automatically.  Mirrors Java_..._setImageMaxSliceNumsNative on
-// Android.
+// ArkTS-driven setter for the mmproj's MiniCPM-V family version.
+// Affects Prepare()'s n_ctx selection and the assistant-turn prefix
+// logic; should be called immediately after a successful loadMmproj.
+// Mirrors setMinicpmvVersionNative on Android.
+napi_value SetMinicpmvVersion(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value argv[1];
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    int v = 0;
+    if (argc >= 1) {
+        napi_get_value_int32(env, argv[0], &v);
+    }
+    g_minicpmv_version = v;
+    LOGi("SetMinicpmvVersion: minicpmv_version set to %{public}d", g_minicpmv_version);
+    return make_undefined(env);
+}
+
+// Per-image slice cap.  No-op on upstream master mtmd: the
+// `mtmd_set_image_max_slice_nums` runtime API was removed, and slice
+// control now happens at mtmd_context creation time via
+// `image_max_tokens`.  Kept so existing ArkTS call sites
+// (LlamaEngine.setImageMaxSliceNums / prefillVideoFrames) continue to
+// compile; the value is informational only.
 napi_value SetImageMaxSliceNums(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
@@ -249,12 +276,8 @@ napi_value SetImageMaxSliceNums(napi_env env, napi_callback_info info) {
         napi_get_value_int32(env, argv[0], &n);
     }
     g_image_max_slice_nums = n;
-    if (g_ctx_vision) {
-        mtmd_set_image_max_slice_nums(g_ctx_vision, n);
-        LOGi("SetImageMaxSliceNums: image_max_slice_nums set to %{public}d", n);
-    } else {
-        LOGi("SetImageMaxSliceNums: mmproj not loaded; deferred slice cap = %{public}d", n);
-    }
+    LOGi("SetImageMaxSliceNums: image_max_slice_nums hint set to %{public}d "
+         "(advisory only on master mtmd)", n);
     return make_undefined(env);
 }
 

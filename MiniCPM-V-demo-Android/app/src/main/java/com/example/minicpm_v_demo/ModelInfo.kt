@@ -3,21 +3,28 @@ package com.example.minicpm_v_demo
 /**
  * Metadata for a downloadable MiniCPM-V variant.
  *
- * Two download strategies are supported, in priority order:
+ * Source-of-truth for download URLs: HuggingFace ([hfRepo]) and ModelScope
+ * ([msRepo]) are both registered for every model, and `LlamaEngine`'s
+ * downloader runs them in a **race**: both GETs are launched in parallel and
+ * the first one to deliver HTTP headers wins; the loser's connection is
+ * closed immediately. Mirrors iOS opt-r1's `MBModelDownloadHelperV2.downloadV2`
+ * so all three demos consume the same upstream artifacts via the same
+ * topology (no OBS direct link).
  *
- * 1. **Direct URL** ([directGgufUrl] / [directMmprojUrl]) — used as-is. This is
- *    how the iOS demo handles MiniCPM-V-4.6 today: the GGUFs are not yet on
- *    HuggingFace, so a temporary OSS link (Huawei Cloud OBS) is used during
- *    the TestFlight period. Whenever both direct URLs are non-null, HF/MS are
- *    skipped entirely.
+ * The previously used [directGgufUrl] / [directMmprojUrl] knobs are retained
+ * as an optional escape hatch — if a model ever needs a temporary mirror
+ * during a TestFlight period they can be set and the racer treats them as a
+ * third source — but for the current release lineup they stay null.
  *
- * 2. **HuggingFace + ModelScope fallback** ([hfRepo] / [msRepo]) — the
- *    standard path for already-published models such as MiniCPM-V-4.0.
- *    The downloader probes HF first and falls back to ModelScope on failure.
+ * [ggufRemoteName] and [mmprojRemoteName] decouple the on-disk filename from
+ * the path segment on HF/MS. MiniCPM-V-4.6 stores mmproj as
+ * `mmproj-model-merger-f16.gguf` locally (to avoid colliding with stale
+ * pre-release files left in the per-model directory) but the upstream HF/MS
+ * object is `mmproj-model-f16.gguf`.
  *
  * When [ggufMd5] / [mmprojMd5] are provided, the downloader verifies the
  * downloaded file's MD5 and deletes + raises on mismatch. Mirrors iOS demo
- * MBV4ModelDownloadManager / MBV46ModelDownloadManager behaviour.
+ * `MBV4ModelDownloadManager` / `MBV46ModelDownloadManager`.
  */
 data class ModelInfo(
     val id: String,
@@ -29,20 +36,30 @@ data class ModelInfo(
     val msRepo: String? = null,
     val hfBranch: String = "main",
     val msBranch: String = "master",
+    val ggufRemoteName: String? = null,
+    val mmprojRemoteName: String? = null,
     val directGgufUrl: String? = null,
     val directMmprojUrl: String? = null,
     val ggufMd5: String? = null,
     val mmprojMd5: String? = null
 ) {
+    /** Path segment to request on HF/MS for the gguf, falling back to local name. */
+    val ggufRemotePath: String
+        get() = ggufRemoteName ?: ggufFileName
+
+    /** Path segment to request on HF/MS for the mmproj, falling back to local name. */
+    val mmprojRemotePath: String
+        get() = mmprojRemoteName ?: mmprojFileName
+
+    /** Whether the model registers a direct (non-HF/MS) mirror URL. */
     val hasDirectUrls: Boolean
         get() = !directGgufUrl.isNullOrBlank() && !directMmprojUrl.isNullOrBlank()
 
-    companion object {
-        // Mirrors iOS demo MiniCPMModelConst.swift. Keep the lists in sync so
-        // the Android download config doesn't drift from the iOS one.
-        private const val V46_OBS_BASE =
-            "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/minicpmv46-instruct"
+    /** Whether the model registers HF + MS repos for racing. */
+    val hasHfMsSources: Boolean
+        get() = !hfRepo.isNullOrBlank() && !msRepo.isNullOrBlank()
 
+    companion object {
         val AVAILABLE_MODELS = listOf(
             ModelInfo(
                 id = "minicpm-v-4",
@@ -53,52 +70,29 @@ data class ModelInfo(
                 hfRepo = "openbmb/MiniCPM-V-4-gguf",
                 msRepo = "OpenBMB/MiniCPM-V-4-gguf"
                 // No MD5 here on purpose: HF / ModelScope serve via git-LFS
-                // which already provides hash-based integrity checks. The
-                // iOS demo's MD5 (8fc4cc88...) refers to ggml-model-Q4_0.gguf,
-                // which is a different quant from the Q4_K_M we use here.
+                // which already provides hash-based integrity checks.
             ),
-            // MiniCPM-V-4.6 (release / instruct): direct OBS link, identical
-            // to the iOS demo. File names follow the upstream HF naming for
-            // the released GGUFs. ID kept as "minicpm-v-4_6-instruct" so the
-            // per-model subdirectory layout is unchanged from previous demo
-            // builds; LEGACY_FILE_RENAMES handles the old filenames.
+            // MiniCPM-V-4.6: HF (primary) + ModelScope (backup) racing, aligned
+            // with iOS opt-r1's MBV46ModelDownloadManager. Both the local and
+            // the remote file names are now the upstream-canonical
+            // `mmproj-model-f16.gguf`: upstream master mtmd accepts the
+            // OpenBMB-published `minicpmv4_6` projector type natively, so the
+            // previous demo-private "merger" re-conversion is no longer
+            // required. STALE_MMPROJ_NAMES handles cleanup of the legacy
+            // `*-merger-*` file from earlier demo builds.
             ModelInfo(
                 id = "minicpm-v-4_6-instruct",
                 displayName = "MiniCPM-V-4.6 (Q4_K_M)",
                 description = "新一代多模态模型，支持图文理解 (1.2B)",
                 ggufFileName = "MiniCPM-V-4_6-Q4_K_M.gguf",
-                // The local filename is intentionally different from the
-                // remote object on OBS. OBS still serves
-                // `mmproj-model-f16.gguf` (see [directMmprojUrl]); we save
-                // it locally as `mmproj-model-merger-f16.gguf` so that any
-                // prior demo install which already cached a stale copy of
-                // the file under the old (`mmproj-v46-model-f16.gguf`) or
-                // the current upstream (`mmproj-model-f16.gguf`) names is
-                // *not* picked up by `modelsExist()` and silently fed to
-                // the native loader. Combined with the explicit purge in
-                // [migrateLegacyLayoutIfNeeded] this guarantees a clean
-                // re-download whenever the OBS mmproj is rotated.
-                //
-                // History of OBS mmproj revisions for this slot:
-                //   - Pre-release: `mmproj-v46-model-f16.gguf`, projector
-                //     type baked in matched the demo's clip.cpp.
-                //   - Sealed (early 4.6 release): same filename but
-                //     projector type rewritten to `minicpmv4_6`, which the
-                //     demo's clip.cpp does *not* understand.
-                //   - Current: `mmproj-model-f16.gguf`, re-converted on
-                //     the demo's Support-iOS-Demo branch -> projector type
-                //     back to `merger`, loadable.
-                mmprojFileName = "mmproj-model-merger-f16.gguf",
-                directGgufUrl = "$V46_OBS_BASE/MiniCPM-V-4_6-Q4_K_M.gguf",
-                directMmprojUrl = "$V46_OBS_BASE/mmproj-model-f16.gguf",
-                // MD5 values must match the OBS objects exactly; keep this
-                // constant in sync with MiniCPMModelConst.swift on iOS so
-                // both clients fetch the exact same bytes.
+                mmprojFileName = "mmproj-model-f16.gguf",
+                hfRepo = "openbmb/MiniCPM-V-4.6-gguf",
+                msRepo = "OpenBMB/MiniCPM-V-4.6-gguf",
                 ggufMd5 = "fd778481dd56b6036dd8f9cf7c1519cf",
-                // mmproj is converted on the Support-iOS-Demo branch (writes
-                // clip.projector_type=merger, which the demo's clip.cpp accepts);
-                // the upstream-branch conversion would write minicpmv4_6 and fail to load.
-                mmprojMd5 = "aad0d36e43a35412d72ed27a1248c7ef"
+                // OpenBMB original (projector_type=minicpmv4_6), as served by
+                // both HuggingFace and ModelScope. Replaces the previous
+                // OBS-only `aad0d36e..` merger-converted variant.
+                mmprojMd5 = "54aea6e04d752f47309a48f12795a1a3"
             )
         )
 

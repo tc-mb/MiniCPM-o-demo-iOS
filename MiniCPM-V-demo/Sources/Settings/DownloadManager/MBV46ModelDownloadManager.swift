@@ -102,7 +102,7 @@ class MBV46ModelDownloadManager: NSObject {
             modelName: MiniCPMModelConst.modelv46_FileName,
             modelUrl: MiniCPMModelConst.modelv46_Q4_K_M_URLString,
             filename: MiniCPMModelConst.modelv46_FileName,
-            backupModelUrl: nil
+            backupModelUrl: MiniCPMModelConst.modelv46_Q4_K_M_BackUpURLString
         )
         
         mmprojv46_Manager = MBModelDownloadHelperV2(
@@ -110,7 +110,7 @@ class MBV46ModelDownloadManager: NSObject {
             modelName: MiniCPMModelConst.mmprojv46_FileName,
             modelUrl: MiniCPMModelConst.mmprojv46_URLString,
             filename: MiniCPMModelConst.mmprojv46_FileName,
-            backupModelUrl: nil
+            backupModelUrl: MiniCPMModelConst.mmprojv46_BackUpURLString
         )
         
         mlmodelcv46_Manager = MBModelDownloadHelperV2(
@@ -120,9 +120,33 @@ class MBV46ModelDownloadManager: NSObject {
             filename: MiniCPMModelConst.mlmodelcv46_ZipFileName,
             backupModelUrl: nil
         )
-        
+
+        // master 适配前的老 mmproj（OBS demo-fork merger 版本）启动时直接清掉，
+        // 避免 modelsExist() fast-path 拿残留文件喂给 native 加载导致闪退。
+        purgeStaleArtifactsIfPresent()
+
         reconcileStatusFromDisk()
         restoreDownloadProgress()
+    }
+
+    /// 清理已知不兼容的历史构件（目前仅 V4.6 老 mmproj）。
+    ///
+    /// 单 demo 多版本演进里，"老用户机器上残留旧文件 + modelsExist() 只看存在不看 MD5"
+    /// 这种情况几乎注定踩 — 把删除责任下沉到 setupModels()，跟 reconcileStatusFromDisk()
+    /// 放在同一个生命周期点，比让用户去设置页删干净更稳。
+    private func purgeStaleArtifactsIfPresent() {
+        let docs = getDocumentsDirectory()
+        let fm = FileManager.default
+        for stale in MiniCPMModelConst.staleMMProjv46_FileNames {
+            let url = docs.appendingPathComponent(stale)
+            guard fm.fileExists(atPath: url.path) else { continue }
+            do {
+                try fm.removeItem(at: url)
+                debugLog("-->> 已清理老 V4.6 mmproj 残留: \(stale)")
+            } catch {
+                debugLog("-->> 老 V4.6 mmproj 残留清理失败: \(stale), error=\(error.localizedDescription)")
+            }
+        }
     }
 
     /// 用磁盘上的文件存在情况强制 reconcile helper.status，**完全按磁盘真相重写**。

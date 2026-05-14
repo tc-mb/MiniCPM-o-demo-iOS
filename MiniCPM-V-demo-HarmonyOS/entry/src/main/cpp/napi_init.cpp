@@ -12,6 +12,7 @@ extern napi_value Init(napi_env env, napi_callback_info info);
 extern napi_value Load(napi_env env, napi_callback_info info);
 extern napi_value LoadMmproj(napi_env env, napi_callback_info info);
 extern napi_value GetMinicpmvVersion(napi_env env, napi_callback_info info);
+extern napi_value SetMinicpmvVersion(napi_env env, napi_callback_info info);
 extern napi_value SetImageMaxSliceNums(napi_env env, napi_callback_info info);
 extern napi_value Prepare(napi_env env, napi_callback_info info);
 extern napi_value SystemInfo(napi_env env, napi_callback_info info);
@@ -30,6 +31,7 @@ static napi_value RegisterModule(napi_env env, napi_value exports) {
         { "load",                nullptr, Load,                nullptr, nullptr, nullptr, napi_default, nullptr },
         { "loadMmproj",          nullptr, LoadMmproj,          nullptr, nullptr, nullptr, napi_default, nullptr },
         { "getMinicpmvVersion",  nullptr, GetMinicpmvVersion,  nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setMinicpmvVersion",  nullptr, SetMinicpmvVersion,  nullptr, nullptr, nullptr, napi_default, nullptr },
         { "setImageMaxSliceNums",nullptr, SetImageMaxSliceNums,nullptr, nullptr, nullptr, napi_default, nullptr },
         { "prepare",             nullptr, Prepare,             nullptr, nullptr, nullptr, napi_default, nullptr },
         { "systemInfo",          nullptr, SystemInfo,          nullptr, nullptr, nullptr, napi_default, nullptr },

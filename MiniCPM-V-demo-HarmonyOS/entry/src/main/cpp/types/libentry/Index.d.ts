@@ -18,8 +18,16 @@ export const loadMmproj: (mmprojPath: string, imageMaxSliceNums: number) => numb
 // ArkTS layer to gate the video-understanding feature on V-4.6 only,
 // matching the iOS demo.
 export const getMinicpmvVersion: () => number;
-// Live override of the slice cap.  No mmproj reload required - takes
-// effect from the next image encode onwards.
+// Pushes the MiniCPM-V family version (5 / 46 / 100045 / ...) into native
+// state so Prepare()'s n_ctx selection and the assistant-turn prefix logic
+// see the right value.  Required since upstream master mtmd dropped
+// mtmd_get_minicpmv_version().  Call right after a successful loadMmproj.
+export const setMinicpmvVersion: (version: number) => void;
+// Per-image slice cap.  No-op on upstream master mtmd (the runtime
+// override API was removed); kept so existing call sites compile.
+// Slice control now happens at mtmd_context creation time and the chat
+// page's slider has effectively become next-launch-only until the upper
+// layer is reworked to re-init the mtmd context on change.
 export const setImageMaxSliceNums: (n: number) => void;
 export const prepare: () => number;
 export const systemInfo: () => string;

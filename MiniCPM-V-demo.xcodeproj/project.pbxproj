@@ -49,6 +49,7 @@
 		FA8511382E20DCC000748053 /* MBSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85112F2E20DCC000748053 /* MBSettingsModel.swift */; };
 		FA85113B2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */; };
 		FA9AB0022F03000200E00002 /* MiniCPMV46CoreMLBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */; };
+		458A103C0E3240538FD649B1 /* MBDeviceMemoryProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */; };
 		FA9AB0112F03000200E00011 /* MarkdownEscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0102F03000200E00010 /* MarkdownEscape.swift */; };
 		FA9AB0212F03000200E00021 /* ImageSliceSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0202F03000200E00020 /* ImageSliceSetting.swift */; };
 		FA9AB0312F03000200E00031 /* MBImageSliceSettingAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0302F03000200E00030 /* MBImageSliceSettingAlert.swift */; };
@@ -74,6 +75,7 @@
 		FAD6428C2E2A223800088528 /* MTMDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642842E2A223800088528 /* MTMDError.swift */; };
 		FAD6428D2E2A223800088528 /* MTMDWrapperExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642882E2A223800088528 /* MTMDWrapperExample.swift */; };
 		FAD6428E2E2A223800088528 /* MTMDWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642872E2A223800088528 /* MTMDWrapper.swift */; };
+		DDE74EEEC8CC4246A56C7F07 /* MBMtmd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */; };
 		FAD6428F2E2A223800088528 /* MTMDToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642862E2A223800088528 /* MTMDToken.swift */; };
 		FAD642902E2A223800088528 /* MTMDParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642852E2A223800088528 /* MTMDParams.swift */; };
 		FAD642B12E2A374900088528 /* MBModelDownloadHelperV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642B02E2A374900088528 /* MBModelDownloadHelperV2.swift */; };
@@ -168,6 +170,7 @@
 		FA8511322E20DCC000748053 /* MBSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsViewController.swift; sourceTree = "<group>"; };
 		FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBRealtimeUnderstandingViewController.swift; sourceTree = "<group>"; };
 		FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCPMV46CoreMLBootstrap.swift; sourceTree = "<group>"; };
+		DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBDeviceMemoryProbe.swift; sourceTree = "<group>"; };
 		FA9AB0102F03000200E00010 /* MarkdownEscape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEscape.swift; sourceTree = "<group>"; };
 		FA9AB0202F03000200E00020 /* ImageSliceSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSliceSetting.swift; sourceTree = "<group>"; };
 		FA9AB0302F03000200E00030 /* MBImageSliceSettingAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBImageSliceSettingAlert.swift; sourceTree = "<group>"; };
@@ -196,6 +199,8 @@
 		FAD642852E2A223800088528 /* MTMDParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDParams.swift; sourceTree = "<group>"; };
 		FAD642862E2A223800088528 /* MTMDToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDToken.swift; sourceTree = "<group>"; };
 		FAD642872E2A223800088528 /* MTMDWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDWrapper.swift; sourceTree = "<group>"; };
+		41EAA1C52A18439AB99C85E0 /* MBMtmd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBMtmd.h; sourceTree = "<group>"; };
+		383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MBMtmd.mm; sourceTree = "<group>"; };
 		FAD642882E2A223800088528 /* MTMDWrapperExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDWrapperExample.swift; sourceTree = "<group>"; };
 		FAD642B02E2A374900088528 /* MBModelDownloadHelperV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBModelDownloadHelperV2.swift; sourceTree = "<group>"; };
 		FADE92C92C3D1C36009FD00D /* MBHomeViewController+NavBarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+NavBarEvent.swift"; sourceTree = "<group>"; };
@@ -586,8 +591,18 @@
 				FAD642862E2A223800088528 /* MTMDToken.swift */,
 				FAD642872E2A223800088528 /* MTMDWrapper.swift */,
 				FAD642882E2A223800088528 /* MTMDWrapperExample.swift */,
+				91A8210CC1B34725A3B053C0 /* Bridge */,
 			);
 			path = MTMDWrapper;
+			sourceTree = "<group>";
+		};
+		91A8210CC1B34725A3B053C0 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				41EAA1C52A18439AB99C85E0 /* MBMtmd.h */,
+				383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */,
+			);
+			path = Bridge;
 			sourceTree = "<group>";
 		};
 		FAE69AA72C181F3100E6D095 /* Utils */ = {
@@ -599,6 +614,7 @@
 				FA49BA102C32A1DD005660C4 /* MBUtils+checkMD5.swift */,
 				FA7D16B72C45FE6300442536 /* MBConstants.swift */,
 				FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */,
+				DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */,
 				FA9AB0102F03000200E00010 /* MarkdownEscape.swift */,
 				FA9AB0202F03000200E00020 /* ImageSliceSetting.swift */,
 			);
@@ -838,6 +854,7 @@
 				FA7517002C452A0500CFB066 /* MBVideoFrameExtractor.swift in Sources */,
 				FAAC6D1D2E223B0F00D45121 /* MiniCPMModelConst.swift in Sources */,
 				FA9AB0022F03000200E00002 /* MiniCPMV46CoreMLBootstrap.swift in Sources */,
+				458A103C0E3240538FD649B1 /* MBDeviceMemoryProbe.swift in Sources */,
 				FACAE97A2C40D37900C557D6 /* MBHomeViewController+SendAction.swift in Sources */,
 				FA47CD712C23F9F800A7D563 /* MBHomeViewController+LogTimer.swift in Sources */,
 				FA3D8FBD2C1FCF30003DACDA /* FFileTool.m in Sources */,
@@ -848,6 +865,7 @@
 				FAD6428C2E2A223800088528 /* MTMDError.swift in Sources */,
 				FAD6428D2E2A223800088528 /* MTMDWrapperExample.swift in Sources */,
 				FAD6428E2E2A223800088528 /* MTMDWrapper.swift in Sources */,
+				DDE74EEEC8CC4246A56C7F07 /* MBMtmd.mm in Sources */,
 				FAD6428F2E2A223800088528 /* MTMDToken.swift in Sources */,
 				FAD642902E2A223800088528 /* MTMDParams.swift in Sources */,
 				FAE7CE492C25531F0080570C /* MBHomeViewController+UITextView.swift in Sources */,
@@ -1069,7 +1087,7 @@
 				CODE_SIGN_ENTITLEMENTS = "MiniCPM-V-demo/MiniCPM-V-demo.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.16;
+				CURRENT_PROJECT_VERSION = 2.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = VGXUYC2C5K;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1102,7 +1120,7 @@
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 				);
-				MARKETING_VERSION = 1.16;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tianchi.minicpmvdemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1124,7 +1142,7 @@
 				CODE_SIGN_ENTITLEMENTS = "MiniCPM-V-demo/MiniCPM-V-demo.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.16;
+				CURRENT_PROJECT_VERSION = 2.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = VGXUYC2C5K;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1157,7 +1175,7 @@
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 				);
-				MARKETING_VERSION = 1.16;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tianchi.minicpmvdemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

@@ -489,7 +489,12 @@ extension MBV46ModelDetailViewController {
     private func setAsCurrentModel() {
         mtmdWrapperExample?.currentUsingModelType = .V46MultiModel
         UserDefaults.standard.setValue("V46MultiModel", forKey: "current_selected_model")
-        
+
+        // Tell the home VC the selection just changed so it can reset the
+        // wrapper and reload — otherwise its one-shot didStartInitialModelLoad
+        // flag suppresses every reload after the first viewDidAppear.
+        NotificationCenter.default.post(name: .mbModelSelectionChanged, object: nil)
+
         let hud = MBHUD.showAdded(to: self.view, animated: true)
         hud.mode = .text
         hud.label.text = "已设置 \(modelName) 为当前模型"
