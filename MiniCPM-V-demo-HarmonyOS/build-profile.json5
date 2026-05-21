@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "/Users/tianchi/.ohos/config/default_MiniCPM-V-demo-HarmonyOS_rdHwT61C4XswgeU6sy9IbB0yaSw4EcJqtZCj_vZIa6w=.cer",
+          "certpath": "/Users/tianchi/.ohos/config/default_MiniCPM-V-demo-HarmonyOS_Af9-cnuajUXIkMFYiMpAmKOjlhb5ENDhjD5eN0bF2xA=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B0F10B025C96B65C185D20C245A0ABC7A73DAE168877F85BAA037229DBD402FA711941C60B00E4B",
-          "profile": "/Users/tianchi/.ohos/config/default_MiniCPM-V-demo-HarmonyOS_rdHwT61C4XswgeU6sy9IbB0yaSw4EcJqtZCj_vZIa6w=.p7b",
+          "keyPassword": "0000001BDF718ADB7EF993217EA031353CD8BF1E3284DA8AECA577D441B00B7B3FBA14D4C01B02AB29DDA0",
+          "profile": "/Users/tianchi/.ohos/config/default_MiniCPM-V-demo-HarmonyOS_Af9-cnuajUXIkMFYiMpAmKOjlhb5ENDhjD5eN0bF2xA=.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "/Users/tianchi/.ohos/config/default_MiniCPM-V-demo-HarmonyOS_rdHwT61C4XswgeU6sy9IbB0yaSw4EcJqtZCj_vZIa6w=.p12",
-          "storePassword": "0000001B098F3FC25DA41F120FBCC80EAF2961E558B6BFA8670D1DF07C62D5EE7ED02411EF0A0953D458AE"
+          "storeFile": "/Users/tianchi/.ohos/config/default_MiniCPM-V-demo-HarmonyOS_Af9-cnuajUXIkMFYiMpAmKOjlhb5ENDhjD5eN0bF2xA=.p12",
+          "storePassword": "0000001BD8EA5B005781B2586B68F2F2A085CAE3C81CED3789A564EB9E27442F248943FFCE7A0866952FC8"
         }
       }
     ],

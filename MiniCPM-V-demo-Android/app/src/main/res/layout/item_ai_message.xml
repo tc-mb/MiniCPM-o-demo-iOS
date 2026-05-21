@@ -23,6 +23,66 @@
             android:orientation="vertical"
             android:padding="12dp">
 
+            <!-- Collapsible thinking block -->
+            <LinearLayout
+                android:id="@+id/layout_thinking"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/layout_thinking_header"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_thinking_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="▸"
+                        android:textSize="13sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:alpha="0.6"
+                        android:includeFontPadding="false" />
+
+                    <TextView
+                        android:id="@+id/tv_thinking_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="思考过程"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:alpha="0.6" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_thinking_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp"
+                    android:alpha="0.7"
+                    android:lineSpacingMultiplier="1.15"
+                    android:visibility="gone" />
+
+                <View
+                    android:id="@+id/divider_thinking"
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="?attr/colorOnSurfaceVariant"
+                    android:alpha="0.15" />
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/tv_ai_text"
                 android:layout_width="wrap_content"

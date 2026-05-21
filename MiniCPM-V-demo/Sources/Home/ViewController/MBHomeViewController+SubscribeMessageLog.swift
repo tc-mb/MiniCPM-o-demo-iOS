@@ -25,14 +25,17 @@ extension MBHomeViewController {
                         
                         if latestCell.model?.role == "llm", !receivedData.isEmpty {
                             
-                            // 更新输出的文本内容
                             latestCell.model?.contentText = receivedData
+                            // streaming: true 时 cell 使用 plain text 渲染，
+                            // 避免每个 token 都触发 MarkdownRenderer 整段重解析
+                            // （这是 O(N²) 主线程开销的元凶，详见 cell 内注释）。
+                            // 在 $performanceLog 完成回调里会用 streaming: false
+                            // 再渲染一次，正式上 markdown 样式。
+                            latestCell.bindTextWith(data: latestCell.model, streaming: true)
+                            latestCell.model?.cellHeight = latestCell.heightFromRenderedContent(
+                                viewWidth: self?.view.frame.width ?? 0)
                             
-                            // 重新计算 cell 高度
-                            let cellHeight = MBTextTableViewCell.calcCellHeight(data: latestCell.model, viewWidth: self?.view.frame.width ?? 0)
-                            latestCell.model?.cellHeight = cellHeight
-                            
-                            self?.tableViewScrollToBottom()
+                            self?.tableViewScrollToBottom(animated: false)
                         }
                         
                     }
@@ -126,7 +129,7 @@ extension MBHomeViewController {
                             if !log.hasPrefix("Loaded model") {
                                 latestCell.model?.performLog = log
                                 
-                                self?.tableViewScrollToBottom()
+                                self?.reloadAndScrollToBottom()
                                 
                                 // 显示暂停和继续的悬浮的按钮
                                 if !log.isEmpty {

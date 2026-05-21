@@ -5,17 +5,56 @@
 // Renders the text through MarkdownParser so headings, lists, **bold**,
 // *italic*, `code`, and ``` fenced ``` blocks come out with proper visual
 // styling instead of as literal characters.
+//
+// Think block rendering: MiniCPM5 (and other thinking models) emit
+// `<think>...</think>` around reasoning content. This component parses
+// that block and renders it as a collapsible section above the actual
+// response, matching the Android ChatAdapter's renderWithThinking logic.
 
 import { ChatMessage } from '../data/ChatMessage';
 import { parseMarkdown, BlockType, InlineType, MdBlock, InlineSpan } from '../utils/MarkdownParser';
 import { normalizeResponseText } from '../utils/MarkdownEscape';
 
+// Extracts thinking text and response text from raw assistant output.
+// Returns [thinkingText, responseText, isStillThinking].
+function getThinkingText(text: string): string {
+  const thinkStart = text.indexOf('<think>');
+  if (thinkStart < 0) return '';
+  const contentAfterTag = text.substring(thinkStart + '<think>'.length);
+  const thinkEnd = contentAfterTag.indexOf('</think>');
+  if (thinkEnd < 0) return contentAfterTag.trim();
+  return contentAfterTag.substring(0, thinkEnd).trim();
+}
+
+function getResponseText(text: string): string {
+  const thinkStart = text.indexOf('<think>');
+  if (thinkStart < 0) return text;
+  const contentAfterTag = text.substring(thinkStart + '<think>'.length);
+  const thinkEnd = contentAfterTag.indexOf('</think>');
+  if (thinkEnd < 0) return '';
+  let response = contentAfterTag.substring(thinkEnd + '</think>'.length);
+  while (response.length > 0 && response[0] === '\n') {
+    response = response.substring(1);
+  }
+  return response;
+}
+
+function hasThinkTag(text: string): boolean {
+  return text.indexOf('<think>') >= 0;
+}
+
+function isStillThinking(text: string): boolean {
+  if (text.indexOf('<think>') < 0) return false;
+  const contentAfterTag = text.substring(text.indexOf('<think>') + '<think>'.length);
+  return contentAfterTag.indexOf('</think>') < 0;
+}
+
 @Component
 export struct AiMessageItem {
   @ObjectLink message: ChatMessage;
   onStop: () => void = () => undefined;
+  @State private thinkingExpanded: boolean = true;
 
-  // Map heading levels 1..6 to font sizes (in fp).
   private headingFontSize(level: number): number {
     if (level <= 1) return 22;
     if (level === 2) return 19;
@@ -23,8 +62,6 @@ export struct AiMessageItem {
     return 16;
   }
 
-  // Render a sequence of inline spans inside a single Text container.
-  // Using a builder keeps the @Component happy with conditional Span children.
   @Builder
   inlineRow(spans: InlineSpan[], baseFontSize: number, baseWeight: FontWeight) {
     Text() {
@@ -92,19 +129,69 @@ export struct AiMessageItem {
     Row() {
       Column({ space: 6 }) {
         Column({ space: 6 }) {
-          // Re-parse on every render. Cost is sub-millisecond for a few KB of
-          // streaming content, and re-parsing each token keeps partial syntax
-          // visible-as-literal until it completes (matches Markwon behavior).
-          //
-          // [normalizeResponseText] is the only place where assistant output
-          // is touched for v4.6's literal `\n` artefact.  It runs at the
-          // rendering boundary so the canonical text on `ChatMessage.text`
-          // (and any future re-feed into the model) remains byte-identical
-          // to what native produced.
-          ForEach(parseMarkdown(normalizeResponseText(this.message.text.length > 0 ? this.message.text : ' ')),
-            (b: MdBlock, idx: number) => {
-              this.block(b);
-            });
+          if (hasThinkTag(this.message.text)) {
+            // --- Thinking section (collapsible) ---
+            Column({ space: 0 }) {
+              // Header: arrow + label
+              Row({ space: 6 }) {
+                Text(this.thinkingExpanded ? '▾' : '▸')
+                  .fontSize(14)
+                  .fontColor($r('app.color.on_surface_variant'));
+                Text(isStillThinking(this.message.text) ? '思考中…' : '思考过程')
+                  .fontSize(13)
+                  .fontColor($r('app.color.on_surface_variant'))
+                  .fontWeight(FontWeight.Medium);
+              }
+              .width('100%')
+              .padding({ top: 6, bottom: 6 })
+              .onClick(() => {
+                this.thinkingExpanded = !this.thinkingExpanded;
+              });
+
+              // Thinking content body
+              if (this.thinkingExpanded && getThinkingText(this.message.text).length > 0) {
+                Column({ space: 4 }) {
+                  ForEach(
+                    parseMarkdown(normalizeResponseText(getThinkingText(this.message.text))),
+                    (b: MdBlock, _idx: number) => {
+                      this.block(b);
+                    }
+                  );
+                }
+                .width('100%')
+                .padding({ left: 4, bottom: 6 });
+              }
+
+              // Divider (only after thinking is complete)
+              if (!isStillThinking(this.message.text)) {
+                Divider()
+                  .color('#33000000')
+                  .width('100%')
+                  .margin({ top: 4, bottom: 4 });
+              }
+            }
+            .width('100%');
+
+            // --- Response text (after </think>) ---
+            if (getResponseText(this.message.text).length > 0) {
+              ForEach(
+                parseMarkdown(normalizeResponseText(getResponseText(this.message.text))),
+                (b: MdBlock, _idx: number) => {
+                  this.block(b);
+                }
+              );
+            }
+          } else {
+            // No thinking block - render normally
+            ForEach(
+              parseMarkdown(normalizeResponseText(
+                this.message.text.length > 0 ? this.message.text : ' '
+              )),
+              (b: MdBlock, idx: number) => {
+                this.block(b);
+              }
+            );
+          }
         }
         .width('100%')
         .padding({ left: 12, right: 12, top: 8, bottom: 8 })

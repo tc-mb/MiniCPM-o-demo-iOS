@@ -87,17 +87,22 @@ export async function downloadModelsForSelected(
     const msBase = `https://www.modelscope.cn/models/${model.msRepo}/resolve/${model.msBranch}`;
     ggufSources.push(  { label: 'HuggingFace', url: `${hfBase}/${model.ggufRemotePath()}`   });
     ggufSources.push(  { label: 'ModelScope',  url: `${msBase}/${model.ggufRemotePath()}`   });
-    mmprojSources.push({ label: 'HuggingFace', url: `${hfBase}/${model.mmprojRemotePath()}` });
-    mmprojSources.push({ label: 'ModelScope',  url: `${msBase}/${model.mmprojRemotePath()}` });
+    if (!model.isTextOnly) {
+      mmprojSources.push({ label: 'HuggingFace', url: `${hfBase}/${model.mmprojRemotePath()}` });
+      mmprojSources.push({ label: 'ModelScope',  url: `${msBase}/${model.mmprojRemotePath()}` });
+    }
   }
   if (model.directGgufUrl) {
     ggufSources.push({ label: '直链', url: model.directGgufUrl });
   }
-  if (model.directMmprojUrl) {
+  if (!model.isTextOnly && model.directMmprojUrl) {
     mmprojSources.push({ label: '直链', url: model.directMmprojUrl });
   }
-  if (ggufSources.length === 0 || mmprojSources.length === 0) {
-    throw new Error(`Model ${model.id} has no download source configured`);
+  if (ggufSources.length === 0) {
+    throw new Error(`Model ${model.id} has no GGUF download source configured`);
+  }
+  if (!model.isTextOnly && mmprojSources.length === 0) {
+    throw new Error(`Model ${model.id} has no mmproj download source configured`);
   }
 
   const labelSummary = ggufSources.map(s => s.label).join('+');
@@ -105,8 +110,10 @@ export async function downloadModelsForSelected(
 
   const jobs: MultiSourceJob[] = [
     { name: model.ggufFileName,   sources: ggufSources,   md5: model.ggufMd5 },
-    { name: model.mmprojFileName, sources: mmprojSources, md5: model.mmprojMd5 },
   ];
+  if (!model.isTextOnly) {
+    jobs.push({ name: model.mmprojFileName, sources: mmprojSources, md5: model.mmprojMd5 });
+  }
   for (const job of jobs) {
     await downloadFileWithSources(context, dir, job, onProgress);
   }
@@ -465,7 +472,11 @@ export async function deleteSelectedModelFiles(context: common.Context): Promise
   const model = await getSelectedModelAsync(context);
   const dir = `${context.filesDir}/models/${model.id}`;
   let deleted = false;
-  for (const name of [model.ggufFileName, model.mmprojFileName]) {
+  const filesToDelete: string[] = [model.ggufFileName];
+  if (model.mmprojFileName) {
+    filesToDelete.push(model.mmprojFileName);
+  }
+  for (const name of filesToDelete) {
     const p = `${dir}/${name}`;
     if (fs.accessSync(p)) {
       try { fs.unlinkSync(p); deleted = true; }

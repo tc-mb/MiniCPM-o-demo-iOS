@@ -27,6 +27,16 @@ enum CurrentUsingModelTypeV2 {
     case V4MultiModel
     /// V4.6 多模态模型
     case V46MultiModel
+    /// MiniCPM 5 纯文本模型
+    case V5TextModel
+    
+    /// 是否为纯文本模型（无 mmproj / 视觉模块）
+    var isTextOnly: Bool {
+        switch self {
+        case .V5TextModel: return true
+        default: return false
+        }
+    }
 }
 
 /// 将要 embedding 的图片的来源
@@ -201,6 +211,39 @@ public class MTMDWrapperExample: ObservableObject {
         }
     }
     
+    /// 初始化纯文本模型（无 mmproj）
+    /// - Parameters:
+    ///   - modelPath: 模型路径
+    ///   - nCtx: 上下文长度
+    public func initializeTextOnly(modelPath: String, nCtx: Int? = nil) async {
+        do {
+            let tier        = MBDeviceMemoryProbe.currentTier
+            let nUbatch     = tier.recommendedUbatch
+            let useGPU      = !MBDeviceMemoryProbe.isSimulator
+
+            let params = MTMDParams(
+                modelPath: modelPath,
+                mmprojPath: "",
+                nCtx: nCtx ?? 4096,
+                temperature: 0.6,
+                useGPU: useGPU,
+                mmprojUseGPU: false,
+                warmup: false,
+                nUbatch: nUbatch,
+                imageMaxSliceNums: -1,
+                imageMaxTokens: -1
+            )
+            self.params = params
+            try await mtmdWrapper.initializeTextOnly(with: params)
+            print("MTMDWrapperExample: text-only init, n_ctx = \(params.nCtx), n_ubatch = \(nUbatch), temp = 0.6")
+            self.multiModelLoadingSuccess = true
+        } catch {
+            errorMessage = error.localizedDescription
+            print("纯文本模型初始化失败: \(error)")
+            self.multiModelLoadingSuccess = false
+        }
+    }
+
     /// 在后台线程中添加图片
     /// - Parameter imagePath: 图片路径
     public func addImageInBackground(_ imagePath: String) async -> Bool {

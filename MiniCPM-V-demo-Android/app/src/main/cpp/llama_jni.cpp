@@ -351,7 +351,7 @@ static std::string chat_add_and_format(const std::string &role, const std::strin
     new_msg.role = role;
     new_msg.content = content;
     auto formatted = common_chat_format_single(
-            g_chat_templates.get(), chat_msgs, new_msg, role == ROLE_USER, false);
+            g_chat_templates.get(), chat_msgs, new_msg, role == ROLE_USER, true);
     chat_msgs.push_back(new_msg);
     LOGi("%s: Formatted and added %s message: \n%s\n", __func__, role.c_str(), formatted.c_str());
     return formatted;
@@ -629,6 +629,11 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_processUserPrompt(
     }
     env->ReleaseStringUTFChars(juser_prompt, user_prompt);
 
+    if (formatted_user_prompt.size() >= 8 &&
+        formatted_user_prompt.compare(formatted_user_prompt.size() - 8, 8, "<think>\n") == 0) {
+        cached_token_chars = "<think>\n";
+    }
+
     if (g_ctx_vision) {
         mtmd_input_text text;
         text.text          = formatted_user_prompt.c_str();
@@ -744,7 +749,15 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_generateNextToken(
 
     if (is_eog) {
         LOGd("id: %d,\tIS EOG!\nSTOP.", new_token_id);
-        chat_add_and_format(ROLE_ASSISTANT, assistant_ss.str());
+        std::string assistant_content = assistant_ss.str();
+        auto think_end = assistant_content.find("</think>");
+        if (think_end != std::string::npos) {
+            assistant_content = assistant_content.substr(think_end + 8);
+            while (!assistant_content.empty() && assistant_content[0] == '\n') {
+                assistant_content.erase(0, 1);
+            }
+        }
+        chat_add_and_format(ROLE_ASSISTANT, assistant_content);
         return nullptr;
     }
 

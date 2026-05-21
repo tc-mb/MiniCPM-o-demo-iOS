@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -44,12 +45,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnImageSlice: ImageButton
     private lateinit var cardInputBar: View
     private lateinit var appBarLayout: AppBarLayout
+    private lateinit var tvTitle: TextView
 
     private lateinit var engine: LlamaEngine
     private var generationJob: Job? = null
     private var isModelReady = false
     private var isImagePrefilled = false
+    private var isProcessingVideo = false
     private var hasAutoLoaded = false
+    private var loadedModelId: String? = null
     private var messageIdCounter = 1L
     private val messages = mutableListOf<ChatMessage>()
 
@@ -93,6 +97,7 @@ class MainActivity : AppCompatActivity() {
         btnImageSlice = findViewById(R.id.btn_image_slice)
         cardInputBar = findViewById(R.id.card_input_bar)
         appBarLayout = findViewById(R.id.appBarLayout)
+        tvTitle = findViewById(R.id.tv_title)
     }
 
     private fun setupRecyclerView() {
@@ -101,11 +106,13 @@ class MainActivity : AppCompatActivity() {
             engine.cancelGeneration()
         }
         chatAdapter.setOnSuggestionClick { suggestion ->
-            if (isModelReady) {
+            if (isModelReady && !isProcessingVideo) {
                 etInput.setText(suggestion)
                 handleUserInput()
-            } else {
+            } else if (!isModelReady) {
                 Toast.makeText(this, "请先加载模型", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "请等待视频处理完成", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -121,7 +128,8 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        messages.add(ChatMessage.WelcomeCard())
+        val selectedModel = LlamaEngine.getSelectedModel(applicationContext)
+        messages.add(ChatMessage.WelcomeCard(isTextOnly = selectedModel.isTextOnly))
         chatAdapter.submitList(messages.toList())
     }
 
@@ -154,14 +162,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun scrollToBottom() {
         recyclerChat.post {
-            val layoutManager = recyclerChat.layoutManager as? LinearLayoutManager ?: return@post
-            val lastPos = layoutManager.findLastCompletelyVisibleItemPosition()
             val adapterCount = chatAdapter.itemCount
             if (adapterCount == 0) return@post
-            if (lastPos < adapterCount - 2) {
-                recyclerChat.scrollToPosition(adapterCount - 1)
+            val layoutManager = recyclerChat.layoutManager as? LinearLayoutManager ?: return@post
+            val lastView = layoutManager.findViewByPosition(adapterCount - 1)
+            if (lastView != null) {
+                val offset = recyclerChat.height - recyclerChat.paddingBottom - lastView.height
+                layoutManager.scrollToPositionWithOffset(adapterCount - 1, offset.coerceAtMost(0))
             } else {
-                recyclerChat.smoothScrollToPosition(adapterCount - 1)
+                recyclerChat.scrollToPosition(adapterCount - 1)
             }
         }
     }
@@ -215,23 +224,21 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun clearChatUI() {
+        messages.clear()
+        val selectedModel = LlamaEngine.getSelectedModel(applicationContext)
+        messages.add(ChatMessage.WelcomeCard(isTextOnly = selectedModel.isTextOnly))
+        messageIdCounter = 1L
+        isImagePrefilled = false
+        chatAdapter.submitList(messages.toList())
+    }
+
     private fun clearChat() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 engine.clearContext()
-                // No default system prompt: aligned with iOS opt-r1 (see
-                // MBMtmd.mm top-of-file note). The reference Python pipeline
-                // (`AutoModel.chat(...)` / `apply_chat_template`) does not
-                // insert one either, and an English-only system string biases
-                // MiniCPM-V into answering Chinese queries in English.
-                // If a caller wants a system prompt, call setSystemPrompt
-                // explicitly here before the first user turn.
                 withContext(Dispatchers.Main) {
-                    messages.clear()
-                    messages.add(ChatMessage.WelcomeCard())
-                    messageIdCounter = 1L
-                    isImagePrefilled = false
-                    chatAdapter.submitList(messages.toList())
+                    clearChatUI()
                     Toast.makeText(this@MainActivity, R.string.clear_chat_toast, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
@@ -272,8 +279,9 @@ class MainActivity : AppCompatActivity() {
                     }
                     is LlamaState.ModelReady -> {
                         isModelReady = true
+                        loadedModelId = LlamaEngine.getSelectedModel(applicationContext).id
                         enableInput(true)
-                        btnImage.isEnabled = engine.isVisionSupported
+                        updateUIForModelType()
                     }
                     is LlamaState.ProcessingSystemPrompt,
                     is LlamaState.ProcessingUserPrompt,
@@ -283,7 +291,7 @@ class MainActivity : AppCompatActivity() {
                     is LlamaState.PrefillingImage -> {
                         isModelReady = true
                         etInput.isEnabled = true
-                        btnSend.isEnabled = true
+                        btnSend.isEnabled = !isProcessingVideo
                         btnImage.isEnabled = false
                     }
                     is LlamaState.UnloadingModel -> {
@@ -307,31 +315,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateUIForModelType() {
+        val model = LlamaEngine.getSelectedModel(applicationContext)
+        val isVision = engine.isVisionSupported
+
+        tvTitle.setText(if (isVision) R.string.app_title else R.string.app_title_text)
+        btnImage.visibility = if (isVision) View.VISIBLE else View.GONE
+        btnImageSlice.visibility = if (isVision) View.VISIBLE else View.GONE
+        btnImage.isEnabled = isVision
+
+        refreshWelcomeCard(model.isTextOnly)
+    }
+
+    private fun refreshWelcomeCard(isTextOnly: Boolean) {
+        val welcomeIndex = messages.indexOfFirst { it is ChatMessage.WelcomeCard }
+        if (welcomeIndex >= 0) {
+            messages[welcomeIndex] = ChatMessage.WelcomeCard(isTextOnly = isTextOnly)
+            chatAdapter.submitList(messages.toList())
+        }
+    }
+
     private fun loadDefaultModel() {
         val ctx = applicationContext
+        val model = LlamaEngine.getSelectedModel(ctx)
         val ggufFile = File(LlamaEngine.modelPath(ctx))
-        val mmprojFile = File(LlamaEngine.mmprojPath(ctx))
+        val mmprojPathStr = LlamaEngine.mmprojPath(ctx)
+        val mmprojFile = mmprojPathStr?.let { File(it) }
 
-        // Both files must be on-disk before we even try to load. Falling back
-        // to a text-only load when mmproj is missing is the wrong default for
-        // this demo: vision is the marquee feature, and silently disabling
-        // the image button leaves the user wondering why "新装的 apk 点不开
-        // 图片". Common trigger is `migrateLegacyLayoutIfNeeded` having just
-        // purged a stale mmproj after an APK upgrade - in that case the user
-        // needs to re-download from "模型管理".
-        if (!ggufFile.exists() || !mmprojFile.exists()) {
+        val ggufMissing = !ggufFile.exists()
+        val mmprojMissing = !model.isTextOnly && (mmprojFile == null || !mmprojFile.exists())
+
+        if (ggufMissing || mmprojMissing) {
             promptDownloadModels(
-                ggufMissing = !ggufFile.exists(),
-                mmprojMissing = !mmprojFile.exists()
+                ggufMissing = ggufMissing,
+                mmprojMissing = mmprojMissing
             )
             return
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                engine.loadModel(ggufFile.absolutePath, mmprojFile.absolutePath)
-                // No default system prompt: aligned with iOS opt-r1. See
-                // clearChat() above for the rationale.
+                val mmprojArg = if (mmprojFile != null && mmprojFile.exists()) mmprojFile.absolutePath else null
+                engine.loadModel(ggufFile.absolutePath, mmprojArg)
+                loadedModelId = model.id
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading model", e)
                 engine.resetToInitialized()
@@ -466,6 +492,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        isProcessingVideo = true
         lifecycleScope.launch(Dispatchers.IO) {
             val msgId = messageIdCounter++
             val startNs = System.nanoTime()
@@ -506,6 +533,7 @@ class MainActivity : AppCompatActivity() {
 
                 val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
                 withContext(Dispatchers.Main) {
+                    isProcessingVideo = false
                     val index = messages.indexOfFirst { it.id == msgId }
                     if (index >= 0) {
                         val cur = messages[index] as ChatMessage.UserMessage
@@ -519,6 +547,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing video", e)
                 withContext(Dispatchers.Main) {
+                    isProcessingVideo = false
                     val index = messages.indexOfFirst { it.id == msgId }
                     if (index >= 0) {
                         messages.removeAt(index)
@@ -549,6 +578,10 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "请输入文字消息", Toast.LENGTH_SHORT).show()
             return
         }
+
+        etInput.clearFocus()
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(etInput.windowToken, 0)
 
         etInput.text = null
         enableInput(false)
@@ -619,9 +652,9 @@ class MainActivity : AppCompatActivity() {
         if (ev.action == MotionEvent.ACTION_DOWN) {
             val v = currentFocus
             if (v is TextInputEditText) {
-                val outRect = android.graphics.Rect()
-                v.getGlobalVisibleRect(outRect)
-                if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+                val barRect = android.graphics.Rect()
+                cardInputBar.getGlobalVisibleRect(barRect)
+                if (!barRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
                     v.clearFocus()
                     val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(v.windowToken, 0)
@@ -629,6 +662,39 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!::engine.isInitialized) return
+        val selectedId = LlamaEngine.getSelectedModel(applicationContext).id
+
+        if (loadedModelId != null && loadedModelId != selectedId) {
+            loadedModelId = null
+            hasAutoLoaded = false
+            reloadAfterModelSwitch()
+        } else if (LlamaEngine.consumeModelSwitched(applicationContext)) {
+            loadedModelId = selectedId
+            clearChatUI()
+            updateUIForModelType()
+        }
+    }
+
+    private fun reloadAfterModelSwitch() {
+        enableInput(false)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                if (engine.state.value is LlamaState.ModelReady) {
+                    engine.unloadModel()
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Error unloading during model switch", e)
+            }
+            withContext(Dispatchers.Main) {
+                clearChatUI()
+                loadDefaultModel()
+            }
+        }
     }
 
     override fun onStop() {

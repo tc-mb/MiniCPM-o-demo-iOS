@@ -11,7 +11,9 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        MiniCPMV46CoreMLBootstrap.installBundledModelIntoDocumentsIfNeeded()
+        DispatchQueue.global(qos: .utility).async {
+            MiniCPMV46CoreMLBootstrap.installBundledModelIntoDocumentsIfNeeded()
+        }
         return true
     }
 

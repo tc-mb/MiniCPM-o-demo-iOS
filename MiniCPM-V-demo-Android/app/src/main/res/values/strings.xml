@@ -1,10 +1,15 @@
 <resources>
     <string name="app_name">MiniCPM-V-demo</string>
     <string name="app_title">MiniCPM-V</string>
+    <string name="app_title_text">MiniCPM</string>
     <string name="welcome_title">Welcome to MiniCPM-V</string>
+    <string name="welcome_title_text">Welcome to MiniCPM</string>
     <string name="welcome_desc">让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话互动、根据图片给出信息并进一步解读。</string>
+    <string name="welcome_desc_text">让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话互动，回答你的各种问题。</string>
     <string name="suggestion_1">请描述图片中的内容。</string>
     <string name="suggestion_2">Describe the image.</string>
+    <string name="suggestion_1_text">帮我写一首关于春天的诗</string>
+    <string name="suggestion_2_text">Explain AI in brief.</string>
     <string name="model_management">模型管理</string>
     <string name="status_uninitialized">未初始化 - 请下载或加载模型</string>
     <string name="status_initializing">正在初始化...</string>

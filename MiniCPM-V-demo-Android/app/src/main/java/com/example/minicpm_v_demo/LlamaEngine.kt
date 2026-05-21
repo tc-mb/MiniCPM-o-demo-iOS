@@ -62,13 +62,14 @@ class LlamaEngine private constructor(
         // covers the vast majority of single-turn answers; the n_ctx=4096
         // buffer plus shift_context() in llama_jni.cpp still keeps multi-turn
         // chats stable.
-        const val DEFAULT_PREDICT_LENGTH = 512
+        const val DEFAULT_PREDICT_LENGTH = 1024
 
         const val MODEL_SUBDIR = "models"
 
         private const val PREFS_NAME = "model_prefs"
         private const val KEY_SELECTED_MODEL = "selected_model_id"
         private const val KEY_IMAGE_MAX_SLICE = "image_max_slice_nums"
+        private const val KEY_MODEL_SWITCHED = "model_switched"
 
         // MiniCPM-V's hard upper bound on slice count.  Values higher than 9
         // get clamped by clip.cpp::get_best_grid anyway; we cap on the UI
@@ -101,6 +102,18 @@ class LlamaEngine private constructor(
             prefs(context).edit().putString(KEY_SELECTED_MODEL, modelId).apply()
         }
 
+        fun markModelSwitched(context: Context) {
+            prefs(context).edit().putBoolean(KEY_MODEL_SWITCHED, true).apply()
+        }
+
+        fun consumeModelSwitched(context: Context): Boolean {
+            val switched = prefs(context).getBoolean(KEY_MODEL_SWITCHED, false)
+            if (switched) {
+                prefs(context).edit().putBoolean(KEY_MODEL_SWITCHED, false).apply()
+            }
+            return switched
+        }
+
         // Slice cap is persisted globally (not per-model) - users keep
         // their preferred speed / quality trade-off across model swaps,
         // and v4 / v4.6 / 2.6 all use the same slicing semantics.
@@ -124,13 +137,19 @@ class LlamaEngine private constructor(
             return File(modelDirFor(context, model), model.ggufFileName).absolutePath
         }
 
-        fun mmprojPath(context: Context): String {
+        fun mmprojPath(context: Context): String? {
             val model = getSelectedModel(context)
-            return File(modelDirFor(context, model), model.mmprojFileName).absolutePath
+            val mmproj = model.mmprojFileName ?: return null
+            return File(modelDirFor(context, model), mmproj).absolutePath
         }
 
-        fun modelsExist(context: Context): Boolean =
-            File(modelPath(context)).exists() && File(mmprojPath(context)).exists()
+        fun modelsExist(context: Context): Boolean {
+            val model = getSelectedModel(context)
+            if (!File(modelPath(context)).exists()) return false
+            if (model.isTextOnly) return true
+            val mp = mmprojPath(context) ?: return true
+            return File(mp).exists()
+        }
 
         // Rename map for files that were previously sideloaded with a
         // different name and now need to match the iOS demo's filenames so a
@@ -193,8 +212,8 @@ class LlamaEngine private constructor(
             for (model in ModelInfo.AVAILABLE_MODELS) {
                 val targetDir = File(rootDir, model.id)
                 val flatGguf = File(rootDir, model.ggufFileName)
-                val flatMmproj = File(rootDir, model.mmprojFileName)
-                if (flatGguf.exists() || flatMmproj.exists()) {
+                val flatMmproj = model.mmprojFileName?.let { File(rootDir, it) }
+                if (flatGguf.exists() || (flatMmproj != null && flatMmproj.exists())) {
                     if (!targetDir.exists()) targetDir.mkdirs()
                     if (flatGguf.exists()) {
                         val dst = File(targetDir, model.ggufFileName)
@@ -202,7 +221,7 @@ class LlamaEngine private constructor(
                             Log.i(TAG, "Migrated legacy ${model.ggufFileName} into ${model.id}/")
                         }
                     }
-                    if (flatMmproj.exists()) {
+                    if (flatMmproj != null && flatMmproj.exists() && model.mmprojFileName != null) {
                         val dst = File(targetDir, model.mmprojFileName)
                         if (!dst.exists() && flatMmproj.renameTo(dst)) {
                             Log.i(TAG, "Migrated legacy ${model.mmprojFileName} into ${model.id}/")
@@ -305,26 +324,31 @@ class LlamaEngine private constructor(
                 val msBase = "https://www.modelscope.cn/models/${model.msRepo}/resolve/${model.msBranch}"
                 ggufSources.add(FileSource("HuggingFace", URL("$hfBase/${model.ggufRemotePath}")))
                 ggufSources.add(FileSource("ModelScope", URL("$msBase/${model.ggufRemotePath}")))
-                mmprojSources.add(FileSource("HuggingFace", URL("$hfBase/${model.mmprojRemotePath}")))
-                mmprojSources.add(FileSource("ModelScope", URL("$msBase/${model.mmprojRemotePath}")))
+                if (!model.isTextOnly) {
+                    mmprojSources.add(FileSource("HuggingFace", URL("$hfBase/${model.mmprojRemotePath}")))
+                    mmprojSources.add(FileSource("ModelScope", URL("$msBase/${model.mmprojRemotePath}")))
+                }
             }
-            // Optional direct-mirror escape hatch (e.g. OBS during TestFlight).
-            // Registered as an extra race candidate; not exclusive of HF/MS.
             if (!model.directGgufUrl.isNullOrBlank()) {
                 ggufSources.add(FileSource("直链", URL(model.directGgufUrl)))
             }
-            if (!model.directMmprojUrl.isNullOrBlank()) {
+            if (!model.isTextOnly && !model.directMmprojUrl.isNullOrBlank()) {
                 mmprojSources.add(FileSource("直链", URL(model.directMmprojUrl)))
             }
 
-            if (ggufSources.isEmpty() || mmprojSources.isEmpty()) {
-                throw RuntimeException("Model ${model.id} has no download source configured")
+            if (ggufSources.isEmpty()) {
+                throw RuntimeException("Model ${model.id} has no GGUF download source configured")
+            }
+            if (!model.isTextOnly && mmprojSources.isEmpty()) {
+                throw RuntimeException("Model ${model.id} has no mmproj download source configured")
             }
 
-            val files = listOf(
+            val files = mutableListOf(
                 FileSpec(model.ggufFileName, ggufSources, model.ggufMd5),
-                FileSpec(model.mmprojFileName, mmprojSources, model.mmprojMd5),
             )
+            if (!model.isTextOnly && model.mmprojFileName != null) {
+                files.add(FileSpec(model.mmprojFileName, mmprojSources, model.mmprojMd5))
+            }
 
             val racedLabel = files.first().sources.joinToString("+") { it.label }
             onProgress("$racedLabel 多源 race 启动...")

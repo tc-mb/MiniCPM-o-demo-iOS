@@ -56,6 +56,9 @@ public class MBChatModel: NSObject {
     /// 本次输出是否被强制终止了？
     var isForceHalted = false
     
+    /// 思考过程是否被折叠（默认 nil = 未设置，生成完成后自动折叠）
+    var isThinkingCollapsed: Bool?
+    
     /// 日志用：会话 ID
     var msgId: String?
     

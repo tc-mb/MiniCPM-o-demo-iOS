@@ -87,14 +87,62 @@ class ModelManagerActivity : AppCompatActivity() {
             models = ModelInfo.AVAILABLE_MODELS,
             selectedModelId = selectedModel.id,
             onModelSelected = { model ->
+                val previousModelId = LlamaEngine.getSelectedModel(this).id
                 LlamaEngine.setSelectedModel(this, model.id)
                 updateLoadButtonState()
-                Toast.makeText(this, "已选择: ${model.displayName}", Toast.LENGTH_SHORT).show()
+
+                if (previousModelId != model.id) {
+                    val wasLoaded = engine.state.value is LlamaState.ModelReady
+                    if (wasLoaded) {
+                        reloadSelectedModel()
+                    } else {
+                        tvModelStatus.text = "已切换至 ${model.displayName}，请加载模型"
+                    }
+                }
             }
         )
 
         recyclerModels.layoutManager = LinearLayoutManager(this)
         recyclerModels.adapter = modelAdapter
+    }
+
+    private fun reloadSelectedModel() {
+        val model = LlamaEngine.getSelectedModel(this)
+        val modelPath = LlamaEngine.modelPath(applicationContext)
+
+        if (!File(modelPath).exists()) {
+            tvModelStatus.text = "已切换至 ${model.displayName}，请先下载模型"
+            lifecycleScope.launch(Dispatchers.IO) {
+                try { engine.unloadModel() } catch (_: Exception) {}
+                withContext(Dispatchers.Main) { updateLoadButtonState() }
+            }
+            return
+        }
+
+        btnLoadModel.isEnabled = false
+        btnDownload.isEnabled = false
+        tvModelStatus.text = "正在切换至 ${model.displayName}..."
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                engine.unloadModel()
+                val mmprojPath = LlamaEngine.mmprojPath(applicationContext)
+                val mmprojArg = mmprojPath?.let { if (File(it).exists()) it else null }
+                engine.loadModel(modelPath, mmprojArg)
+                LlamaEngine.markModelSwitched(applicationContext)
+                withContext(Dispatchers.Main) {
+                    updateLoadButtonState()
+                    Toast.makeText(this@ModelManagerActivity, "${model.displayName} 加载成功!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reloading model", e)
+                engine.resetToInitialized()
+                withContext(Dispatchers.Main) {
+                    tvModelStatus.text = "加载失败: ${e.message}"
+                    updateLoadButtonState()
+                }
+            }
+        }
     }
 
     private fun observeEngineState() {
@@ -276,8 +324,10 @@ class ModelManagerActivity : AppCompatActivity() {
                     engine.unloadModel()
                 }
 
-                val mmprojFile = File(mmprojPath)
-                engine.loadModel(modelPath, if (mmprojFile.exists()) mmprojPath else null)
+                val mmprojArg = mmprojPath?.let { path ->
+                    if (File(path).exists()) path else null
+                }
+                engine.loadModel(modelPath, mmprojArg)
                 // No default system prompt: aligned with iOS opt-r1. See
                 // MainActivity.clearChat() for the rationale.
 
@@ -302,9 +352,15 @@ class ModelManagerActivity : AppCompatActivity() {
 
     private fun confirmDeleteModel() {
         val model = LlamaEngine.getSelectedModel(this)
+        val fileList = buildString {
+            append("• ${model.ggufFileName}")
+            if (model.mmprojFileName != null) {
+                append("\n• ${model.mmprojFileName}")
+            }
+        }
         AlertDialog.Builder(this)
             .setTitle("删除模型文件")
-            .setMessage("确定要删除 ${model.displayName} 的模型文件吗？\n\n这将删除:\n• ${model.ggufFileName}\n• ${model.mmprojFileName}\n\n删除后需要重新下载才能使用。")
+            .setMessage("确定要删除 ${model.displayName} 的模型文件吗？\n\n这将删除:\n$fileList\n\n删除后需要重新下载才能使用。")
             .setPositiveButton("删除") { _, _ -> deleteModelFiles() }
             .setNegativeButton("取消", null)
             .show()
@@ -318,7 +374,7 @@ class ModelManagerActivity : AppCompatActivity() {
 
                 var deleted = false
                 File(modelPath).let { if (it.exists()) { it.delete(); deleted = true } }
-                File(mmprojPath).let { if (it.exists()) { it.delete(); deleted = true } }
+                mmprojPath?.let { File(it) }?.let { if (it.exists()) { it.delete(); deleted = true } }
 
                 withContext(Dispatchers.Main) {
                     updateLoadButtonState()

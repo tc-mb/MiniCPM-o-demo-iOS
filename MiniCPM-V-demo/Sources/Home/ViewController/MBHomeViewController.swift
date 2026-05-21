@@ -107,6 +107,8 @@ import llama
         tv.backgroundColor = .white
         
         tv.separatorStyle = .none
+
+        tv.keyboardDismissMode = .interactiveWithAccessory
         
         // 设置数据源和委托对象
         tv.dataSource = self
@@ -431,9 +433,12 @@ import llama
     
     /// 更新顶导标题
     func updateNavTitle() {
+        let lastSelectedModelString = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
+        let isTextOnly = (lastSelectedModelString == "V5TextModel")
+        let brandName = isTextOnly ? "MiniCPM" : "MiniCPM-V"
+
         let newTitle: String
         if MBUtils.isDeviceIPad() {
-            let lastSelectedModelString = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
             var modelDisplayedName = ""
 
             if lastSelectedModelString == "V26MultiModel" {
@@ -442,15 +447,17 @@ import llama
                 modelDisplayedName = MiniCPMModelConst.modelv4_Q4_K_M_DisplayedName
             } else if lastSelectedModelString == "V46MultiModel" {
                 modelDisplayedName = MiniCPMModelConst.modelv46_DisplayedName
+            } else if lastSelectedModelString == "V5TextModel" {
+                modelDisplayedName = MiniCPMModelConst.modelv5_DisplayedName
             }
 
             if !modelDisplayedName.isEmpty {
-                newTitle = "MiniCPM-V（当前模型：\(modelDisplayedName)）"
+                newTitle = "\(brandName)（当前模型：\(modelDisplayedName)）"
             } else {
-                newTitle = "MiniCPM-V（请先下载模型）"
+                newTitle = "\(brandName)（请先下载模型）"
             }
         } else {
-            newTitle = "MiniCPM-V"
+            newTitle = brandName
         }
 
         // 标题只走左侧 customView label；不设 self.title，否则系统会在中间再画一份导致重复
@@ -458,6 +465,41 @@ import llama
         if let label = navTitleLabel {
             label.text = newTitle
             label.sizeToFit()
+        }
+        
+        // 根据模型类型动态调整 UI
+        updateUIForModelType()
+    }
+    
+    /// 从 UserDefaults 判断当前选中的模型是否为纯文本
+    var isSelectedModelTextOnly: Bool {
+        let key = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
+        return key == "V5TextModel"
+    }
+
+    /// 根据当前模型类型（视觉 vs 纯文本）动态显示/隐藏 UI 元素
+    func updateUIForModelType() {
+        let isTextOnly = isSelectedModelTextOnly
+        
+        // 纯文本模型：隐藏图片选择按钮和图片切片设置按钮
+        chooseImageButton.isHidden = isTextOnly
+        
+        // 更新顶导右侧按钮组（隐藏切图设置按钮）
+        if let items = self.navigationItem.rightBarButtonItems {
+            for item in items {
+                if item.action == #selector(imageSliceButtonTapped) {
+                    item.isHidden = isTextOnly
+                    if #unavailable(iOS 16.0) {
+                        item.isEnabled = !isTextOnly
+                        item.tintColor = isTextOnly ? .clear : .black
+                    }
+                }
+            }
+        }
+
+        // 更新欢迎卡片
+        if let headerView = tableView.headerView(forSection: 0) as? MBHomeTableViewHeaderView {
+            headerView.updateForModelType(isTextOnly: isTextOnly)
         }
     }
     
@@ -529,6 +571,10 @@ import llama
             make.left.right.equalTo(self.view)
             make.bottom.equalTo(self.view.snp.bottom)
         }
+
+        let tapDismissKeyboard = UITapGestureRecognizer(target: self, action: #selector(handleResignKeyboard))
+        tapDismissKeyboard.cancelsTouchesInView = false
+        tableView.addGestureRecognizer(tapDismissKeyboard)
     }
     
     func setupInputView() {
@@ -539,9 +585,6 @@ import llama
             inputViewMargin = 24
         }
 
-        let tapResignKeyboardGesture = UITapGestureRecognizer(target: self, action: #selector(handleResignKeyboard))
-        self.inputContainerView.isUserInteractionEnabled = true
-        self.inputContainerView.addGestureRecognizer(tapResignKeyboardGesture)
         self.view.addSubview(self.inputContainerView)
         self.inputContainerView.snp.makeConstraints { make in
             make.left.equalTo(0)
@@ -570,6 +613,11 @@ import llama
                         width: self.view.frame.size.width - inputViewMargin*2 + 4,
                         height: 64 + 4)
         self.inputRoundCornerView.layer.shadowPath = UIBezierPath(rect: rc).cgPath
+
+        // 点击圆角框任意位置激活输入
+        let tapFocusInput = UITapGestureRecognizer(target: self, action: #selector(handleFocusTextInput))
+        tapFocusInput.cancelsTouchesInView = false
+        self.inputRoundCornerView.addGestureRecognizer(tapFocusInput)
 
         // textview 输入框
         self.inputRoundCornerView.addSubview(self.textInputView)
@@ -688,6 +736,10 @@ import llama
                 cell.onTap = { [weak self] model, actionName in
                     self?.cellToolbarClickEvent(model, action: actionName)
                 }
+                cell.onThinkingToggle = { [weak tableView] in
+                    tableView?.beginUpdates()
+                    tableView?.endUpdates()
+                }
                 return cell
             }
             
@@ -778,7 +830,7 @@ import llama
     public func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "MBHomeTableViewHeaderView") as! MBHomeTableViewHeaderView
         
-        // 引导用的 4 个 tips 点击事件
+        // 引导用的 tips 点击事件
         headerView.setupTapEvent { [weak self] str in
             self?.placeholderLabel.isHidden = true
             self?.textInputView.text = str
@@ -786,6 +838,9 @@ import llama
                 self?.handleSendText(b)
             }
         }
+
+        // 根据选中的模型类型设置欢迎卡片内容
+        headerView.updateForModelType(isTextOnly: isSelectedModelTextOnly)
 
         return headerView
     }
@@ -902,44 +957,45 @@ import llama
         dataArray.append(imgModel)
     }
     
-    /// 每次输入完，要把列表滚动到归底部
-    func tableViewScrollToBottom() {
-        // scroll to bottom
-        if dataArray.count == 1 {
-            tableView.reloadData()
-            
-            // 计算需要滚动到的位置，确保 footerview 也可见
-            let lastRow = dataArray.count - 1
-            let lastIndexPath = IndexPath(row: lastRow, section: 0)
-            
-            // 先滚动到最后一个 cell
-            tableView.scrollToRow(at: lastIndexPath, at: .bottom, animated: true)
-            
-            // 然后额外滚动一些距离，确保 footerview 也可见
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                guard let self = self else { return }
-                
-                // 获取当前 content offset
-                let currentOffset = self.tableView.contentOffset
-                
-                // 计算额外的滚动距离，确保 footerview 可见
-                // 这里假设 footerview 高度约为 50-60 像素（包括间距）
-                let extraOffset: CGFloat = 80
-                
-                // 设置新的 content offset
-                let newOffset = CGPoint(x: currentOffset.x, y: currentOffset.y + extraOffset)
-                self.tableView.setContentOffset(newOffset, animated: true)
-            }
-        } else if dataArray.count > 1 {
-            tableView.reloadData()
-            
-            // 计算需要滚动到的位置，确保 footerview 也可见
-            let lastRow = dataArray.count - 1
-            let lastIndexPath = IndexPath(row: lastRow, section: 0)
-            
-            // 先滚动到最后一个 cell
-            tableView.scrollToRow(at: lastIndexPath, at: .bottom, animated: true)
+    /// 滚动到底部（流式更新用：不重载整个表格，仅刷新行高）
+    func tableViewScrollToBottom(animated: Bool = true) {
+        guard dataArray.count > 0 else { return }
+
+        UIView.performWithoutAnimation {
+            tableView.beginUpdates()
+            tableView.endUpdates()
         }
+        tableView.layoutIfNeeded()
+
+        let contentHeight = tableView.contentSize.height
+        let frameHeight = tableView.bounds.height
+        let bottomInset = tableView.contentInset.bottom
+
+        guard contentHeight > frameHeight else { return }
+
+        let bottomOffset = CGPoint(
+            x: 0,
+            y: contentHeight - frameHeight + bottomInset)
+        tableView.setContentOffset(bottomOffset, animated: animated)
+    }
+
+    /// 新增/删除 cell 后重新加载表格并滚动到底部
+    func reloadAndScrollToBottom(animated: Bool = true) {
+        guard dataArray.count > 0 else { return }
+
+        tableView.reloadData()
+        tableView.layoutIfNeeded()
+
+        let contentHeight = tableView.contentSize.height
+        let frameHeight = tableView.bounds.height
+        let bottomInset = tableView.contentInset.bottom
+
+        guard contentHeight > frameHeight else { return }
+
+        let bottomOffset = CGPoint(
+            x: 0,
+            y: contentHeight - frameHeight + bottomInset)
+        tableView.setContentOffset(bottomOffset, animated: animated)
     }
 }
 

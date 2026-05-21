@@ -116,7 +116,19 @@ struct Index {
         break;
       case 'ModelReady':
         this.isModelReady = true;
+        const wasVision = this.isVisionSupported;
         this.isVisionSupported = !!this.engine && this.engine.isVisionSupported();
+        // When vision support state changes (model switch), clear the chat
+        // and show a fresh welcome card. Use a unique id so LazyForEach's
+        // key changes and it creates a brand-new WelcomeCard component
+        // instead of reusing the cached one with stale props.
+        if (wasVision !== this.isVisionSupported) {
+          this.messageList.clear();
+          const w = ChatMessage.welcome();
+          w.id = this.messageIdCounter++;
+          this.messageList.push(w);
+          this.isImagePrefilled = false;
+        }
         break;
       case 'PrefillingImage':
         this.isModelReady = true;
@@ -136,6 +148,7 @@ struct Index {
   private async loadDefaultModel(): Promise<void> {
     if (!this.engine) return;
     const ctx = getContext(this);
+    const selectedModel = LlamaEngine.getSelectedModel(ctx);
 
     // Step 1: if the selected model is missing on disk, download it first.
     // The downloader is already serial-safe (LlamaEngine.serial chain) so we
@@ -143,7 +156,9 @@ struct Index {
     // need to manually open the Model Manager page just to fetch a model.
     let modelPath = LlamaEngine.modelPath(ctx);
     let mmprojPath = LlamaEngine.mmprojPath(ctx);
-    if (!fs.accessSync(modelPath) || !fs.accessSync(mmprojPath)) {
+    const needsDownload = !fs.accessSync(modelPath) ||
+        (!selectedModel.isTextOnly && !!mmprojPath && !fs.accessSync(mmprojPath));
+    if (needsDownload) {
       hilog.info(DOMAIN, TAG, 'Default model missing, auto-downloading...');
       promptAction.showToast({ message: '首次使用，正在下载模型...', duration: 3000 });
       try {
@@ -167,7 +182,7 @@ struct Index {
       return;
     }
     try {
-      const mm = fs.accessSync(mmprojPath) ? mmprojPath : null;
+      const mm = (mmprojPath && fs.accessSync(mmprojPath)) ? mmprojPath : null;
       await this.engine.loadModel(modelPath, mm);
       // No default system prompt: aligned with iOS opt-r1 (see LlamaEngine.ets).
     } catch (e) {
@@ -498,7 +513,7 @@ struct Index {
   @Builder AppBar() {
     Row() {
       Column() {
-        Text($r('app.string.page_title_chat'))
+        Text(this.isVisionSupported ? 'MiniCPM-V' : 'MiniCPM')
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.on_surface'));
@@ -511,20 +526,17 @@ struct Index {
       .layoutWeight(1)
       .padding({ left: 16 });
 
-      // Trailing icons (mirror Android demo's toolbar):
-      //   * clear chat (delete icon)
-      //   * model manager (settings icon)
-      // The image picker icon used to live here too, but it has been moved
-      // next to the input field at the bottom of the screen, matching the
-      // Android/iOS layout (gallery button sits inside the input bar).
-      Button({ type: ButtonType.Circle, stateEffect: true }) {
-        Image($r('app.media.ic_image_slice'))
-          .width(22).height(22)
-          .fillColor($r('app.color.on_surface_variant'));
+      // Image slice button — hidden for text-only models
+      if (this.isVisionSupported) {
+        Button({ type: ButtonType.Circle, stateEffect: true }) {
+          Image($r('app.media.ic_image_slice'))
+            .width(22).height(22)
+            .fillColor($r('app.color.on_surface_variant'));
+        }
+        .width(40).height(40).margin({ right: 4 })
+        .backgroundColor(Color.Transparent)
+        .onClick(() => { this.onClickImageSlice(); });
       }
-      .width(40).height(40).margin({ right: 4 })
-      .backgroundColor(Color.Transparent)
-      .onClick(() => { this.onClickImageSlice(); });
 
       Button({ type: ButtonType.Circle, stateEffect: true }) {
         Image($r('app.media.ic_delete'))
@@ -558,6 +570,7 @@ struct Index {
         ListItem() {
           if (msg.kind === 'welcome') {
             WelcomeCard({
+              isTextOnly: !this.isVisionSupported,
               onSuggestion: (s: string) => {
                 this.inputText = s;
                 this.onClickSend();
@@ -596,22 +609,23 @@ struct Index {
         .enabled(this.isModelReady)
         .onChange((v: string) => { this.inputText = v; });
 
-      // Image picker button.  Single tap → system photo picker.  Long-press
-      // → cycles through the bundled rawfile debug images.  Same gesture
-      // wiring as the icon buttons in the AppBar (Button + onClick + gesture).
-      Button({ type: ButtonType.Circle, stateEffect: true }) {
-        Image($r('app.media.ic_image'))
-          .width(22).height(22)
-          .fillColor($r('app.color.on_surface_variant'));
+      // Image picker button — hidden for text-only models.
+      // Single tap → system photo picker. Long-press → bundled debug images.
+      if (this.isVisionSupported) {
+        Button({ type: ButtonType.Circle, stateEffect: true }) {
+          Image($r('app.media.ic_image'))
+            .width(22).height(22)
+            .fillColor($r('app.color.on_surface_variant'));
+        }
+        .width(40).height(40)
+        .backgroundColor(Color.Transparent)
+        .enabled(this.isModelReady)
+        .onClick(() => this.onClickPickImage())
+        .gesture(
+          LongPressGesture({ repeat: false, duration: 500 })
+            .onAction(() => this.onLongPressImageDebug()),
+        );
       }
-      .width(40).height(40)
-      .backgroundColor(Color.Transparent)
-      .enabled(this.isModelReady && this.isVisionSupported)
-      .onClick(() => this.onClickPickImage())
-      .gesture(
-        LongPressGesture({ repeat: false, duration: 500 })
-          .onAction(() => this.onLongPressImageDebug()),
-      );
 
       Button({ type: ButtonType.Circle, stateEffect: true }) {
         Image($r('app.media.ic_send'))

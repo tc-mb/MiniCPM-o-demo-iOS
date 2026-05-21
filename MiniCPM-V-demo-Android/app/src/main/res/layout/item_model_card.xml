@@ -43,11 +43,12 @@
 
         <TextView
             android:id="@+id/iv_selected"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:gravity="center"
             android:text="○"
             android:textSize="20sp"
+            android:includeFontPadding="false"
             android:textColor="?attr/colorOnSurface"
             android:alpha="0.5" />
     </LinearLayout>

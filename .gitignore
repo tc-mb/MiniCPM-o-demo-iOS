@@ -72,6 +72,9 @@ iOSInjectionProject/
 .DS_Store
 __MACOSX
 
+# Xcode build cache (xcodebuild -derivedDataPath)
+build_tmp/
+
 # AI agent local notes (Claude / Cursor / Codex 等本地协作笔记，不入库)
 AGENTS.md
 CLAUDE.md

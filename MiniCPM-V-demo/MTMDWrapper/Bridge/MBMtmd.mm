@@ -55,22 +55,43 @@ namespace {
 // One-shot helper for llama_token -> std::string using only public llama.h API.
 // Mirrors what common_token_to_piece does, minus the std::vector roundtrip.
 std::string token_to_piece_impl(const llama_vocab * vocab, llama_token token) {
+    // special=true so that special tokens like <think> / </think> are rendered
+    // as their text form (e.g. "<think>") instead of empty strings.  This lets
+    // the Swift UI layer parse thinking blocks.  EOG tokens (<|im_end|>) never
+    // reach here because is_eog is checked first in mb_mtmd_loop.
     char buf[256];
-    int32_t n = llama_token_to_piece(vocab, token, buf, sizeof(buf), /*lstrip=*/0, /*special=*/false);
+    int32_t n = llama_token_to_piece(vocab, token, buf, sizeof(buf), /*lstrip=*/0, /*special=*/true);
     if (n >= 0) {
         return std::string(buf, n);
     }
-    // Buffer too small (extremely rare for a single token).  Re-try with the
-    // exact required size.  Use std::vector<char> so we have a writable
-    // buffer (std::string::data() returns const char* before C++17, which
-    // does not match llama_token_to_piece's char* parameter).
     std::vector<char> wide(static_cast<size_t>(-n));
     int32_t n2 = llama_token_to_piece(vocab, token, wide.data(), static_cast<int32_t>(wide.size()),
-                                      /*lstrip=*/0, /*special=*/false);
+                                      /*lstrip=*/0, /*special=*/true);
     if (n2 < 0) {
         return std::string();
     }
     return std::string(wide.data(), static_cast<size_t>(n2));
+}
+
+// Validate whether a byte buffer forms valid UTF-8.  Mirrors the Android
+// JNI is_valid_utf8() used alongside cached_token_chars.
+bool is_valid_utf8(const char * str) {
+    if (!str) return true;
+    const auto * bytes = reinterpret_cast<const unsigned char *>(str);
+    while (*bytes) {
+        int num;
+        if      ((*bytes & 0x80) == 0x00) num = 1;
+        else if ((*bytes & 0xE0) == 0xC0) num = 2;
+        else if ((*bytes & 0xF0) == 0xE0) num = 3;
+        else if ((*bytes & 0xF8) == 0xF0) num = 4;
+        else return false;
+        bytes++;
+        for (int i = 1; i < num; i++) {
+            if ((*bytes & 0xC0) != 0x80) return false;
+            bytes++;
+        }
+    }
+    return true;
 }
 
 // Add a single token to a freshly-cleared llama_batch with seq_id={0} and
@@ -104,7 +125,7 @@ struct mb_mtmd_context {
     llama_model_ptr     model;
     llama_context_ptr   lctx;
     llama_sampler_ptr   sampler;
-    mtmd_context_ptr    vision;
+    mtmd_context_ptr    vision;       // nullptr for text-only models
 
     // n_batch the lctx was actually built with (after llama_n_batch(ctx)
     // query).  We use this for both the prefill batch size and the size of
@@ -117,6 +138,14 @@ struct mb_mtmd_context {
     const llama_vocab * vocab = nullptr; // borrowed from model
 
     llama_pos           n_past = 0;      // position counter for seq=0
+
+    bool                text_only = false; // true for text-only models (no mmproj)
+
+    // UTF-8 byte cache: BPE byte-level tokens may split multi-byte chars
+    // (e.g. emoji 😊 = F0 9F 98 8A across 4 tokens). We accumulate raw
+    // bytes here and only emit when the sequence forms valid UTF-8, exactly
+    // matching Android's cached_token_chars + is_valid_utf8 pattern.
+    std::string         cached_piece;
 
     std::string         last_error;
 
@@ -300,6 +329,86 @@ mb_mtmd_context * mb_mtmd_init(const char * model_path,
     return ctx.release();
 }
 
+mb_mtmd_context * mb_mtmd_init_text_only(const char * model_path,
+                                         const mb_mtmd_params * params_in) {
+    if (!model_path || !*model_path) {
+        fprintf(stderr, "[MBMtmd] mb_mtmd_init_text_only: missing model_path\n");
+        return nullptr;
+    }
+
+    mb_mtmd_params params = params_in ? *params_in : mb_mtmd_params_default();
+
+    llama_backend_init();
+
+    std::unique_ptr<mb_mtmd_context> ctx(new mb_mtmd_context());
+    ctx->text_only = true;
+
+    // ---- Load text model ----
+    llama_model_params mparams = llama_model_default_params();
+    mparams.use_mmap     = true;
+    mparams.use_mlock    = false;
+    mparams.n_gpu_layers = params.use_gpu ? 999 : 0;
+
+    ctx->model.reset(llama_model_load_from_file(model_path, mparams));
+    if (!ctx->model) {
+        set_error(ctx.get(), std::string("Failed to load model from: ") + model_path);
+        return nullptr;
+    }
+
+    // ---- Create llama_context ----
+    const int requested_ubatch = params.n_ubatch > 0 ? params.n_ubatch : MB_DEFAULT_N_UBATCH;
+
+    llama_context_params cparams = llama_context_default_params();
+    cparams.n_ctx           = static_cast<uint32_t>(params.n_ctx > 0 ? params.n_ctx : 4096);
+    cparams.n_batch         = 2048;
+    cparams.n_ubatch        = static_cast<uint32_t>(requested_ubatch);
+    cparams.n_threads       = params.n_threads;
+    cparams.n_threads_batch = params.n_threads;
+    cparams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO;
+    cparams.no_perf         = false;
+
+    fprintf(stderr, "[MBMtmd] text-only llama_context: n_ctx=%u n_batch=%u n_ubatch=%u flash_attn=AUTO\n",
+            cparams.n_ctx, cparams.n_batch, cparams.n_ubatch);
+
+    ctx->lctx.reset(llama_init_from_model(ctx->model.get(), cparams));
+    if (!ctx->lctx) {
+        set_error(ctx.get(), "Failed to create llama_context");
+        return nullptr;
+    }
+
+    ctx->vocab   = llama_model_get_vocab(ctx->model.get());
+    ctx->n_batch = static_cast<int32_t>(llama_n_batch(ctx->lctx.get()));
+
+    // ---- Build sampler chain ----
+    // MiniCPM 5: temperature=0.6, top_p=0.95 (from generation_config.json)
+    {
+        llama_sampler_chain_params scp = llama_sampler_chain_default_params();
+        scp.no_perf = false;
+        ctx->sampler.reset(llama_sampler_chain_init(scp));
+        if (!ctx->sampler) {
+            set_error(ctx.get(), "Failed to init sampler chain");
+            return nullptr;
+        }
+        float temp = params.temperature > 0.0f ? params.temperature : 0.6f;
+        llama_sampler_chain_add(ctx->sampler.get(), llama_sampler_init_top_p(0.95f, /*min_keep=*/1));
+        llama_sampler_chain_add(ctx->sampler.get(), llama_sampler_init_temp(temp));
+        llama_sampler_chain_add(ctx->sampler.get(), llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+    }
+
+    // ---- Allocate generation batch ----
+    ctx->batch        = llama_batch_init(ctx->n_batch, /*embd=*/0, /*n_seq_max=*/1);
+    ctx->batch_inited = true;
+    if (!ctx->batch.token) {
+        set_error(ctx.get(), "Failed to llama_batch_init");
+        return nullptr;
+    }
+
+    // No vision context for text-only models
+    // ctx->vision remains nullptr
+
+    return ctx.release();
+}
+
 void mb_mtmd_free(mb_mtmd_context * ctx) {
     delete ctx;
 }
@@ -458,22 +567,99 @@ int mb_mtmd_prefill_text(mb_mtmd_context * ctx, const char * text_in, const char
     const std::string text = text_in;
     const std::string role = role_in;
 
-    // MiniCPM-V 4.6 instruct chatml template fragment.  Hand-rolled because
-    // the GGUF-embedded template does not encode the enable_thinking=false
-    // prefix.  No default system prompt is injected — see top-of-file note.
+    // Build ChatML template based on model type.
+    //
+    // MiniCPM5's Jinja2 chat_template starts with {{- bos_token }}, i.e. <s>
+    // (token 0).  On Android, common_chat_format_single renders this
+    // automatically via Jinja2.  Here we must include it explicitly for the
+    // very first turn (n_past == 0), because llama_tokenize with
+    // add_special=true will NOT add BOS since the model's metadata sets
+    // add_bos_token=false (the template, not the tokenizer, owns BOS
+    // placement).
     std::string formatted;
+
+    // Prepend BOS for text-only models on the first turn.
+    if (ctx->text_only && ctx->n_past == 0) {
+        formatted = "<s>";
+    }
+
     if (role == "user") {
         formatted += "<|im_start|>user\n" + text + "<|im_end|>\n";
-        formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";
+        if (ctx->text_only) {
+            // MiniCPM5 (enable_thinking=true): the Jinja2 template places
+            // <think>\n after the assistant header.  With parse_special=true,
+            // llama_tokenize correctly maps "<think>" to the single special
+            // token (not individual characters), matching the Android path's
+            // common_tokenize + Jinja2 behavior.
+            formatted += "<|im_start|>assistant\n<think>\n";
+        } else {
+            // V4.6: disable thinking — inject empty think block
+            formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";
+        }
     } else if (role == "assistant") {
-        formatted = text + "<|im_end|>\n";
+        formatted += text + "<|im_end|>\n";
     } else if (role == "system") {
-        formatted = "<|im_start|>system\n" + text + "<|im_end|>\n";
+        formatted += "<|im_start|>system\n" + text + "<|im_end|>\n";
     } else {
         set_error(ctx, "prefill_text: unknown role: " + role);
         return -1;
     }
 
+    if (ctx->text_only) {
+        // Text-only path: use llama_tokenize directly (no mtmd/vision context).
+        // BOS is managed explicitly via the template (see <s> above), so
+        // add_special is always false to avoid double BOS.
+        const bool add_special = false;
+
+        int32_t n_tokens = llama_tokenize(ctx->vocab, formatted.c_str(),
+                                          static_cast<int32_t>(formatted.size()),
+                                          nullptr, 0, add_special, /*parse_special=*/true);
+        if (n_tokens < 0) n_tokens = -n_tokens;
+
+        std::vector<llama_token> tokens(static_cast<size_t>(n_tokens));
+        int32_t actual = llama_tokenize(ctx->vocab, formatted.c_str(),
+                                        static_cast<int32_t>(formatted.size()),
+                                        tokens.data(), n_tokens, add_special, /*parse_special=*/true);
+        if (actual < 0) {
+            set_error(ctx, "prefill_text: llama_tokenize failed");
+            return -1;
+        }
+        tokens.resize(static_cast<size_t>(actual));
+
+        // Prefill tokens in batches
+        const llama_pos start_n_past = ctx->n_past;
+        const int32_t batch_size = ctx->n_batch;
+
+        for (size_t i = 0; i < tokens.size(); i += static_cast<size_t>(batch_size)) {
+            size_t end = std::min(i + static_cast<size_t>(batch_size), tokens.size());
+            int32_t chunk_len = static_cast<int32_t>(end - i);
+            bool is_last_chunk = (end == tokens.size());
+
+            llama_batch batch = llama_batch_init(chunk_len, /*embd=*/0, /*n_seq_max=*/1);
+            batch.n_tokens = chunk_len;
+            for (int32_t j = 0; j < chunk_len; j++) {
+                batch.token[j]      = tokens[i + static_cast<size_t>(j)];
+                batch.pos[j]        = ctx->n_past + j;
+                batch.n_seq_id[j]   = 1;
+                batch.seq_id[j][0]  = 0;
+                batch.logits[j]     = (is_last_chunk && j == chunk_len - 1) ? 1 : 0;
+            }
+
+            if (llama_decode(ctx->lctx.get(), batch) != 0) {
+                llama_batch_free(batch);
+                rollback_to_n_past(ctx, start_n_past);
+                set_error(ctx, "prefill_text: llama_decode failed (text-only path)");
+                return -1;
+            }
+
+            ctx->n_past += chunk_len;
+            llama_batch_free(batch);
+        }
+
+        return 0;
+    }
+
+    // Vision model path: use mtmd_tokenize + mtmd_helper_eval_chunks
     mtmd_input_text in;
     in.text          = formatted.c_str();
     in.add_special   = (ctx->n_past == 0);
@@ -494,7 +680,6 @@ int mb_mtmd_prefill_text(mb_mtmd_context * ctx, const char * text_in, const char
 
     const llama_pos start_n_past = ctx->n_past;
     llama_pos new_n_past = start_n_past;
-    // logits_last=true so the next mb_mtmd_loop call has fresh logits to sample.
     int32_t ev = mtmd_helper_eval_chunks(ctx->vision.get(),
                                          ctx->lctx.get(),
                                          chunks,
@@ -504,8 +689,6 @@ int mb_mtmd_prefill_text(mb_mtmd_context * ctx, const char * text_in, const char
                                          /*logits_last=*/true,
                                          &new_n_past);
     if (ev != 0) {
-        // 同 prefill_image_like 的回滚策略；SSM/hybrid 模型下 partial truncate 不
-        // 支持时会自动 fallback 到全清 + n_past=0。
         const bool clean_rollback = rollback_to_n_past(ctx, start_n_past);
         const std::string suffix = clean_rollback
             ? " (KV rolled back to n_past=" + std::to_string(start_n_past) + ")"
@@ -544,16 +727,39 @@ mb_mtmd_token mb_mtmd_loop(mb_mtmd_context * ctx) {
     }
 
     if (is_eog) {
+        // Flush any remaining cached bytes on EOG (lossy but ensures we
+        // never silently eat trailing output).
+        if (!ctx->cached_piece.empty()) {
+            piece = ctx->cached_piece;
+            ctx->cached_piece.clear();
+            result.token = static_cast<char *>(malloc(piece.size() + 1));
+            if (result.token) {
+                memcpy(result.token, piece.data(), piece.size());
+                result.token[piece.size()] = '\0';
+            }
+        }
         result.is_end = true;
         return result;
     }
 
-    // 4) Hand piece off to the caller as a malloc'd C string.
-    result.token = static_cast<char *>(malloc(piece.size() + 1));
-    if (result.token) {
-        memcpy(result.token, piece.data(), piece.size());
-        result.token[piece.size()] = '\0';
+    // 4) UTF-8 byte caching: accumulate bytes until they form a valid
+    //    UTF-8 sequence.  BPE byte-level tokens for multi-byte chars
+    //    (e.g. emoji) arrive as individual bytes that would corrupt
+    //    Swift's String(cString:) if passed alone.
+    ctx->cached_piece += piece;
+
+    if (is_valid_utf8(ctx->cached_piece.c_str())) {
+        const std::string & emit = ctx->cached_piece;
+        result.token = static_cast<char *>(malloc(emit.size() + 1));
+        if (result.token) {
+            memcpy(result.token, emit.data(), emit.size());
+            result.token[emit.size()] = '\0';
+        }
+        ctx->cached_piece.clear();
     }
+    // else: result.token stays nullptr → Swift sees empty string, waits
+    //       for the next byte token to complete the sequence.
+
     result.is_end = false;
     return result;
 }

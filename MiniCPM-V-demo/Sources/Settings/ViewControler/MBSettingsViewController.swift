@@ -175,10 +175,12 @@ extension MBSettingsViewController: UITableViewDataSource {
         
         switch section {
         case 0:
-            titleLabel.text = "模型管理"
+            titleLabel.text = "多模态模型管理"
         case 1:
-            titleLabel.text = "功能设置"
+            titleLabel.text = "语言模型管理"
         case 2:
+            titleLabel.text = "功能设置"
+        case 3:
             titleLabel.text = "其他设置"
         default:
             titleLabel.text = ""
@@ -204,11 +206,11 @@ extension MBSettingsViewController: UITableViewDelegate {
         let model = dataArray[indexPath.section][indexPath.row]
         
         switch indexPath.section {
-        case 0: // 模型管理
+        case 0, 1: // 多模态模型 / 语言模型
             handleModelSelection(model: model, at: indexPath)
-        case 1: // 功能设置
+        case 2: // 功能设置
             handleFeatureSelection(model: model, at: indexPath)
-        case 2: // 其他设置
+        case 3: // 其他设置
             handleOtherSettings(model: model, at: indexPath)
         default:
             break
@@ -245,6 +247,9 @@ extension MBSettingsViewController: UITableViewDelegate {
                 self.navigationController?.pushViewController(detailVC, animated: true)
             } else if title == "MiniCPM-V 4.6" {
                 let detailVC = MBV46ModelDetailViewController(with: mtmdWrapperExample)
+                self.navigationController?.pushViewController(detailVC, animated: true)
+            } else if title == "MiniCPM 5 0.9B" {
+                let detailVC = MBV5ModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
             }
         }
@@ -298,22 +303,23 @@ extension MBSettingsViewController {
     
     /// 配置列表数据用于展示 cell
     public func loadTableViewData() {
-        setupModelManagementSection()
+        dataArray.removeAll()
+        setupMultimodalModelSection()
+        setupLanguageModelSection()
         setupFeatureSettingsSection()
-        setupThirdSection()
+        setupOtherSettingsSection()
         
         tableView.reloadData()
     }
     
-    /// 配置模型管理 section
-    private func setupModelManagementSection() {
-        var sectionA = [MBSettingsModel]()
+    /// Section 0: 多模态模型 (VLM)
+    private func setupMultimodalModelSection() {
+        var section = [MBSettingsModel]()
         
-        // 获取当前选中的模型
         let currentSelectedModel = UserDefaults.standard.string(forKey: "current_selected_model")
         
         let totalRAM = ProcessInfo.processInfo.physicalMemory
-        let deviceSupports8B = totalRAM >= 12 * 1024 * 1024 * 1024 // 需要 12 GB+ 内存
+        let deviceSupports8B = totalRAM >= 12 * 1024 * 1024 * 1024
 
         // MiniCPM-V 2.6 8B
         let model1 = MBSettingsModel()
@@ -333,7 +339,7 @@ extension MBSettingsViewController {
             model1.status = "none"
         }
         
-        sectionA.append(model1)
+        section.append(model1)
         
         // MiniCPM-V 4.0 4B
         let model2 = MBSettingsModel()
@@ -342,17 +348,14 @@ extension MBSettingsViewController {
         model2.accessoryIcon = UIImage(named: "setting_accessory_icon")
         model2.selectedIcon = UIImage(systemName: "checkmark.circle.fill")
         
-        // 检查是否已选中
         if currentSelectedModel == "V4MultiModel" {
             model2.status = "selected"
             model2.statusString = "正在使用"
-            debugLog("-->> SettingsVC: V4模型设置为选中状态")
         } else {
             model2.status = "none"
-            debugLog("-->> SettingsVC: V4模型设置为未选中状态")
         }
         
-        sectionA.append(model2)
+        section.append(model2)
         
         // MiniCPM-V 4.6
         let model3 = MBSettingsModel()
@@ -368,61 +371,67 @@ extension MBSettingsViewController {
             model3.status = "none"
         }
         
-        sectionA.append(model3)
+        section.append(model3)
         
-        // 添加到数据源
-        if dataArray.count > 0 {
-            dataArray[0] = sectionA
-        } else {
-            dataArray.append(sectionA)
-        }
+        dataArray.append(section)
     }
     
-    /// 配置功能设置 section
+    /// Section 1: 语言模型 (LLM)
+    private func setupLanguageModelSection() {
+        var section = [MBSettingsModel]()
+        
+        let currentSelectedModel = UserDefaults.standard.string(forKey: "current_selected_model")
+        
+        let model = MBSettingsModel()
+        model.title = "MiniCPM 5 0.9B"
+        model.icon = UIImage(systemName: "text.bubble")
+        model.accessoryIcon = UIImage(named: "setting_accessory_icon")
+        model.selectedIcon = UIImage(systemName: "checkmark.circle.fill")
+        
+        if currentSelectedModel == "V5TextModel" {
+            model.status = "selected"
+            model.statusString = "正在使用"
+        } else {
+            model.status = "none"
+        }
+        
+        section.append(model)
+        
+        dataArray.append(section)
+    }
+    
+    /// Section 2: 功能设置
     private func setupFeatureSettingsSection() {
-        var sectionB = [MBSettingsModel]()
+        var section = [MBSettingsModel]()
         
         // 实时理解设置（暂未调通，暂时隐藏）
         // let realtimeSetting = MBSettingsModel()
         // realtimeSetting.title = "实时理解设置"
         // realtimeSetting.icon = UIImage(systemName: "brain.head.profile")
         // realtimeSetting.accessoryIcon = UIImage(named: "setting_accessory_icon")
-        // sectionB.append(realtimeSetting)
+        // section.append(realtimeSetting)
         
-        // 添加到数据源（空 section 不会显示）
-        if dataArray.count > 1 {
-            dataArray[1] = sectionB
-        } else {
-            dataArray.append(sectionB)
-        }
+        dataArray.append(section)
     }
     
-    /// 配置第三个 section
-    private func setupThirdSection() {
-        var sectionC = [MBSettingsModel]()
+    /// Section 3: 其他设置
+    private func setupOtherSettingsSection() {
+        var section = [MBSettingsModel]()
         
-        // 关于我们
         let aboutModel = MBSettingsModel()
         aboutModel.title = "关于我们"
         aboutModel.icon = UIImage(systemName: "info.circle")
         aboutModel.accessoryIcon = UIImage(named: "setting_accessory_icon")
         
-        sectionC.append(aboutModel)
+        section.append(aboutModel)
         
-        // 添加到数据源
-        if dataArray.count > 2 {
-            dataArray[2] = sectionC
-        } else {
-            dataArray.append(sectionC)
-        }
+        dataArray.append(section)
     }
     
-    /// 刷新模型管理section
+    /// 刷新模型相关 section
     private func refreshModelManagementSection() {
-        // 获取当前选中的模型
         var currentSelectedModel = UserDefaults.standard.string(forKey: "current_selected_model")
         
-        // 如果 V2.6 已被选中但设备内存不再满足要求，清除选择
         let totalRAM = ProcessInfo.processInfo.physicalMemory
         let hasEnoughRAMFor8B = totalRAM >= 12 * 1024 * 1024 * 1024
         if currentSelectedModel == "V26MultiModel" && !hasEnoughRAMFor8B {
@@ -431,22 +440,19 @@ extension MBSettingsViewController {
             mtmdWrapperExample?.currentUsingModelType = .Unknown
         }
         
-        // 更新llamaState的当前模型类型
         if currentSelectedModel == "V26MultiModel" {
             mtmdWrapperExample?.currentUsingModelType = .V26MultiModel
         } else if currentSelectedModel == "V4MultiModel" {
             mtmdWrapperExample?.currentUsingModelType = .V4MultiModel
         } else if currentSelectedModel == "V46MultiModel" {
             mtmdWrapperExample?.currentUsingModelType = .V46MultiModel
+        } else if currentSelectedModel == "V5TextModel" {
+            mtmdWrapperExample?.currentUsingModelType = .V5TextModel
         }
         
-        // 重新配置模型管理section
-        setupModelManagementSection()
+        // 完整重建数据源（loadTableViewData 内部 removeAll + append）
+        loadTableViewData()
         
-        // 刷新表格
-        tableView.reloadData()
-        
-        // 调用回调通知外部模型类型已更新
         if let currentType = mtmdWrapperExample?.currentUsingModelType {
             updateUsingModeltype?(currentType)
         }

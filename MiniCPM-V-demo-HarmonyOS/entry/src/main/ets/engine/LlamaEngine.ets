@@ -565,12 +565,15 @@ export class LlamaEngine {
 
   static mmprojPath(context: common.Context): string {
     const m = LlamaEngine.getSelectedModel(context);
+    if (m.isTextOnly) return '';
     return `${LlamaEngine.modelDirFor(context, m)}/${m.mmprojFileName}`;
   }
 
   static modelsExist(context: common.Context): boolean {
-    return fs.accessSync(LlamaEngine.modelPath(context)) &&
-           fs.accessSync(LlamaEngine.mmprojPath(context));
+    if (!fs.accessSync(LlamaEngine.modelPath(context))) return false;
+    const m = LlamaEngine.getSelectedModel(context);
+    if (m.isTextOnly) return true;
+    return fs.accessSync(LlamaEngine.mmprojPath(context));
   }
 
   // SharedPreferences-style selected-model persistence. The preferences API
@@ -700,9 +703,9 @@ export class LlamaEngine {
     for (const model of AVAILABLE_MODELS) {
       const targetDir = LlamaEngine.modelDirFor(context, model);
       const flatGguf  = `${root}/${model.ggufFileName}`;
-      const flatMmproj = `${root}/${model.mmprojFileName}`;
+      const flatMmproj = model.mmprojFileName ? `${root}/${model.mmprojFileName}` : '';
 
-      if (fs.accessSync(flatGguf) || fs.accessSync(flatMmproj)) {
+      if (fs.accessSync(flatGguf) || (flatMmproj && fs.accessSync(flatMmproj))) {
         if (!fs.accessSync(targetDir)) fs.mkdirSync(targetDir, true);
         if (fs.accessSync(flatGguf)) {
           const dst = `${targetDir}/${model.ggufFileName}`;
@@ -713,7 +716,7 @@ export class LlamaEngine {
             }
           }
         }
-        if (fs.accessSync(flatMmproj)) {
+        if (flatMmproj && fs.accessSync(flatMmproj)) {
           const dst = `${targetDir}/${model.mmprojFileName}`;
           if (!fs.accessSync(dst)) {
             try { fs.renameSync(flatMmproj, dst); }

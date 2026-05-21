@@ -9,6 +9,9 @@ import Foundation
 import UIKit
 import SnapKit
 
+/// Tag class so we can identify our gesture among others on the label.
+private class ThinkingTapGesture: UITapGestureRecognizer {}
+
 /// 文本 cell
 class MBTextTableViewCell: UITableViewCell {
     
@@ -37,6 +40,9 @@ class MBTextTableViewCell: UITableViewCell {
     
     /// 按钮 点击事件, model 和 点击的按钮的名字
     public var onTap: ((MBChatModel?, String?) -> Void)?
+
+    /// 思考区域折叠/展开回调，cell 通知外部刷新高度
+    public var onThinkingToggle: (() -> Void)?
 
     /// [复制、重新生成、👍、🦶] toolbar 容器
     lazy var toolBarContainerView: UIView = {
@@ -287,7 +293,7 @@ class MBTextTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func bindTextWith(data: MBChatModel?) {
+    public func bindTextWith(data: MBChatModel?, streaming: Bool = false) {
         model = data
         
         if let rawText = model?.contentText {
@@ -314,7 +320,24 @@ class MBTextTableViewCell: UITableViewCell {
                 .paragraphStyle: para
             ]
             
-            customLabel.attributedText = NSAttributedString(string: text, attributes: attributes)
+            let isCollapsed = model?.isThinkingCollapsed ?? false
+            let isLLM = model?.role == "llm"
+            // streaming == true 时跳过 MarkdownRenderer：流式路径上每 token 都
+            // 会触发这里，整段重新解析 + CoreText 重排版是 O(N²) 主线程开销，
+            // iOS 17/18 的输入法 candidate accumulator 3 秒超时就由此而来。
+            // 生成完成时上层会再用 streaming=false 调一次，正式渲染 markdown。
+            customLabel.attributedText = MBTextTableViewCell.buildThinkAttributedString(
+                from: text, normalAttributes: attributes, paragraphStyle: para,
+                collapsed: isCollapsed, renderMarkdown: isLLM && !streaming)
+            
+            // Tap gesture for collapsing/expanding thinking block
+            if text.hasPrefix("<think>") && text.contains("</think>") {
+                customLabel.isUserInteractionEnabled = true
+                if customLabel.gestureRecognizers?.contains(where: { $0 is ThinkingTapGesture }) != true {
+                    let tap = ThinkingTapGesture(target: self, action: #selector(handleThinkingTap))
+                    customLabel.addGestureRecognizer(tap)
+                }
+            }
             
             // cellMargin means cell left, right margin, 15 inner text margin
             let frameWidth: CGFloat = self.contentView.frame.size.width - CGFloat((cellMargin*2 + 48/*错落有致*/)) - 30
@@ -464,6 +487,35 @@ class MBTextTableViewCell: UITableViewCell {
         }
     }
     
+    /// 流式更新时，从已渲染的 customLabel.attributedText 直接计算高度，
+    /// 避免重复调用 buildThinkAttributedString 做第二次 Markdown 渲染。
+    public func heightFromRenderedContent(viewWidth: CGFloat) -> CGFloat {
+        guard let attrText = customLabel.attributedText else { return 0 }
+
+        var margin: CGFloat = 32
+        if MBUtils.isDeviceIPad() {
+            margin = 64 * 2
+        }
+
+        let frameWidth = viewWidth - CGFloat(margin * 2 + 48) - 15
+        let textSize = attrText.boundingRect(
+            with: CGSize(width: frameWidth, height: .greatestFiniteMagnitude),
+            options: .usesLineFragmentOrigin, context: nil).size
+
+        var toolbarAreaHeight: CGFloat = 0
+        if model?.hasBottomToolbar == true {
+            toolbarAreaHeight = 34
+        }
+
+        let cellTop: CGFloat = 18.0
+        var logHeight: CGFloat = 20
+        if model?.role == "user", model?.type == "TEXT" {
+            logHeight = 0
+        }
+        let cellBottom = toolbarAreaHeight + logHeight + 34.0
+        return cellTop + textSize.height + cellBottom
+    }
+
     /// 计算 cell 高度
     public static func calcCellHeight(data: MBChatModel?, viewWidth: CGFloat) -> CGFloat {
         if let rawText = data?.contentText {
@@ -488,7 +540,11 @@ class MBTextTableViewCell: UITableViewCell {
             ]
             
             let customLabel = UILabel()
-            customLabel.attributedText = NSAttributedString(string: text, attributes: attributes)
+            let isCollapsed = data?.isThinkingCollapsed ?? false
+            let isLLM = data?.role == "llm"
+            customLabel.attributedText = buildThinkAttributedString(
+                from: text, normalAttributes: attributes, paragraphStyle: para,
+                collapsed: isCollapsed, renderMarkdown: isLLM)
             
             // 适配 iPhone + iPad
             var cellMargin: CGFloat = 32
@@ -658,6 +714,94 @@ extension MBTextTableViewCell {
             self.floatingVoteupIcon.image = UIImage(named: "toolbar_voteup")
         }
 
+    }
+
+    // MARK: - Thinking collapse/expand
+
+    @objc private func handleThinkingTap(_ gesture: UITapGestureRecognizer) {
+        guard let m = model else { return }
+        let current = m.isThinkingCollapsed ?? false
+        m.isThinkingCollapsed = !current
+        m.cellHeight = MBTextTableViewCell.calcCellHeight(
+            data: m, viewWidth: contentView.frame.width)
+        bindTextWith(data: m)
+        onThinkingToggle?()
+    }
+
+    // MARK: - <think> block rendering
+
+    /// Parse text containing `<think>...</think>` blocks and build an
+    /// NSAttributedString with thinking content rendered in gray italic and
+    /// the response in normal style.
+    ///
+    /// Handles three states:
+    ///   1. `<think>\n思考中...\n</think>\n\n回复` → gray italic think + normal response
+    ///   2. `<think>\n思考中...` (no closing tag, still generating) → gray italic "思考中..."
+    ///   3. No `<think>` tag → plain normal text
+    ///
+    /// - Parameter collapsed: When true, thinking content is hidden (only header + response shown).
+    static func buildThinkAttributedString(
+        from text: String,
+        normalAttributes: [NSAttributedString.Key: Any],
+        paragraphStyle: NSMutableParagraphStyle,
+        collapsed: Bool = false,
+        renderMarkdown: Bool = false
+    ) -> NSAttributedString {
+        
+        guard text.hasPrefix("<think>") else {
+            if renderMarkdown {
+                return MarkdownRenderer.render(text, baseAttributes: normalAttributes)
+            }
+            return NSAttributedString(string: text, attributes: normalAttributes)
+        }
+        
+        let result = NSMutableAttributedString()
+        let thinkFont = UIFont.italicSystemFont(ofSize: 14)
+        let thinkColor = UIColor.gray
+        let thinkAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: thinkColor,
+            .font: thinkFont,
+            .paragraphStyle: paragraphStyle
+        ]
+        
+        let thinkOpenTag = "<think>\n"
+        let thinkCloseTag = "</think>"
+        
+        if let closeRange = text.range(of: thinkCloseTag) {
+            let thinkStart = text.index(text.startIndex, offsetBy: thinkOpenTag.count)
+            let thinkContent = String(text[thinkStart..<closeRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            if !thinkContent.isEmpty {
+                let arrow = collapsed ? "▸" : "▾"
+                result.append(NSAttributedString(string: "💭 \(arrow) 思考过程\n", attributes: thinkAttributes))
+                if !collapsed {
+                    result.append(NSAttributedString(string: thinkContent + "\n\n", attributes: thinkAttributes))
+                }
+            }
+            
+            var responseStart = closeRange.upperBound
+            while responseStart < text.endIndex && text[responseStart] == "\n" {
+                responseStart = text.index(after: responseStart)
+            }
+            let response = String(text[responseStart...])
+            if !response.isEmpty {
+                if renderMarkdown {
+                    result.append(MarkdownRenderer.render(response, baseAttributes: normalAttributes))
+                } else {
+                    result.append(NSAttributedString(string: response, attributes: normalAttributes))
+                }
+            }
+        } else {
+            let thinkStart = text.index(text.startIndex, offsetBy: min(thinkOpenTag.count, text.count))
+            let thinkContent = String(text[thinkStart...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            result.append(NSAttributedString(string: "💭 ▾ 思考中...\n", attributes: thinkAttributes))
+            if !thinkContent.isEmpty {
+                result.append(NSAttributedString(string: thinkContent, attributes: thinkAttributes))
+            }
+        }
+        
+        return result
     }
 
 }

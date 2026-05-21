@@ -70,8 +70,21 @@ extension MBHomeViewController {
     
     /// 用户点击空白处
     @objc public func handleResignKeyboard(_ tap: UITapGestureRecognizer?) {
-        if textInputView.text.isEmpty, textInputView.isFirstResponder {
+        if textInputView.isFirstResponder {
             textInputView.resignFirstResponder()
+        }
+    }
+
+    /// 点击输入框圆角区域，激活文本输入
+    @objc public func handleFocusTextInput(_ tap: UITapGestureRecognizer) {
+        let loc = tap.location(in: inputRoundCornerView)
+        if sendButton.frame.contains(loc)
+            || chooseImageButton.frame.contains(loc)
+            || captureVideoButton.frame.contains(loc) {
+            return
+        }
+        if !textInputView.isFirstResponder {
+            textInputView.becomeFirstResponder()
         }
     }
 }

@@ -31,7 +31,7 @@ data class ModelInfo(
     val displayName: String,
     val description: String,
     val ggufFileName: String,
-    val mmprojFileName: String,
+    val mmprojFileName: String? = null,
     val hfRepo: String? = null,
     val msRepo: String? = null,
     val hfBranch: String = "main",
@@ -43,17 +43,22 @@ data class ModelInfo(
     val ggufMd5: String? = null,
     val mmprojMd5: String? = null
 ) {
+    /** True for text-only models that have no vision projector. */
+    val isTextOnly: Boolean
+        get() = mmprojFileName == null
+
     /** Path segment to request on HF/MS for the gguf, falling back to local name. */
     val ggufRemotePath: String
         get() = ggufRemoteName ?: ggufFileName
 
     /** Path segment to request on HF/MS for the mmproj, falling back to local name. */
-    val mmprojRemotePath: String
-        get() = mmprojRemoteName ?: mmprojFileName
+    val mmprojRemotePath: String?
+        get() = mmprojFileName?.let { mmprojRemoteName ?: it }
 
-    /** Whether the model registers a direct (non-HF/MS) mirror URL. */
+    /** Whether the model registers a direct (non-HF/MS) mirror URL for all required files. */
     val hasDirectUrls: Boolean
-        get() = !directGgufUrl.isNullOrBlank() && !directMmprojUrl.isNullOrBlank()
+        get() = if (isTextOnly) !directGgufUrl.isNullOrBlank()
+                else !directGgufUrl.isNullOrBlank() && !directMmprojUrl.isNullOrBlank()
 
     /** Whether the model registers HF + MS repos for racing. */
     val hasHfMsSources: Boolean
@@ -93,6 +98,14 @@ data class ModelInfo(
                 // both HuggingFace and ModelScope. Replaces the previous
                 // OBS-only `aad0d36e..` merger-converted variant.
                 mmprojMd5 = "54aea6e04d752f47309a48f12795a1a3"
+            ),
+            ModelInfo(
+                id = "minicpm5-0.9b",
+                displayName = "MiniCPM5-0.9B (Q4_K_M)",
+                description = "轻量级纯文本模型 (0.9B)",
+                ggufFileName = "MiniCPM5-0.9B-Q4_K_M.gguf",
+                directGgufUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf",
+                ggufMd5 = "71a80b3f5013e2410d9db7ce6cbd5f37"
             )
         )
 

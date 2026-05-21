@@ -25,7 +25,7 @@ extension MBHomeViewController {
         // 静态多行文案在 vc 完全 attach 之后再被 alpha 动画显示出来，没有任何额外引用链，最稳。
         let hud = MBHUD.showAdded(to: self.view, animated: true)
         hud.mode = .indeterminate
-        hud.label.text = "正在加载多模态模型...\n首次启动需要解析权重，请稍候"
+        hud.label.text = "正在加载模型...\n首次启动需要解析权重，请稍候"
         
         Task.detached(priority: .userInitiated) {
 
@@ -50,10 +50,15 @@ extension MBHomeViewController {
                 modelURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.modelv46_FileName)
                 mmprojURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.mmprojv46_FileName)
                 selectedModelType = .V46MultiModel
+            } else if lastSelectedModelString == "V5TextModel" {
+                // MiniCPM 5 纯文本模型（无 mmproj）
+                modelURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.modelv5_FileName)
+                selectedModelType = .V5TextModel
             }
             
+            // 纯文本模型不需要 mmproj
             guard let modelURL = modelURL,
-                  let mmprojURL = mmprojURL else {
+                  (selectedModelType.isTextOnly || mmprojURL != nil) else {
                 DispatchQueue.main.async {
                     hud.mode = .text
                     hud.label.text = "初始化失败，请先下载模型"
@@ -69,17 +74,17 @@ extension MBHomeViewController {
             
             // 加载模型
             if await self.mtmdWrapperExample?.multiModelLoadingSuccess == false {
-                if selectedModelType == .V26MultiModel {
+                if selectedModelType == .V5TextModel {
+                    // MiniCPM 5 纯文本模型：无 mmproj，走 text-only 初始化路径
+                    await self.mtmdWrapperExample?.initializeTextOnly(modelPath: modelURL.path)
+                } else if selectedModelType == .V26MultiModel {
                     // V2.6 不走 CoreML / ANE，没有冷启动文案。
-                    await self.mtmdWrapperExample?.initialize(modelPath: modelURL.path, mmprojPath: mmprojURL.path)
+                    await self.mtmdWrapperExample?.initialize(modelPath: modelURL.path, mmprojPath: mmprojURL!.path)
                 } else if selectedModelType == .V4MultiModel {
 
                     await self.mtmdWrapperExample?.initialize()
 
                     // warm-up：注入一张全白图触发 mmproj 首次 forward。
-                    // 注意 V4.0 的 ANE 编译其实在 mtmd_init_from_file 内部的 warmup
-                    // 一帧时就已经发生，下面这次 warmup 是为了让 KV cache 处于已暖
-                    // 的状态，给用户第一张真实图片节省 ~1s 的首次 prefill 开销。
                     let whiteImage = UIImage(named: "white")
                     let whiteImageData = whiteImage?.pngData()
                     let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
@@ -87,24 +92,17 @@ extension MBHomeViewController {
                     try? whiteImageData?.write(to: URL(fileURLWithPath: whiteImagePath))
                     _ = await self.mtmdWrapperExample?.addImageInBackground(whiteImagePath)
                 } else if selectedModelType == .V46MultiModel {
-                    // V4.6：CoreML mlmodelc 默认不再要求用户下载（详见 MBV46ModelDetailViewController 注释）。
-                    // 这里仍保留 resolvedCoreMLPathInDocuments() —— 老用户磁盘上若残留 mlmodelc，
-                    // 自动 pick up 走 CoreML/Metal；否则返回 nil，C++ 层退到 ggml/Metal 路径。
                     let coremlPath = MiniCPMV46CoreMLBootstrap.resolvedCoreMLPathInDocuments()
-                    // V4.6 nCtx：之前 hardcode 8192 是为了给"64 帧 × ~64 visual token = 4096"
-                    // 的视频路径留足余量；现在改成按设备 tier 走 MBDeviceMemoryProbe.recommendedNCtx，
-                    // 4 GB iPhone 仍是 8K 守底线、8 GB+ Pro 拉到 32K 享受更长历史。每多 4K
-                    // 大约 +48 MiB MTL0 KV，详见 MBDeviceMemoryProbe.recommendedNCtx 注释。
                     let nCtx = MBDeviceMemoryProbe.recommendedNCtx
                     await self.mtmdWrapperExample?.initialize(
                         modelPath: modelURL.path,
-                        mmprojPath: mmprojURL.path,
+                        mmprojPath: mmprojURL!.path,
                         coremlPath: coremlPath,
                         nCtx: nCtx
                     )
                 }
 
-                // 更新模型加载状态为：加载成功，maybe 不需要，因为直接选择一张图提问时，也可能要重新 load model。
+                // 更新模型加载状态为：加载成功
                 await self.updateImageLoadedStatus(true)
             }
             

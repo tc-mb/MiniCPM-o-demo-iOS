@@ -31,6 +31,9 @@ public class MTMDWrapper: ObservableObject {
     /// 是否有内容可以生成
     @Published public private(set) var hasContent: Bool = false
     
+    /// 是否为纯文本模型（影响 <think> 注入行为）
+    public var isTextOnlyModel: Bool = false
+    
     // MARK: - Private Properties
     
     /// MTMD 上下文指针
@@ -106,6 +109,41 @@ public class MTMDWrapper: ObservableObject {
                     self.params = params
                     self.initializationState = .initialized
                     print("MTMDWrapper: 初始化成功")
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    /// 初始化纯文本模型（无 mmproj / 视觉模块）
+    public func initializeTextOnly(with params: MTMDParams) async throws {
+        guard initializationState != .initializing else {
+            throw MTMDError.alreadyInitializing
+        }
+        guard initializationState != .initialized else {
+            throw MTMDError.alreadyInitialized
+        }
+
+        updateInitializationState(.initializing)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var cParams = params.toCParams()
+                let ctx = params.modelPath.withCString { modelCStr in
+                    mb_mtmd_init_text_only(modelCStr, &cParams)
+                }
+
+                if ctx == nil {
+                    continuation.resume(throwing: MTMDError.initializationFailed("无法创建纯文本模型上下文"))
+                    return
+                }
+
+                Task { @MainActor in
+                    self.context = ctx
+                    self.params = params
+                    self.isTextOnlyModel = true
+                    self.initializationState = .initialized
+                    print("MTMDWrapper: 纯文本模型初始化成功")
                     continuation.resume()
                 }
             }
@@ -301,6 +339,7 @@ public class MTMDWrapper: ObservableObject {
         currentToken = .empty
         fullOutput = ""
         hasContent = false
+        isTextOnlyModel = false
         params = nil
         
         print("MTMDWrapper: 上下文已重置")
@@ -334,17 +373,47 @@ public class MTMDWrapper: ObservableObject {
     // MARK: - Private Methods
     
     /// 执行生成
+    ///
+    /// **节流设计**：这里有一个**本地累加 buffer + 周期性 flush** 的策略。
+    /// 不能简单地"每 token 都 `fullOutput += ...`"，因为：
+    ///   1. MTMDWrapper 是 @MainActor，每次属性赋值都会被强制 hop 回主线程
+    ///   2. fullOutput 是 @Published，每次写都广播给 MTMDWrapperExample.outputText，
+    ///      再广播给 MBHomeViewController 的 sink，最终触发 cell 重绘 / boundingRect /
+    ///      tableView scroll 一整条主线程链
+    ///   3. 推理在后台跑得很快（几十 ms/token），意味着主线程被持续高频打扰
+    ///
+    /// 现象上的恶果：用户在生成期间点输入框 / 打字会感觉到"互斥卡顿"，第三方
+    /// 输入法 candidate accumulator 还会出现 `Result accumulator timeout: 3.0s`。
+    ///
+    /// 修复策略：本地变量 `accumulated` 全程累加，只在以下时机把它同步到
+    /// @Published fullOutput（触发广播）：
+    ///   - 第一个 token：让 UI 立刻有反馈（lastFlush 设为 distantPast）
+    ///   - 距上次 flush ≥ ``flushIntervalMs`` 毫秒：把刷新降到 ~20 fps，对人眼仍然丝滑
+    ///   - 生成结束：保证最后一段一定可见
+    ///
+    /// 主线程负载从"每 token 一次" → "≤20 次/秒"，下游 sink 链跟着减负。
     private func performGeneration() async {
         guard let ctx = context else {
             updateGenerationState(.failed(.contextNotInitialized))
             return
         }
-        
-        fullOutput = ""
-        
+
+        // For text-only models (MiniCPM5), <think>\n is injected into the
+        // prompt as a special token, so the model won't generate it itself.
+        // Pre-seed fullOutput so the UI can parse <think>...</think> blocks.
+        // Mirrors Android's cached_token_chars = "<think>\n" logic.
+        var accumulated: String = isTextOnlyModel ? "<think>\n" : ""
+        fullOutput = accumulated
+
+        // 50ms = 20 fps 节流。再短主线程会被打扰太多次（每帧 sink → markdown
+        // 高度计算 → scroll），再长用户能看出"一卡一卡"出字（不流畅）。
+        let flushIntervalMs: TimeInterval = 0.050
+        // 用 distantPast 保证循环第一个 token 一定立即 flush，让 UI 立刻有反应。
+        var lastFlush: Date = .distantPast
+
         // 生成循环
         while !Task.isCancelled {
-            
+
             // 在后台线程执行 C 函数调用
             let cToken = await withCheckedContinuation { continuation in
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -357,10 +426,10 @@ public class MTMDWrapper: ObservableObject {
 
             // 在主线程更新状态
             currentToken = MTMDToken(content: tokenString, isEnd: cToken.is_end)
-            if fullOutput.isEmpty && tokenString == "\n" {
+            if accumulated.isEmpty && tokenString == "\n" {
                 tokenString = ""
             }
-            fullOutput += tokenString
+            accumulated += tokenString
 
             // 释放 native bridge 在 mb_mtmd_loop 里 malloc 出来的 token 字符串。
             // 这个 free 是必须的；旧 mtmd-ios 时代被注释掉是因为当时漏 free，
@@ -368,7 +437,16 @@ public class MTMDWrapper: ObservableObject {
             if let tokenPtr = cToken.token {
                 mb_mtmd_string_free(tokenPtr)
             }
-            
+
+            // 节流：把高频 token 累加合并成 ≤20 fps 的 fullOutput 广播。
+            let now = Date()
+            let shouldFlush = cToken.is_end
+                || now.timeIntervalSince(lastFlush) >= flushIntervalMs
+            if shouldFlush {
+                fullOutput = accumulated
+                lastFlush = now
+            }
+
             // 检查是否生成完成
             if cToken.is_end {
                 updateGenerationState(.completed)
@@ -379,7 +457,7 @@ public class MTMDWrapper: ObservableObject {
                 generationTask = nil
                 return
             }
-            
+
             // 避免过度占用 CPU
             try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }

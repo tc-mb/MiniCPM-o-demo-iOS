@@ -365,7 +365,7 @@ extension MBHomeViewController: PHPickerViewControllerDelegate {
         self.appendImageDataToCellWith(image: self.outputImageView.image, imageURL: videoURLString)
 
         // 滚动到底部
-        self.tableViewScrollToBottom()
+        self.reloadAndScrollToBottom()
 
         self.mtmdWrapperExample?.performanceLog = ""
 

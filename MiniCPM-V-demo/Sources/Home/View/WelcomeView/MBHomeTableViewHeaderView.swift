@@ -44,4 +44,8 @@ class MBHomeTableViewHeaderView: UITableViewHeaderFooterView {
     public func setupTapEvent(_ tapImp : ((String?) -> Void)? ) {
         welcomeView.setupTapEvent(tapImp)
     }
+
+    public func updateForModelType(isTextOnly: Bool) {
+        welcomeView.updateForModelType(isTextOnly: isTextOnly)
+    }
 }

@@ -44,6 +44,7 @@ extension MBHomeViewController {
             guard let self = self else { return }
             self._warmUpAlertOnce()
             self._warmUpPHPickerOnce()
+            self._warmUpKeyboardOnce()
         }
     }
 
@@ -55,7 +56,17 @@ extension MBHomeViewController {
     /// UIBlurEffect / alert UIWindow 的 backing class registration / Metal
     /// blur kernel 等都初始化了，等真用户按"切片数量"按钮时直接命中 cache。
     private func _warmUpAlertOnce() {
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
+        // iOS 26+ 在 present 时 assert UIAlertController 必须有可显示内容，
+        // 否则抛 `NSInternalInconsistencyException: UIAlertController must
+        // have a title, a message or an action to display`，未被 catch 会
+        // 走到 llama.cpp 注册的 std::terminate_handler 直接 abort，启动闪退
+        // （见 issue OpenBMB/MiniCPM-V-Apps#14, iOS 26.5 模拟器复现）。
+        // iOS 25 及以前给一个空格 message 就能蒙混过去，iOS 26 SDK 在校验前
+        // 做了 whitespace trim，单空格被视为空。这里给一个非空 title + 一个
+        // dummy action 双保险，alpha=0 + animated:false + 立即 dismiss，
+        // 用户依然完全无感。
+        let alert = UIAlertController(title: ".", message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: ".", style: .cancel))
         alert.view.alpha = 0
         present(alert, animated: false) {
             alert.dismiss(animated: false)
@@ -79,5 +90,50 @@ extension MBHomeViewController {
         config.selectionLimit = 1
         config.filter = .images
         _ = PHPickerViewController(configuration: config)
+    }
+
+    /// 触发系统键盘 extension 的首次 spawn —— 尤其针对装了第三方输入法
+    /// （讯飞 / 搜狗 / 百度 等）的用户。
+    ///
+    /// 第三方输入法在 iOS 上是独立的 app extension 沙箱进程，首次被唤起需要：
+    ///   1. launchd spawn extension process（~200-500 ms）
+    ///   2. dyld 链接 + framework 加载
+    ///   3. 输入法自身的词库 / AI 候选模型加载（讯飞 ~1-3 s）
+    ///   4. RunningBoard 协商生命周期（讯飞缺 entitlement 时还会 retry）
+    ///
+    /// 同时还会附带 iOS 自己的键盘子系统懒加载：
+    ///   - UITextInput / UIKeyboard 单例的 lazy init
+    ///   - 候选词 accumulator (`Received external candidate resultset` 那条 log)
+    ///   - 系统手势识别器 `System gesture gate` 注册
+    ///
+    /// 不预热时，用户进入 home VC 后第一次点输入框会卡 2-5 s 等键盘弹出，期间
+    /// `<0x...> Gesture: System gesture gate timed out.` 是典型 log 信号。
+    /// 我们用一个屏幕外 alpha=0 的 UITextField 偷偷 becomeFirstResponder + 立刻
+    /// resign，把整条冷启动链在 home VC 显示 1.5s 后 background 跑掉。等用户
+    /// 真点输入框时键盘 extension 已 ready，bring-up 路径全是 cache hit。
+    ///
+    /// 安全保护：
+    ///   - 仅在用户的真实输入框还没获焦时才执行，避免抢走正在用的键盘
+    ///   - 临时 textField 加在屏幕外 (-1000,-1000) + alpha=0，肉眼不可见
+    ///   - resign 后异步从父视图移除，确保不残留
+    private func _warmUpKeyboardOnce() {
+        if textInputView.isFirstResponder { return }
+
+        let probe = UITextField(frame: CGRect(x: -1000, y: -1000, width: 1, height: 1))
+        probe.alpha = 0
+        probe.autocorrectionType = .no
+        probe.spellCheckingType = .no
+        view.addSubview(probe)
+
+        // becomeFirstResponder 立刻触发系统去唤起当前默认键盘 extension。
+        _ = probe.becomeFirstResponder()
+
+        // 0.05 s 已足够让系统把 keyboard extension 的 spawn 请求 enqueue；
+        // extension 实际的 process spawn / dlopen 仍在 background 继续，
+        // 但 main thread 已交还。再延一帧 resignFirstResponder + 移除节点。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            probe.resignFirstResponder()
+            probe.removeFromSuperview()
+        }
     }
 }

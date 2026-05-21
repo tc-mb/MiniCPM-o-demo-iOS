@@ -108,16 +108,32 @@ class ChatAdapter(
     }
 
     inner class WelcomeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvWelcomeTitle: TextView = itemView.findViewById(R.id.tv_welcome_title)
+        private val tvWelcomeDesc: TextView = itemView.findViewById(R.id.tv_welcome_desc)
         private val btnSuggestion1: MaterialButton = itemView.findViewById(R.id.btn_suggestion_1)
         private val btnSuggestion2: MaterialButton = itemView.findViewById(R.id.btn_suggestion_2)
 
         fun bind(item: ChatMessage.WelcomeCard) {
-            btnSuggestion1.setOnClickListener {
-                onSuggestionClick?.invoke(itemView.context.getString(R.string.suggestion_1))
+            val ctx = itemView.context
+            if (item.isTextOnly) {
+                tvWelcomeTitle.setText(R.string.welcome_title_text)
+                tvWelcomeDesc.setText(R.string.welcome_desc_text)
+                btnSuggestion1.setText(R.string.suggestion_1_text)
+                btnSuggestion2.setText(R.string.suggestion_2_text)
+                btnSuggestion1.setIconResource(R.drawable.ic_lightbulb)
+                btnSuggestion2.setIconResource(R.drawable.ic_lightbulb)
+            } else {
+                tvWelcomeTitle.setText(R.string.welcome_title)
+                tvWelcomeDesc.setText(R.string.welcome_desc)
+                btnSuggestion1.setText(R.string.suggestion_1)
+                btnSuggestion2.setText(R.string.suggestion_2)
+                btnSuggestion1.setIconResource(R.drawable.ic_lightbulb)
+                btnSuggestion2.setIconResource(R.drawable.ic_image)
             }
-            btnSuggestion2.setOnClickListener {
-                onSuggestionClick?.invoke(itemView.context.getString(R.string.suggestion_2))
-            }
+            val s1 = btnSuggestion1.text.toString()
+            val s2 = btnSuggestion2.text.toString()
+            btnSuggestion1.setOnClickListener { onSuggestionClick?.invoke(s1) }
+            btnSuggestion2.setOnClickListener { onSuggestionClick?.invoke(s2) }
         }
     }
 
@@ -152,9 +168,22 @@ class ChatAdapter(
     inner class AiMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvText: TextView = itemView.findViewById(R.id.tv_ai_text)
         private val btnStop: MaterialButton = itemView.findViewById(R.id.btn_stop_generating)
+        private val layoutThinking: View = itemView.findViewById(R.id.layout_thinking)
+        private val layoutThinkingHeader: View = itemView.findViewById(R.id.layout_thinking_header)
+        private val tvThinkingArrow: TextView = itemView.findViewById(R.id.tv_thinking_arrow)
+        private val tvThinkingLabel: TextView = itemView.findViewById(R.id.tv_thinking_label)
+        private val tvThinkingText: TextView = itemView.findViewById(R.id.tv_thinking_text)
+        private val dividerThinking: View = itemView.findViewById(R.id.divider_thinking)
+
+        private var thinkingExpanded = false
+        private var streamingMinWidth = 0
 
         fun bind(item: ChatMessage.AiMessage) {
-            renderMarkdown(item.text)
+            if (!item.isGenerating) {
+                streamingMinWidth = 0
+                (tvText.parent as? ViewGroup)?.minimumWidth = 0
+            }
+            renderWithThinking(item.text, item.isGenerating)
             btnStop.visibility = if (item.isGenerating) View.VISIBLE else View.GONE
             btnStop.setOnClickListener {
                 onStopClick?.invoke()
@@ -162,26 +191,86 @@ class ChatAdapter(
         }
 
         fun updateText(text: String) {
-            renderMarkdown(text)
+            val contentLayout = tvText.parent as? ViewGroup
+            if (contentLayout != null && contentLayout.width > streamingMinWidth) {
+                streamingMinWidth = contentLayout.width
+            }
+            contentLayout?.minimumWidth = streamingMinWidth
+            renderWithThinking(text, true)
         }
 
         fun setStopButtonVisible(visible: Boolean) {
             btnStop.visibility = if (visible) View.VISIBLE else View.GONE
         }
 
-        // Re-rendering Markwon on every streaming token works fine in practice
-        // (parsing a few KB of partial markdown is sub-millisecond). If the
-        // generated text gets very long we can add a 100-150ms throttle here.
-        //
-        // [MarkdownEscape.normalizeResponseText] is the only place where
-        // assistant output is touched for v4.6's literal `\n` artefact.
-        // It runs at the rendering boundary so the canonical text stored in
-        // [ChatMessage.AiMessage.text] (and any future re-feed into the model)
-        // remains byte-identical to what native produced.
-        private fun renderMarkdown(text: String) {
-            markwon.setMarkdown(tvText, MarkdownEscape.normalizeResponseText(text))
+        private fun renderWithThinking(raw: String, isGenerating: Boolean) {
+            val parsed = parseThinkingBlock(raw, isGenerating)
+
+            if (parsed.thinkingText != null) {
+                layoutThinking.visibility = View.VISIBLE
+
+                if (parsed.isThinking) {
+                    tvThinkingLabel.text = "思考中…"
+                    thinkingExpanded = true
+                } else {
+                    tvThinkingLabel.text = "思考过程"
+                }
+
+                tvThinkingArrow.text = if (thinkingExpanded) "▾" else "▸"
+                tvThinkingText.visibility = if (thinkingExpanded) View.VISIBLE else View.GONE
+                dividerThinking.visibility = if (!parsed.isThinking) View.VISIBLE else View.GONE
+
+                markwon.setMarkdown(tvThinkingText,
+                    MarkdownEscape.normalizeResponseText(parsed.thinkingText))
+
+                layoutThinkingHeader.setOnClickListener {
+                    thinkingExpanded = !thinkingExpanded
+                    tvThinkingArrow.text = if (thinkingExpanded) "▾" else "▸"
+                    tvThinkingText.visibility = if (thinkingExpanded) View.VISIBLE else View.GONE
+                }
+            } else {
+                layoutThinking.visibility = View.GONE
+            }
+
+            val display = parsed.responseText
+            if (display.isNotEmpty()) {
+                tvText.visibility = View.VISIBLE
+                markwon.setMarkdown(tvText, MarkdownEscape.normalizeResponseText(display))
+            } else {
+                tvText.visibility = View.GONE
+            }
+        }
+
+        private fun parseThinkingBlock(text: String, isGenerating: Boolean): ParsedThinking {
+            val thinkStart = text.indexOf("<think>")
+            if (thinkStart < 0) {
+                return ParsedThinking(null, text, false)
+            }
+
+            val contentAfterTag = text.substring(thinkStart + "<think>".length)
+            val thinkEnd = contentAfterTag.indexOf("</think>")
+
+            return if (thinkEnd < 0) {
+                ParsedThinking(
+                    thinkingText = contentAfterTag.trim(),
+                    responseText = "",
+                    isThinking = true
+                )
+            } else {
+                ParsedThinking(
+                    thinkingText = contentAfterTag.substring(0, thinkEnd).trim(),
+                    responseText = contentAfterTag.substring(thinkEnd + "</think>".length).trimStart('\n'),
+                    isThinking = false
+                )
+            }
         }
     }
+
+    private data class ParsedThinking(
+        val thinkingText: String?,
+        val responseText: String,
+        val isThinking: Boolean
+    )
 
     class DiffCallback : DiffUtil.ItemCallback<ChatMessage>() {
         override fun areItemsTheSame(oldItem: ChatMessage, newItem: ChatMessage): Boolean {
@@ -199,7 +288,8 @@ class ChatAdapter(
                 oldItem is ChatMessage.AiMessage && newItem is ChatMessage.AiMessage ->
                     oldItem.isGenerating == newItem.isGenerating &&
                             (oldItem.isGenerating || oldItem.text == newItem.text)
-                oldItem is ChatMessage.WelcomeCard && newItem is ChatMessage.WelcomeCard -> true
+                oldItem is ChatMessage.WelcomeCard && newItem is ChatMessage.WelcomeCard ->
+                    oldItem.isTextOnly == newItem.isTextOnly
                 else -> false
             }
         }

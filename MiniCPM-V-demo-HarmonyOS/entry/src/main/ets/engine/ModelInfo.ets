@@ -29,12 +29,16 @@ export class ModelInfo {
   readonly ggufMd5: string | null;
   readonly mmprojMd5: string | null;
 
+  get isTextOnly(): boolean {
+    return !this.mmprojFileName;
+  }
+
   constructor(
     id: string,
     displayName: string,
     description: string,
     ggufFileName: string,
-    mmprojFileName: string,
+    mmprojFileName: string = '',
     hfRepo: string | null = null,
     msRepo: string | null = null,
     hfBranch: string = 'main',
@@ -74,6 +78,7 @@ export class ModelInfo {
   }
 
   hasDirectUrls(): boolean {
+    if (this.isTextOnly) return !!this.directGgufUrl;
     return !!this.directGgufUrl && !!this.directMmprojUrl;
   }
 
@@ -122,6 +127,25 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     // HuggingFace and ModelScope. Replaces the previous OBS-only
     // `aad0d36e..` merger-converted variant.
     '54aea6e04d752f47309a48f12795a1a3'
+  ),
+  // MiniCPM5-0.9B: text-only model, no mmproj needed. Downloaded via OBS
+  // direct link (华为云 OBS). Mirrors Android ModelInfo.kt registration.
+  new ModelInfo(
+    'minicpm5-0.9b',
+    'MiniCPM5-0.9B (Q4_K_M)',
+    '轻量级纯文本模型 (0.9B)',
+    'MiniCPM5-0.9B-Q4_K_M.gguf',
+    '',
+    null,
+    null,
+    'main',
+    'master',
+    null,
+    null,
+    'https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf',
+    null,
+    '71a80b3f5013e2410d9db7ce6cbd5f37',
+    null
   ),
 ];
 

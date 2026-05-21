@@ -2,19 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!--
-	  ATS：保留 NSAllowsArbitraryLoads=true 以确保 HuggingFace / ModelScope /
-	  华为 OBS 在 LFS redirect 到第三方 CDN 时不被阻断；同时显式列出
-	  NSExceptionDomains 主要的模型下载域名，告诉审核 reviewer "我们已经
-	  把可控范围尽量缩小"，并明确每个域名都强制 HTTPS + TLS 1.2+。
-
-	  审核 Review Notes 建议填写：
-	    本应用为 MiniCPM-V 模型的官方端侧演示客户端，所有推理均在用户设备
-	    本地完成，不向任何服务器上传内容。NSAllowsArbitraryLoads 仅用于
-	    在首次启动时从 HuggingFace / ModelScope / Huawei OBS 下载公开的
-	    模型权重文件（GGUF 数据 + CoreML mlmodelc 包），下载后所有运行
-	    时都不再访问网络。
-	-->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -23,43 +10,33 @@
 		<dict>
 			<key>huggingface.co</key>
 			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<false/>
 				<key>NSExceptionMinimumTLSVersion</key>
 				<string>TLSv1.2</string>
+				<key>NSIncludesSubdomains</key>
+				<true/>
 			</dict>
 			<key>modelscope.cn</key>
 			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<false/>
 				<key>NSExceptionMinimumTLSVersion</key>
 				<string>TLSv1.2</string>
+				<key>NSIncludesSubdomains</key>
+				<true/>
 			</dict>
 			<key>myhuaweicloud.com</key>
 			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<false/>
 				<key>NSExceptionMinimumTLSVersion</key>
 				<string>TLSv1.2</string>
+				<key>NSIncludesSubdomains</key>
+				<true/>
 			</dict>
 		</dict>
 	</dict>
-	<key>NSCameraUsageDescription</key>
-	<string>应用需要使用相机拍照才能进行内容识别。</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>应用需要录音功能才能进行内容识别。</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>App需要您的同意，才能访问相册用于上传图片。</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>语音转文字。</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

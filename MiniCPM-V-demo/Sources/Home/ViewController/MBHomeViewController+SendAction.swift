@@ -61,7 +61,7 @@ extension MBHomeViewController {
         appendTextDataToCellWith(text: "", role: "llm")
         
         // 滚动到底部
-        tableViewScrollToBottom()
+        reloadAndScrollToBottom()
         
         // 清空输出
         mtmdWrapperExample?.outputText = ""

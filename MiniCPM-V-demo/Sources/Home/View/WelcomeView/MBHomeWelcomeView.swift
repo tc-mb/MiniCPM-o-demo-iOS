@@ -139,20 +139,43 @@ class MBHomeWelcomeView: UIView {
         
         tips01ContainerView.onTap = self.onTap
         tips02ContainerView.onTap = self.onTap
-
-        // 隐藏质量不高的 2 个引导 view
-        /*
-        #if DEBUG
-            tips01ContainerView.isHidden = false
-            tips02ContainerView.isHidden = false
-        #else
-            tips01ContainerView.isHidden = true
-            tips02ContainerView.isHidden = true
-        #endif
-        */
     }
-    
-    
 
-    
+    /// 根据模型类型切换欢迎卡片内容
+    public func updateForModelType(isTextOnly: Bool) {
+        if isTextOnly {
+            titleLabel.text = "Welcome to MiniCPM"
+            tips01ContainerView.bindWith(
+                icon: UIImage(named: "header_tips1_icon"),
+                title: "帮我写一首关于春天的诗")
+            tips02ContainerView.bindWith(
+                icon: UIImage(named: "header_tips3_icon"),
+                title: "Explain AI in brief.")
+        } else {
+            titleLabel.text = "Welcome to MiniCPM-V"
+            tips01ContainerView.bindWith(
+                icon: UIImage(named: "header_tips1_icon"),
+                title: "请描述图片中的内容。")
+            tips02ContainerView.bindWith(
+                icon: UIImage(named: "header_tips2_icon"),
+                title: "Describe the image.")
+        }
+
+        let para = NSMutableParagraphStyle()
+        para.maximumLineHeight = 20
+        para.minimumLineHeight = 20
+        para.lineSpacing = 1
+        para.alignment = .center
+        para.lineBreakMode = .byWordWrapping
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.mb_color(with: "#8A8A8E") ?? .gray,
+            .font: UIFont.systemFont(ofSize: 14),
+            .paragraphStyle: para
+        ]
+        let desc = isTextOnly
+            ? "让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话互动，回答你的各种问题。"
+            : "让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话与互动、根据图片给出信息并进一步解读。"
+        descLabel.attributedText = NSAttributedString(string: desc, attributes: attributes)
+    }
 }

@@ -408,7 +408,7 @@ static std::string chat_add_and_format(const std::string &role, const std::strin
     new_msg.role    = role;
     new_msg.content = content;
     auto formatted = common_chat_format_single(
-            g_chat_templates.get(), chat_msgs, new_msg, role == ROLE_USER, false);
+            g_chat_templates.get(), chat_msgs, new_msg, role == ROLE_USER, true);
     chat_msgs.push_back(new_msg);
     LOGi("chat_add_and_format: Formatted %{public}s msg: \n%{public}s\n",
          role.c_str(), formatted.c_str());
@@ -827,6 +827,11 @@ static int run_user_prompt_prefill(const std::string &user_prompt, int n_predict
         generation_start_position = current_position;
     }
 
+    if (formatted_user_prompt.size() >= 8 &&
+        formatted_user_prompt.compare(formatted_user_prompt.size() - 8, 8, "<think>\n") == 0) {
+        cached_token_chars = "<think>\n";
+    }
+
     stop_generation_position = current_position + n_predict;
     return 0;
 }
@@ -906,7 +911,15 @@ static void stream_worker(StreamCtx *ctx) {
 
             if (is_eog) {
                 LOGd("stream_worker: id=%{public}d IS EOG, stopping", new_token_id);
-                chat_add_and_format(ROLE_ASSISTANT, assistant_ss.str());
+                std::string assistant_content = assistant_ss.str();
+                auto think_end = assistant_content.find("</think>");
+                if (think_end != std::string::npos) {
+                    assistant_content = assistant_content.substr(think_end + 8);
+                    while (!assistant_content.empty() && assistant_content[0] == '\n') {
+                        assistant_content.erase(0, 1);
+                    }
+                }
+                chat_add_and_format(ROLE_ASSISTANT, assistant_content);
                 break;
             }
 

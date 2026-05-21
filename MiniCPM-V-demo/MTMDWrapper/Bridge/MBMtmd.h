@@ -90,6 +90,14 @@ mb_mtmd_context * mb_mtmd_init(const char * model_path,
                                const char * mmproj_path,
                                const mb_mtmd_params * params);
 
+// Construct a text-only context (no mmproj / vision module).
+//
+// Used for pure-text models like MiniCPM 5 that do not have a vision encoder.
+// `model_path` MUST point to an existing GGUF file.
+// Returns NULL on failure.
+mb_mtmd_context * mb_mtmd_init_text_only(const char * model_path,
+                                         const mb_mtmd_params * params);
+
 // Release all resources owned by the context.
 void mb_mtmd_free(mb_mtmd_context * ctx);
 

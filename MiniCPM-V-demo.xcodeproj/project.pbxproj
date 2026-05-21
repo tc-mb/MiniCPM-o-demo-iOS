@@ -8,13 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		3366E2325A23FF06A8B96A47 /* MiniCPMVDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F25F021539AC65840465A5F /* MiniCPMVDemoUITests.swift */; };
+		458A103C0E3240538FD649B1 /* MBDeviceMemoryProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */; };
+		49C5B2C8979B45C7A82F9587 /* MBHomeViewController+Warmup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8593FABEABC4C72ABE22E51 /* MBHomeViewController+Warmup.swift */; };
+		DDE74EEEC8CC4246A56C7F07 /* MBMtmd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */; };
 		EFDEF5FABE846D201022133E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E0BCC40C9E47CA8BD9C356 /* Foundation.framework */; };
 		FA1ED0A52E2259DD00370614 /* MBImageVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1ED09F2E2259DD00370614 /* MBImageVideoViewController.swift */; };
 		FA1ED0A82E225D5A00370614 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = FA1ED0A72E225D5A00370614 /* ZipArchive */; };
 		FA201B372C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA201B362C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift */; };
 		FA24495E2C3D0B6B0012D624 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = FA24495D2C3D0B6B0012D624 /* SnapKit */; };
+		FA244CC0199EA64B2C89A85F /* MBV5ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2CE11E1B73CD40A8A9DF3A /* MBV5ModelDownloadManager.swift */; };
+		FA2671C5E0ED774372B55129 /* MBV5ModelDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA610F148B7DE4F44AEBF62 /* MBV5ModelDetailViewController.swift */; };
 		FA2BA6A92C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2BA6A82C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift */; };
-		49C5B2C8979B45C7A82F9587 /* MBHomeViewController+Warmup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8593FABEABC4C72ABE22E51 /* MBHomeViewController+Warmup.swift */; };
 		FA35EE752C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA35EE742C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift */; };
 		FA36EE702C141E66002A2D02 /* MBHomeWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA36EE6F2C141E66002A2D02 /* MBHomeWelcomeView.swift */; };
 		FA36EE752C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA36EE742C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift */; };
@@ -27,7 +31,6 @@
 		FA3FA2682C1176E80077F733 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3FA2672C1176E80077F733 /* SceneDelegate.swift */; };
 		FA3FA26B2C1176E80077F732 /* MBHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3FA26A2C1176E80077F732 /* MBHomeViewController.swift */; };
 		FA3FA2702C1176E90077F732 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA3FA26F2C1176E90077F732 /* Assets.xcassets */; };
-		FAA1F00E2E2A223800088528 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FAA1F00D2E2A223800088528 /* PrivacyInfo.xcprivacy */; };
 		FA3FA2732C1176E90077F732 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = FA3FA2722C1176E90077F732 /* Base */; };
 		FA3FA27F2C1178440077F732 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA3FA27E2C1178440077F732 /* Accelerate.framework */; };
 		FA3FA2812C11784B0077F732 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA3FA2802C11784B0077F732 /* Metal.framework */; };
@@ -49,11 +52,12 @@
 		FA8511382E20DCC000748053 /* MBSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85112F2E20DCC000748053 /* MBSettingsModel.swift */; };
 		FA85113B2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */; };
 		FA9AB0022F03000200E00002 /* MiniCPMV46CoreMLBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */; };
-		458A103C0E3240538FD649B1 /* MBDeviceMemoryProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */; };
 		FA9AB0112F03000200E00011 /* MarkdownEscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0102F03000200E00010 /* MarkdownEscape.swift */; };
+		FA9AB0152F03000200E00015 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0142F03000200E00014 /* MarkdownRenderer.swift */; };
 		FA9AB0212F03000200E00021 /* ImageSliceSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0202F03000200E00020 /* ImageSliceSetting.swift */; };
 		FA9AB0312F03000200E00031 /* MBImageSliceSettingAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0302F03000200E00030 /* MBImageSliceSettingAlert.swift */; };
 		FA9C4B5B2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9C4B5A2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift */; };
+		FAA1F00E2E2A223800088528 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FAA1F00D2E2A223800088528 /* PrivacyInfo.xcprivacy */; };
 		FAA2DE392E2283F000A41C8D /* UINavigationController+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA2DE382E2283F000A41C8D /* UINavigationController+Extensions.swift */; };
 		FAA2DE3B2E22845400A41C8D /* UIColor+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA2DE3A2E22845400A41C8D /* UIColor+Extensions.swift */; };
 		FAA3C9742E220A7F007FAD29 /* MBV4ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA3C9732E220A7F007FAD29 /* MBV4ModelDownloadManager.swift */; };
@@ -75,7 +79,6 @@
 		FAD6428C2E2A223800088528 /* MTMDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642842E2A223800088528 /* MTMDError.swift */; };
 		FAD6428D2E2A223800088528 /* MTMDWrapperExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642882E2A223800088528 /* MTMDWrapperExample.swift */; };
 		FAD6428E2E2A223800088528 /* MTMDWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642872E2A223800088528 /* MTMDWrapper.swift */; };
-		DDE74EEEC8CC4246A56C7F07 /* MBMtmd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */; };
 		FAD6428F2E2A223800088528 /* MTMDToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642862E2A223800088528 /* MTMDToken.swift */; };
 		FAD642902E2A223800088528 /* MTMDParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642852E2A223800088528 /* MTMDParams.swift */; };
 		FAD642B12E2A374900088528 /* MBModelDownloadHelperV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD642B02E2A374900088528 /* MBModelDownloadHelperV2.swift */; };
@@ -123,14 +126,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MBMtmd.mm; sourceTree = "<group>"; };
+		41EAA1C52A18439AB99C85E0 /* MBMtmd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBMtmd.h; sourceTree = "<group>"; };
 		5F25F021539AC65840465A5F /* MiniCPMVDemoUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MiniCPMVDemoUITests.swift; sourceTree = "<group>"; };
 		9D8A8C88B527B4A43C321E8F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D8593FABEABC4C72ABE22E51 /* MBHomeViewController+Warmup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+Warmup.swift"; sourceTree = "<group>"; };
+		DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBDeviceMemoryProbe.swift; sourceTree = "<group>"; };
 		E2E0BCC40C9E47CA8BD9C356 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		F19F2A1C31EA0F54E8EBE229 /* MiniCPM-V-demoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MiniCPM-V-demoUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA1ED09F2E2259DD00370614 /* MBImageVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBImageVideoViewController.swift; sourceTree = "<group>"; };
 		FA201B362C526CDD001FEA76 /* SwiftyCameraMainViewController+LiveStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SwiftyCameraMainViewController+LiveStream.swift"; sourceTree = "<group>"; };
 		FA2BA6A82C2D5AD8006C8193 /* MBHomeViewController+ImageProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+ImageProcess.swift"; sourceTree = "<group>"; };
-		D8593FABEABC4C72ABE22E51 /* MBHomeViewController+Warmup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+Warmup.swift"; sourceTree = "<group>"; };
+		FA2CE11E1B73CD40A8A9DF3A /* MBV5ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV5ModelDownloadManager.swift; sourceTree = "<group>"; };
 		FA35EE742C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+CaptureVideo.swift"; sourceTree = "<group>"; };
 		FA36EE6F2C141E66002A2D02 /* MBHomeWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBHomeWelcomeView.swift; sourceTree = "<group>"; };
 		FA36EE742C142DA9002A2D02 /* MBHomeTableViewHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBHomeTableViewHeaderView.swift; sourceTree = "<group>"; };
@@ -150,7 +157,6 @@
 		FA3FA26F2C1176E90077F732 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FA3FA2722C1176E90077F732 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FA3FA2742C1176E90077F732 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FAA1F00D2E2A223800088528 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		FA3FA27E2C1178440077F732 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		FA3FA2802C11784B0077F732 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		FA4350DC2C4A897900E94116 /* MBLiveCaptureVideoFrameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBLiveCaptureVideoFrameManager.swift; sourceTree = "<group>"; };
@@ -171,17 +177,19 @@
 		FA8511322E20DCC000748053 /* MBSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsViewController.swift; sourceTree = "<group>"; };
 		FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBRealtimeUnderstandingViewController.swift; sourceTree = "<group>"; };
 		FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCPMV46CoreMLBootstrap.swift; sourceTree = "<group>"; };
-		DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBDeviceMemoryProbe.swift; sourceTree = "<group>"; };
 		FA9AB0102F03000200E00010 /* MarkdownEscape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEscape.swift; sourceTree = "<group>"; };
+		FA9AB0142F03000200E00014 /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
 		FA9AB0202F03000200E00020 /* ImageSliceSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSliceSetting.swift; sourceTree = "<group>"; };
 		FA9AB0302F03000200E00030 /* MBImageSliceSettingAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBImageSliceSettingAlert.swift; sourceTree = "<group>"; };
 		FA9C4B5A2C227A2C000D9BC4 /* MBHomeViewController+CheckSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+CheckSupport.swift"; sourceTree = "<group>"; };
 		FAA1195C2C12BA9C00251EB6 /* MiniCPM-V-demo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MiniCPM-V-demo-Bridging-Header.h"; sourceTree = "<group>"; };
+		FAA1F00D2E2A223800088528 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		FAA2DE382E2283F000A41C8D /* UINavigationController+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UINavigationController+Extensions.swift"; sourceTree = "<group>"; };
 		FAA2DE3A2E22845400A41C8D /* UIColor+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extensions.swift"; sourceTree = "<group>"; };
 		FAA3C9732E220A7F007FAD29 /* MBV4ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV4ModelDownloadManager.swift; sourceTree = "<group>"; };
 		FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV26ModelDownloadManager.swift; sourceTree = "<group>"; };
 		FAA3C9772E220C30007FAD29 /* MBV46ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV46ModelDownloadManager.swift; sourceTree = "<group>"; };
+		FAA610F148B7DE4F44AEBF62 /* MBV5ModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV5ModelDetailViewController.swift; sourceTree = "<group>"; };
 		FAAC6D1C2E223B0F00D45121 /* MiniCPMModelConst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCPMModelConst.swift; sourceTree = "<group>"; };
 		FAAFDFF82C37F85B00BF35BE /* debugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = debugLog.swift; sourceTree = "<group>"; };
 		FABA27232E2DD94B00651C44 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = llama.xcframework; sourceTree = "<group>"; };
@@ -200,8 +208,6 @@
 		FAD642852E2A223800088528 /* MTMDParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDParams.swift; sourceTree = "<group>"; };
 		FAD642862E2A223800088528 /* MTMDToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDToken.swift; sourceTree = "<group>"; };
 		FAD642872E2A223800088528 /* MTMDWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDWrapper.swift; sourceTree = "<group>"; };
-		41EAA1C52A18439AB99C85E0 /* MBMtmd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBMtmd.h; sourceTree = "<group>"; };
-		383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MBMtmd.mm; sourceTree = "<group>"; };
 		FAD642882E2A223800088528 /* MTMDWrapperExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMDWrapperExample.swift; sourceTree = "<group>"; };
 		FAD642B02E2A374900088528 /* MBModelDownloadHelperV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBModelDownloadHelperV2.swift; sourceTree = "<group>"; };
 		FADE92C92C3D1C36009FD00D /* MBHomeViewController+NavBarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+NavBarEvent.swift"; sourceTree = "<group>"; };
@@ -256,13 +262,21 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
+		91A8210CC1B34725A3B053C0 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				41EAA1C52A18439AB99C85E0 /* MBMtmd.h */,
+				383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */,
+			);
+			path = Bridge;
+			sourceTree = "<group>";
+		};
 		EA23C1AA7EEC2C6503706118 /* MiniCPM-V-demoUITests */ = {
 			isa = PBXGroup;
 			children = (
 				5F25F021539AC65840465A5F /* MiniCPMVDemoUITests.swift */,
 				9D8A8C88B527B4A43C321E8F /* Info.plist */,
 			);
-			name = "MiniCPM-V-demoUITests";
 			path = "MiniCPM-V-demoUITests";
 			sourceTree = SOURCE_ROOT;
 		};
@@ -489,6 +503,7 @@
 				FA812D2D2E21FC80000CE130 /* MBV4ModelDetailViewController.swift */,
 				FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */,
 				FA812D2C2E21FC80000CE131 /* MBV46ModelDetailViewController.swift */,
+				FAA610F148B7DE4F44AEBF62 /* MBV5ModelDetailViewController.swift */,
 			);
 			path = ModelDetail;
 			sourceTree = "<group>";
@@ -531,6 +546,7 @@
 				FAA3C9732E220A7F007FAD29 /* MBV4ModelDownloadManager.swift */,
 				FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */,
 				FAA3C9772E220C30007FAD29 /* MBV46ModelDownloadManager.swift */,
+				FA2CE11E1B73CD40A8A9DF3A /* MBV5ModelDownloadManager.swift */,
 			);
 			path = DownloadManager;
 			sourceTree = "<group>";
@@ -597,15 +613,6 @@
 			path = MTMDWrapper;
 			sourceTree = "<group>";
 		};
-		91A8210CC1B34725A3B053C0 /* Bridge */ = {
-			isa = PBXGroup;
-			children = (
-				41EAA1C52A18439AB99C85E0 /* MBMtmd.h */,
-				383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */,
-			);
-			path = Bridge;
-			sourceTree = "<group>";
-		};
 		FAE69AA72C181F3100E6D095 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -617,6 +624,7 @@
 				FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */,
 				DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */,
 				FA9AB0102F03000200E00010 /* MarkdownEscape.swift */,
+				FA9AB0142F03000200E00014 /* MarkdownRenderer.swift */,
 				FA9AB0202F03000200E00020 /* ImageSliceSetting.swift */,
 			);
 			path = Utils;
@@ -847,6 +855,8 @@
 				FA35EE752C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift in Sources */,
 				FAA3C9762E220C30007FAD29 /* MBV26ModelDownloadManager.swift in Sources */,
 				FAA3C9782E220C30007FAD29 /* MBV46ModelDownloadManager.swift in Sources */,
+				FA244CC0199EA64B2C89A85F /* MBV5ModelDownloadManager.swift in Sources */,
+				FA2671C5E0ED774372B55129 /* MBV5ModelDetailViewController.swift in Sources */,
 				FB100A032E2D000100000003 /* MBTutorialModel.swift in Sources */,
 				FB100A052E2D000100000005 /* MBTutorialCell.swift in Sources */,
 				FB100A072E2D000100000007 /* MBTutorialViewController.swift in Sources */,
@@ -872,6 +882,7 @@
 				49C5B2C8979B45C7A82F9587 /* MBHomeViewController+Warmup.swift in Sources */,
 				FA49BA112C32A1DD005660C4 /* MBUtils+checkMD5.swift in Sources */,
 				FA9AB0112F03000200E00011 /* MarkdownEscape.swift in Sources */,
+				FA9AB0152F03000200E00015 /* MarkdownRenderer.swift in Sources */,
 				FA9AB0212F03000200E00021 /* ImageSliceSetting.swift in Sources */,
 				FA9AB0312F03000200E00031 /* MBImageSliceSettingAlert.swift in Sources */,
 				FAC2A1DB2C11B3DD00499465 /* MBImageTableViewCell.swift in Sources */,

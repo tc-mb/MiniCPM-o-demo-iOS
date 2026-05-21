@@ -27,6 +27,11 @@
     { "name": "suggestion_1", "value": "请描述图片中的内容。" },
     { "name": "suggestion_2", "value": "Describe the image." },
 
+    { "name": "welcome_title_text", "value": "Welcome to MiniCPM" },
+    { "name": "welcome_desc_text", "value": "让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话与互动，回答各类问题。" },
+    { "name": "suggestion_1_text", "value": "帮我写一首关于春天的诗" },
+    { "name": "suggestion_2_text", "value": "用简单的话解释量子计算" },
+
     { "name": "status_uninitialized", "value": "未初始化" },
     { "name": "status_initializing", "value": "正在初始化..." },
     { "name": "status_initialized", "value": "已初始化，等待加载模型" },

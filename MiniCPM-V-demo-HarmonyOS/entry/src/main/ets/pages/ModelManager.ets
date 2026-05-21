@@ -73,11 +73,16 @@ struct ModelManager {
 
   private onSelectModel(modelId: string): void {
     this.selectedId = modelId;
-    LlamaEngine.setSelectedModel(getContext(this), modelId).then(() => {
-      this.modelExists = LlamaEngine.modelsExist(getContext(this));
-      const m = findModelById(modelId);
-      promptAction.showToast({ message: `已选择: ${m.displayName}`, duration: 1500 });
-    });
+    this.modelExists = LlamaEngine.modelsExist(getContext(this));
+    const m = findModelById(modelId);
+    promptAction.showToast({ message: `已选择: ${m.displayName}`, duration: 1500 });
+    // Persist selection in background. Defer auto-load to next frame so the
+    // Radio checked state renders immediately without being blocked by the
+    // model unload/load cycle.
+    LlamaEngine.setSelectedModel(getContext(this), modelId);
+    if (this.modelExists) {
+      setTimeout(() => { this.onClickLoad(); }, 100);
+    }
   }
 
   private async onClickDownload(): Promise<void> {
@@ -126,7 +131,7 @@ struct ModelManager {
         hilog.info(DOMAIN, TAG, 'Unloading model for reload...');
         await this.engine.unloadModel();
       }
-      const mm = fs.accessSync(mmprojPath) ? mmprojPath : null;
+      const mm = (mmprojPath && fs.accessSync(mmprojPath)) ? mmprojPath : null;
       await this.engine.loadModel(modelPath, mm);
       // No default system prompt: aligned with iOS opt-r1.
       promptAction.showToast({ message: '模型加载成功!', duration: 1500 });
@@ -143,7 +148,7 @@ struct ModelManager {
     const m = findModelById(this.selectedId);
     AlertDialog.show({
       title: '删除模型文件',
-      message: `确定要删除 ${m.displayName} 的模型文件吗？\n\n这将删除:\n• ${m.ggufFileName}\n• ${m.mmprojFileName}\n\n删除后需要重新下载才能使用。`,
+      message: `确定要删除 ${m.displayName} 的模型文件吗？\n\n这将删除:\n• ${m.ggufFileName}${m.mmprojFileName ? '\n• ' + m.mmprojFileName : ''}\n\n删除后需要重新下载才能使用。`,
       autoCancel: true,
       primaryButton: { value: '删除', action: () => this.doDelete() },
       secondaryButton: { value: '取消', action: () => undefined },
@@ -239,7 +244,7 @@ struct ModelManager {
                 .fontSize(13)
                 .fontColor($r('app.color.on_surface_variant'))
                 .margin({ top: 4 });
-              Text(`${m.ggufFileName} + ${m.mmprojFileName}`)
+              Text(m.mmprojFileName ? `${m.ggufFileName} + ${m.mmprojFileName}` : m.ggufFileName)
                 .fontSize(11)
                 .fontColor($r('app.color.on_surface_variant'))
                 .margin({ top: 6 });

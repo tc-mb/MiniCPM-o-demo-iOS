@@ -8,6 +8,7 @@
     android:gravity="center_horizontal">
 
     <TextView
+        android:id="@+id/tv_welcome_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/welcome_title"
@@ -17,6 +18,7 @@
         android:layout_marginTop="16dp" />
 
     <TextView
+        android:id="@+id/tv_welcome_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/welcome_desc"
