@@ -14,15 +14,24 @@
 * `MiniCPM-V-demo-Android/` — Android demo（Gradle / Kotlin）
 * `MiniCPM-V-demo-HarmonyOS/` — HarmonyOS NEXT demo（DevEco Studio / ArkTS）
 
-三端共享仓库根目录的同一份 `llama.cpp` 子模块（分支 `Support-iOS-Demo`）。
+三端共享仓库根目录的同一份 `llama.cpp` 子模块（分支 `MiniCPM-V`）。
 
-> **提示**：本项目通过 git submodule 引入 `llama.cpp`，clone 后请运行：
+> **提示**：本项目通过 git submodule 引入 `llama.cpp`。子模块上游 `tc-mb/llama.cpp` 还有十几个无关分支，全量 clone 要拉 ~350 MB，所以 `.gitmodules` 里默认 `shallow = true`。推荐用如下 **shallow + single-branch** 方式 clone：
 >
 > ```bash
-> git clone https://github.com/OpenBMB/MiniCPM-V-Apps.git
+> # 一步到位（父仓库 + 子模块都浅 clone）
+> git clone --recurse-submodules --shallow-submodules \
+>     https://github.com/OpenBMB/MiniCPM-V-Apps.git
 > cd MiniCPM-V-Apps
-> git submodule update --init --recursive
 > ```
+>
+> 如果你已经 clone 了父仓库再 init 子模块：
+>
+> ```bash
+> git submodule update --init --recursive --depth 1 --single-branch
+> ```
+>
+> 这样只会拉 `MiniCPM-V` 分支的单 commit（约几十 MB），不会拉整个 llama.cpp fork 的全 history。需要 push 到 `tc-mb/llama.cpp:MiniCPM-V` 的开发者可在 submodule 里执行 `git fetch --unshallow` 取消浅 clone。
 
 README 分为两大部分：
 
