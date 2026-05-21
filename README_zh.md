@@ -50,10 +50,10 @@ README 分为两大部分：
 
 **注意：在 iOS 设备上部署和测试 demo，可能需要 Apple Developer 账号。**
 
-安装 Xcode：
+#### 1.1.1 安装 Xcode 与命令行工具
 
-* 在 App Store 下载 Xcode
-* 安装命令行工具：
+* 在 App Store 下载 Xcode（已在 Xcode 26.1 上验证；项目 deployment target = iOS 16.4）
+* 安装 Command Line Tools：
 
   ```bash
   xcode-select --install
@@ -63,22 +63,50 @@ README 分为两大部分：
   ```bash
   sudo xcodebuild -license
   ```
+* CMake ≥ 3.28（下一步 build xcframework 需要）：
 
-用 Xcode 打开 `MiniCPM-V-demo/MiniCPM-V-demo.xcodeproj`，等待 Xcode 自动下载所需依赖。
+  ```bash
+  brew install cmake
+  ```
 
-在 Xcode 顶部选择目标设备，点击 "Run"（三角形）按钮启动 demo。
+#### 1.1.2 首次构建 llama.xcframework（必做）
 
-**首次构建必须执行：** 仓库不再追踪预编译的 `llama.xcframework` 二进制（~189 MB），请按下方步骤从 `llama.cpp` 子模块本地构建一份再放回 `MiniCPM-V-demo/thirdparty/`。
+仓库**不追踪**任何编译产物，预编译的 `llama.xcframework`（~189 MB）需要你在本地从 `llama.cpp` 子模块编译一份，放到 `MiniCPM-V-demo/thirdparty/` 让 Xcode 链接。我们提供了一键脚本，默认只 build demo 真正用到的两个 slice（真机 + 模拟器），M 系 Mac 上 ~2-3 分钟：
 
-#### 构建 llama.xcframework
+```bash
+./scripts/build_xcframework.sh
+```
 
-直接在子模块内构建（无需重复 clone）：
+完成后产物落在 `MiniCPM-V-demo/thirdparty/llama.xcframework/`。
+
+如果你想自己控制 build 范围（例如只 build 模拟器或全平台），脚本通过 `MINIMAL_MODE` 环境变量切换：
+
+```bash
+MINIMAL_MODE=ios-sim    ./scripts/build_xcframework.sh   # 只模拟器 (~3 min)
+MINIMAL_MODE=ios-device ./scripts/build_xcframework.sh   # 只真机   (~3 min)
+MINIMAL_MODE=ios        ./scripts/build_xcframework.sh   # 真机+模拟器（默认，~3 min）
+MINIMAL_MODE=all        ./scripts/build_xcframework.sh   # iOS + macOS + tvOS + xrOS 全平台 (~25 min)
+```
+
+等价的手工命令（不走脚本时）：
 
 ```bash
 cd llama.cpp
-./build-xcframework.sh
-cp -r ./build-apple/llama.xcframework ../MiniCPM-V-demo/thirdparty
+MINIMAL_MODE=ios ./build-xcframework.sh
+cp -r ./build-apple/llama.xcframework ../MiniCPM-V-demo/thirdparty/
 ```
+
+Build 过程中会出现 `ignoring duplicate libraries` 和 `skipping debug map object with duplicate name and timestamp` 的 warning —— 这是 llama.cpp 上游 mtmd 模块在不同 model arch 下同名 `.o` 的去重提示，**无害**，产物正常。
+
+> **什么时候要重 build？**
+> - 父仓库 bump 了 llama.cpp submodule 指针（`git submodule status` 显示与本地构建时不同的 commit）
+> - 你自己改动了 `llama.cpp/` 下任意源码
+
+#### 1.1.3 用 Xcode 打开并运行
+
+用 Xcode 打开 `MiniCPM-V-demo/MiniCPM-V-demo.xcodeproj`，等待 Xcode 自动下载所需依赖。在顶部选择目标设备，点击 "Run"（三角形）按钮启动 demo。
+
+如果 build 报 `There is no XCFramework found at '.../llama.xcframework'`，说明你跳过了 §1.1.2，回到上一步执行 build。
 
 ### 1.2 Android Demo
 
