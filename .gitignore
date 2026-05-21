@@ -81,3 +81,15 @@ CLAUDE.md
 .claude/
 .cursor/
 
+# Prebuilt llama.xcframework: 必须从 ./llama.cpp 子模块构建出来再放到这里，
+# 仓库不再追踪二进制本身 (~189 MB)，详见 README "构建 llama.xcframework" 一节
+MiniCPM-V-demo/thirdparty/llama.xcframework/
+MiniCPM-V-demo/thirdparty/llama.xcframework.bak/
+
+# Android Studio 个人/项目级 IDE 配置 (compiler.xml / misc.xml / vcs.xml 等会随 AS 版本漂移)
+MiniCPM-V-demo-Android/.idea/
+
+# HarmonyOS 模块依赖目录 (相当于 node_modules，构建产物，不入库)
+MiniCPM-V-demo-HarmonyOS/entry/oh_modules/
+MiniCPM-V-demo-HarmonyOS/oh_modules/
+

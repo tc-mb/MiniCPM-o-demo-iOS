@@ -59,9 +59,9 @@ Open `MiniCPM-V-demo/MiniCPM-V-demo.xcodeproj` with Xcode. It may take a moment 
 
 In Xcode, select the target device at the top of the window, then click the "Run" (triangle) button to launch the demo.
 
-**NOTE: If you encounter errors related to the `thirdparty/llama.xcframework` path, please follow the steps below to build the `llama.xcframework` manually.**
+**REQUIRED on first build:** The prebuilt `llama.xcframework` binary (~189 MB) is no longer tracked in this repo. Build it once from the `llama.cpp` submodule and copy it back to `MiniCPM-V-demo/thirdparty/` using the steps below.
 
-#### Manually Building the llama.xcframework
+#### Building the llama.xcframework
 
 Build directly inside the submodule (no extra clone needed):
 

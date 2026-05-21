@@ -59,9 +59,9 @@ README 分为两大部分：
 
 在 Xcode 顶部选择目标设备，点击 "Run"（三角形）按钮启动 demo。
 
-**注意：如果遇到 `thirdparty/llama.xcframework` 路径相关报错，请按下方步骤手动构建 `llama.xcframework`。**
+**首次构建必须执行：** 仓库不再追踪预编译的 `llama.xcframework` 二进制（~189 MB），请按下方步骤从 `llama.cpp` 子模块本地构建一份再放回 `MiniCPM-V-demo/thirdparty/`。
 
-#### 手动构建 llama.xcframework
+#### 构建 llama.xcframework
 
 直接在子模块内构建（无需重复 clone）：
 
