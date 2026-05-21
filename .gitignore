@@ -76,8 +76,6 @@ __MACOSX
 build_tmp/
 
 # AI agent local notes (Claude / Cursor / Codex 等本地协作笔记，不入库)
-# NOTE: AGENTS.md is intentionally tracked — it is the public agent-conventions doc.
-#       Only per-agent local notes (CLAUDE.md, .claude/, .cursor/) stay ignored.
 CLAUDE.md
 .claude/
 .cursor/
