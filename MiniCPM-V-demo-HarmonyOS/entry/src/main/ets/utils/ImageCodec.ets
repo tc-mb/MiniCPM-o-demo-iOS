@@ -92,6 +92,7 @@ export async function pickImageOrVideoUri(): Promise<PickedMediaUri | null> {
  */
 export async function decodeImageFromUri(uri: string): Promise<PickedImage> {
   const file = fs.openSync(uri, fs.OpenMode.READ_ONLY);
+  let pixelMap: image.PixelMap | null = null;
   try {
     const src = image.createImageSource(file.fd);
     try {
@@ -100,17 +101,25 @@ export async function decodeImageFromUri(uri: string): Promise<PickedImage> {
       const origH = info.size.height;
       const longEdge = Math.max(origW, origH);
 
+      let currentScale = 1.0;
+      const scaleFactor = 0.5; // 每次缩放比例
       // Step 1: pick a sampleSize (1/2/4/8) to keep peak decode memory low.
       // sampleSize is the cheapest way to downsample because it happens
       // during decode, before we ever materialise the full RGBA buffer.
       let sampleSize = 1;
       while (sampleSize < 8 && longEdge / (sampleSize * 2) >= TARGET_LONG_EDGE) {
         sampleSize *= 2;
+        currentScale *= scaleFactor;
       }
-      const decodeOpts: image.DecodingOptions = sampleSize > 1
-        ? { sampleSize }
-        : {};
-      const pixelMap = await src.createPixelMap(decodeOpts);
+      // const decodeOpts: image.DecodingOptions = sampleSize > 1
+      //   ? { sampleSize }
+      //   : {};
+      // const pixelMap = await src.createPixelMap(decodeOpts);
+      const newWidth = Math.floor(info.size.width * currentScale);
+      const newHeight = Math.floor(info.size.height * currentScale);
+      pixelMap = await src.createPixelMap({
+        desiredSize: { width: newWidth, height: newHeight }
+      });
 
       // Step 2: sampleSize is geometric, so the result might still be a bit
       // larger than TARGET_LONG_EDGE (e.g. a 2400 px image with sampleSize=2
@@ -132,22 +141,32 @@ export async function decodeImageFromUri(uri: string): Promise<PickedImage> {
       // any stb_image-supported format but always re-encoding to PNG keeps
       // the tested-path narrow.
       const packer = image.createImagePacker();
-      const pngBytes = await packer.packing(pixelMap, { format: 'image/png', quality: 100 });
-      packer.release();
+      let pngBytes: ArrayBuffer;
+      try {
+        pngBytes = await packer.packing(pixelMap, { format: 'image/png', quality: 100 });
+      } finally {
+        packer.release();
+      }
 
       const fileName = uri.split('/').pop() ?? `image-${Date.now()}.png`;
-      return {
+      // Ownership of pixelMap is transferred to the caller (ChatMessage).
+      const result: PickedImage = {
         fileName,
         width: finalInfo.size.width,
         height: finalInfo.size.height,
         pngBytes,
         pixelMap,
       };
+      pixelMap = null; // prevent cleanup in finally
+      return result;
     } finally {
       await src.release();
     }
   } finally {
     fs.closeSync(file);
+    if (pixelMap !== null) {
+      try { await pixelMap.release(); } catch (_) { /* ignore */ }
+    }
   }
 }
 
