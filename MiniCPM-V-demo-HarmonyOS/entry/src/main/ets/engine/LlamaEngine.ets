@@ -465,9 +465,6 @@ export class LlamaEngine {
     if (message.length === 0) {
       throw new Error('User prompt must not be empty!');
     }
-    if (this.state.name !== 'ModelReady') {
-      throw new Error(`User prompt discarded due to: ${this.state.name}`);
-    }
 
     const stream = new StreamImpl();
 
@@ -480,7 +477,14 @@ export class LlamaEngine {
     };
 
     // Kick off serially so we don't race with another native call.
-    this.serial(() => {
+    // The state check is inside the serial queue so that if a prefill
+    // (image / video) is still running, the prompt waits for it to
+    // finish and then proceeds automatically — instead of being
+    // immediately discarded with a "PrefillingImage" error.
+    this.serial(async () => {
+      if (this.state.name !== 'ModelReady') {
+        throw new Error(`User prompt discarded due to: ${this.state.name}`);
+      }
       hilog.info(DOMAIN, TAG, 'Sending user prompt...');
       this.readyForSystemPrompt = false;
       this.setState(LlamaState.ProcessingUserPrompt);
@@ -495,7 +499,6 @@ export class LlamaEngine {
         // for it (mirrors Android demo's UX).
         this.setState(LlamaState.Generating);
       }
-      return Promise.resolve();
     }).catch((e: Error) => {
       stream.fail(e);
     });
