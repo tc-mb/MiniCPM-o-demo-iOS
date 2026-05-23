@@ -308,6 +308,8 @@ public class MTMDWrapper: ObservableObject {
     ///
     /// clip 在每张图编码时都会重新读取 hparams.custom_image_max_slice_nums，
     /// 所以这里只是把新值写入上下文，下一张图自然就用新档位生效。
+    /// 链路：mb_mtmd_set_image_max_slice_nums → mtmd_set_image_max_slice_nums →
+    /// clip_set_image_max_slice_nums → 写入 clip_hparams。
     /// - Parameter n: 1 表示不切图（最快），9 表示 MiniCPM-V 模型上限（最清晰）。
     ///                传 -1 等价于"按模型默认"。
     public func setImageMaxSliceNums(_ n: Int) {
@@ -317,10 +319,7 @@ public class MTMDWrapper: ObservableObject {
             return
         }
         mb_mtmd_set_image_max_slice_nums(ctx, Int32(n))
-        // 注意：迁移到 master 后此调用是 nop（master 已删除运行时 slice 调整 API）。
-        // Slice 实际值在 init 时通过 MTMDParams.imageMaxSliceNums →
-        // mb_mtmd_params.image_max_tokens 决定，要切换必须 reset 模型。
-        print("MTMDWrapper: setImageMaxSliceNums(\(n)) 已调用（master 适配后为 nop，需 reset 才生效）")
+        print("MTMDWrapper: setImageMaxSliceNums(\(n)) 已调用，下一张图编码时生效")
     }
 
     /// 重置上下文

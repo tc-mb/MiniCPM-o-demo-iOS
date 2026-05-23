@@ -174,15 +174,16 @@ static void set_error(mb_mtmd_context * ctx, const std::string & err) {
 
 mb_mtmd_params mb_mtmd_params_default(void) {
     mb_mtmd_params p = {};
-    p.n_predict         = -1;
-    p.n_ctx             = 4096;
-    p.n_ubatch          = 0;       // 0 = pick MB_DEFAULT_N_UBATCH below
-    p.n_threads         = 4;
-    p.temperature       = 0.7f;
-    p.use_gpu           = true;
-    p.mmproj_use_gpu    = true;
-    p.warmup            = true;
-    p.image_max_tokens  = -1;
+    p.n_predict             = -1;
+    p.n_ctx                 = 4096;
+    p.n_ubatch              = 0;       // 0 = pick MB_DEFAULT_N_UBATCH below
+    p.n_threads             = 4;
+    p.temperature           = 0.7f;
+    p.use_gpu               = true;
+    p.mmproj_use_gpu        = true;
+    p.warmup                = true;
+    p.image_max_tokens      = -1;
+    p.image_max_slice_nums  = -1;
     return p;
 }
 
@@ -311,11 +312,12 @@ mb_mtmd_context * mb_mtmd_init(const char * model_path,
     // ---- Init vision context ----
     {
         mtmd_context_params vparams = mtmd_context_params_default();
-        vparams.use_gpu          = params.mmproj_use_gpu;
-        vparams.print_timings    = false;
-        vparams.n_threads        = params.n_threads;
-        vparams.warmup           = params.warmup;
-        vparams.image_max_tokens = params.image_max_tokens;
+        vparams.use_gpu              = params.mmproj_use_gpu;
+        vparams.print_timings        = false;
+        vparams.n_threads            = params.n_threads;
+        vparams.warmup               = params.warmup;
+        vparams.image_max_tokens     = params.image_max_tokens;
+        vparams.image_max_slice_nums = params.image_max_slice_nums;
         // image_min_tokens / flash_attn_type / cb_eval are intentionally left
         // at their defaults; the demo never tuned them.
 
@@ -429,10 +431,9 @@ bool mb_mtmd_clean_kv_cache(mb_mtmd_context * ctx) {
     return true;
 }
 
-void mb_mtmd_set_image_max_slice_nums(mb_mtmd_context * /*ctx*/, int /*n*/) {
-    // No-op on upstream master.  See the header comment for context.
-    // Intentionally not setting last_error: this is a known UX downgrade,
-    // not a runtime failure.
+void mb_mtmd_set_image_max_slice_nums(mb_mtmd_context * ctx, int n) {
+    if (!ctx || !ctx->vision) return;
+    mtmd_set_image_max_slice_nums(ctx->vision.get(), n);
 }
 
 // ---------------------------------------------------------------------------

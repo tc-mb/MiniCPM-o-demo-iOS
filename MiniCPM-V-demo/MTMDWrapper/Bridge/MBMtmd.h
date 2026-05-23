@@ -42,10 +42,10 @@ typedef struct mb_mtmd_context mb_mtmd_context;
 //     juggle `withCString` lifetimes when populating a struct field.
 //   - `coreml_path` is gone (CoreML / ANE path is dropped while we re-sync to
 //     upstream master).
-//   - `image_max_slice_nums` is replaced by `image_max_tokens`, since the
-//     upstream mtmd_context_params uses a token-budget knob instead of a
-//     slice-count knob and there is no runtime slice-count override anymore.
-//     -1 means "model default" (MiniCPM-V will pick its own slice count).
+//   - `image_max_tokens` (master mtmd's token-budget knob, only consumed by the
+//     llava-uhd dyn_size path; minicpmv ignores it) is exposed alongside
+//     `image_max_slice_nums` (the slice-count knob the demo's chat slider
+//     actually drives). -1 on either field means "model default".
 //   - `n_ubatch` is exposed so the iOS / desktop caller can pick a per-device
 //     memory budget.  See MBDeviceMemoryProbe.swift for how the iOS app maps
 //     `os_proc_available_memory()` to a tier; `0` means "use bridge default"
@@ -60,6 +60,7 @@ typedef struct mb_mtmd_params {
     bool  mmproj_use_gpu;
     bool  warmup;
     int   image_max_tokens;
+    int   image_max_slice_nums;  // -1 = use model default (currently 9 for minicpm-v); 1 = overview-only
 } mb_mtmd_params;
 
 // Loop return value.
@@ -139,13 +140,19 @@ bool mb_mtmd_clean_kv_cache(mb_mtmd_context * ctx);
 
 // Runtime override of the per-image slice-count knob.
 //
-// NOTE: this is a no-op on upstream master, which removed the
-// runtime-tunable slice-count API.  Slice control now happens at init time
-// via mb_mtmd_params.image_max_tokens (translated from the demo's slice
-// slider by the Swift layer).  We keep this entry point so the existing
-// Swift call site (MTMDWrapper.setImageMaxSliceNums) compiles and links
-// without a behavioural surprise — the actual slider UX will need a redesign
-// (re-init the context to take effect) tracked separately.
+// Internally calls mtmd_set_image_max_slice_nums on the underlying
+// mtmd_context, which patches clip_hparams.custom_image_max_slice_nums
+// in place.  The slicing decision is re-read on every encode (see
+// mtmd-image.cpp::get_slice_instructions), so the next image picks up
+// the new value automatically — no need to reload the mmproj.
+//
+// `n` semantics:
+//   -1 (or 0)  = revert to the model default (currently 9 for MiniCPM-V)
+//    1         = disable slicing entirely (single overview image, ~9x fewer
+//                tokens, much faster on mobile but loses fine detail)
+//    2..9      = explicit cap chosen by the chat-page slider
+//
+// Safe to call between images.  No-op for models that don't use slicing.
 void mb_mtmd_set_image_max_slice_nums(mb_mtmd_context * ctx, int n);
 
 #ifdef __cplusplus

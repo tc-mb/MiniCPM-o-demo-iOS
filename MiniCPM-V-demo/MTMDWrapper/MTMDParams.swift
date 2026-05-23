@@ -57,11 +57,13 @@ import llama
     /// - `1`：不切图（仅 overview，~9× 更少图像 token，速度最快但丢细节）
     /// - `2..9`：用户在对话页用滑条选的档位
     ///
-    /// 注意：这是 demo UI 层的"slice 数"概念，**单位是 slice 数不是 token 数**。
-    /// 迁移到 upstream master 后此字段**不直接透传给 bridge**（master mtmd 没有
-    /// slice cap API，相关 knob 是单位为 token 数的 image_max_tokens，跟这里
-    /// 单位不同）。运行时滑条调整目前是 no-op，需要 reset 模型才生效；
-    /// 实际起作用的低端机内存保护走 `imageMaxTokens` 字段（见下）。
+    /// 这是 demo UI 层的"slice 数"概念，单位是 slice 数。`toCParams()` 会把它
+    /// 透传到 `mb_mtmd_params.image_max_slice_nums` →
+    /// `mtmd_context_params.image_max_slice_nums` →
+    /// `clip_hparams.custom_image_max_slice_nums`，由 mtmd-image.cpp 的
+    /// `get_slice_instructions` 读取。运行时滑条调整走
+    /// `MTMDWrapper.setImageMaxSliceNums` → `mtmd_set_image_max_slice_nums`，
+    /// 直接 patch hparams，下一张图编码即生效，无需重建 mtmd_context。
     public let imageMaxSliceNums: Int
 
     /// 单张图最大 token 数（master mtmd 的 image_max_tokens；单位 token 不是 slice）。
@@ -95,7 +97,8 @@ import llama
     ///   - mmprojUseGPU: 多模态投影是否使用 GPU，默认 false
     ///   - warmup: 是否预热，默认 true
     ///   - imageMaxSliceNums: 单张图最大切片数，默认 -1（按模型默认）。
-    ///     迁移到 master 后此值仅在 init 时生效（见字段注释）。
+    ///     init 时通过 mb_mtmd_params 透传给 native，运行时也可以通过
+    ///     `MTMDWrapper.setImageMaxSliceNums` 动态调整。
     public init(
         modelPath: String,
         mmprojPath: String,
@@ -139,20 +142,21 @@ import llama
     /// 转换为 native bridge 的 C 结构体（不含路径，路径作为 mb_mtmd_init 的独立参数传）。
     internal func toCParams() -> mb_mtmd_params {
         var params = mb_mtmd_params_default()
-        params.n_predict        = Int32(nPredict)
-        params.n_ctx            = Int32(nCtx)
-        params.n_ubatch         = Int32(nUbatch)
-        params.n_threads        = Int32(nThreads)
-        params.temperature      = temperature
-        params.use_gpu          = useGPU
-        params.mmproj_use_gpu   = mmprojUseGPU
-        params.warmup           = warmup
+        params.n_predict             = Int32(nPredict)
+        params.n_ctx                 = Int32(nCtx)
+        params.n_ubatch              = Int32(nUbatch)
+        params.n_threads             = Int32(nThreads)
+        params.temperature           = temperature
+        params.use_gpu               = useGPU
+        params.mmproj_use_gpu        = mmprojUseGPU
+        params.warmup                = warmup
         // image_max_tokens 与 imageMaxSliceNums 单位**不同**（前者 token、后者 slice），
-        // 因此用单独的 imageMaxTokens 字段透传给 bridge：
-        //   imageMaxTokens == -1  → 让 minicpmv 用模型默认（V4.6 ~9 slice）
-        //   imageMaxTokens == 64  → tier=tiny 走 overview-only，避免多 slice 爆内存
-        //   imageMaxTokens == 256 → tier=small 限制 ~2x2 grid + overview
-        params.image_max_tokens = Int32(imageMaxTokens)
+        // 两个 knob 都透传给 bridge：
+        //   image_max_tokens     → llava-uhd dyn_size 路径（Qwen / Pixtral 等）
+        //   image_max_slice_nums → llava-uhd minicpm-v 路径（实际驱动 chat 页滑条）
+        // -1 表示"按模型默认"，与 native 端约定一致。
+        params.image_max_tokens      = Int32(imageMaxTokens)
+        params.image_max_slice_nums  = Int32(imageMaxSliceNums)
         return params
     }
 }
