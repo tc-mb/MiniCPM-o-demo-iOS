@@ -340,6 +340,21 @@ public class MTMDWrapperExample: ObservableObject {
         print("已重置")
     }
 
+    /// Apply model version to the C bridge based on `currentUsingModelType`.
+    /// Must be called after successful init.
+    public func applyModelVersion() {
+        let version: Int
+        switch currentUsingModelType {
+        case .V26MultiModel:  version = 26
+        case .V4MultiModel:   version = 40
+        case .V46MultiModel:  version = 46
+        case .V5TextModel:    version = 5
+        case .Unknown:        version = 46
+        }
+        mtmdWrapper.setModelVersion(version)
+        print("MTMDWrapperExample: model_version set to \(version)")
+    }
+
     /// Persist + live-apply the user's chosen slice cap.  Safe to call
     /// before init: the value is stored in UserDefaults and seeded into
     /// MTMDParams on the next initialize().

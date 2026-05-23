@@ -141,6 +141,8 @@ struct mb_mtmd_context {
 
     bool                text_only = false; // true for text-only models (no mmproj)
 
+    int                 model_version = 46; // 26=V2.6, 40=V4.0, 46=V4.6, 5=MiniCPM5
+
     // UTF-8 byte cache: BPE byte-level tokens may split multi-byte chars
     // (e.g. emoji 😊 = F0 9F 98 8A across 4 tokens). We accumulate raw
     // bytes here and only emit when the sequence forms valid UTF-8, exactly
@@ -431,6 +433,10 @@ bool mb_mtmd_clean_kv_cache(mb_mtmd_context * ctx) {
     return true;
 }
 
+void mb_mtmd_set_model_version(mb_mtmd_context * ctx, int version) {
+    if (ctx) ctx->model_version = version;
+}
+
 void mb_mtmd_set_image_max_slice_nums(mb_mtmd_context * ctx, int n) {
     if (!ctx || !ctx->vision) return;
     mtmd_set_image_max_slice_nums(ctx->vision.get(), n);
@@ -593,9 +599,12 @@ int mb_mtmd_prefill_text(mb_mtmd_context * ctx, const char * text_in, const char
             // token (not individual characters), matching the Android path's
             // common_tokenize + Jinja2 behavior.
             formatted += "<|im_start|>assistant\n<think>\n";
-        } else {
+        } else if (ctx->model_version == 46 || ctx->model_version == 460) {
             // V4.6: disable thinking — inject empty think block
             formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";
+        } else {
+            // V4.0 / V2.6: plain assistant header, no thinking support
+            formatted += "<|im_start|>assistant\n";
         }
     } else if (role == "assistant") {
         formatted += text + "<|im_end|>\n";

@@ -322,6 +322,13 @@ public class MTMDWrapper: ObservableObject {
         print("MTMDWrapper: setImageMaxSliceNums(\(n)) 已调用，下一张图编码时生效")
     }
 
+    /// Set the model version so the C bridge can pick the correct prompt template.
+    /// - Parameter version: 26=V2.6, 40=V4.0, 46=V4.6, 5=MiniCPM5
+    public func setModelVersion(_ version: Int) {
+        guard let ctx = context else { return }
+        mb_mtmd_set_model_version(ctx, Int32(version))
+    }
+
     /// 重置上下文
     public func reset() async {
         stopGeneration()

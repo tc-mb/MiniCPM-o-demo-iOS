@@ -104,6 +104,9 @@ extension MBHomeViewController {
 
                 // 更新模型加载状态为：加载成功
                 await self.updateImageLoadedStatus(true)
+
+                // 通知 C bridge 当前模型版本，用于选择正确的 assistant prompt prefix
+                await self.mtmdWrapperExample?.applyModelVersion()
             }
             
             // 检查模型加载状态

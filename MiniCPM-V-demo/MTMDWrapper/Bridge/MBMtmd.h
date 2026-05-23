@@ -138,6 +138,18 @@ const char * mb_mtmd_get_last_error(mb_mtmd_context * ctx);
 // when starting a fresh conversation; does NOT tear down the model.
 bool mb_mtmd_clean_kv_cache(mb_mtmd_context * ctx);
 
+// Set the MiniCPM-V model version so the prompt template can branch on it.
+//
+// Values follow the convention:
+//   26  = MiniCPM-V 2.6 (no thinking support)
+//   40  = MiniCPM-V 4.0 (no thinking support)
+//   46  = MiniCPM-V 4.6 (thinking disabled via empty block)
+//    5  = MiniCPM 5 text-only (thinking enabled; handled by text_only path)
+//
+// Must be called after mb_mtmd_init / mb_mtmd_init_text_only.
+// If never called, defaults to 46 (legacy behaviour).
+void mb_mtmd_set_model_version(mb_mtmd_context * ctx, int version);
+
 // Runtime override of the per-image slice-count knob.
 //
 // Internally calls mtmd_set_image_max_slice_nums on the underlying
