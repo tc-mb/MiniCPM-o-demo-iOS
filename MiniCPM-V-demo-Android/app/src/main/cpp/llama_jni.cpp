@@ -144,16 +144,14 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_loadMmproj(JNIEnv *env, jobject,
     mparams.use_gpu   = false;
     mparams.print_timings = false;
 
-    // Upstream master mtmd replaced `image_max_slice_nums` (a per-image
-    // slice-count knob) with `image_max_tokens` (a token-budget knob).
-    // There is also no longer a runtime override (`mtmd_set_image_max_*`
-    // is gone), so the chat-page slider can only influence prefill cost
-    // at mtmd_context creation time.  -1 keeps the model default (matches
-    // iOS opt-r1 / MBMtmd default).  The slider value is still persisted
-    // in shared prefs and surfaced in g_image_max_slice_nums for the
-    // Kotlin layer to read back, but it is now informational only.
-    g_image_max_slice_nums = (jint) jimage_max_slice_nums;
-    mparams.image_max_tokens = -1;
+    // Slice cap re-enabled (sub-module bumped to commit 87aee36b which
+    // re-adds custom_image_max_slice_nums hparam + runtime setter).
+    // Persist the value for setImageMaxSliceNumsNative() to read back,
+    // AND thread it through mtmd_context_params so the very first
+    // encode (before the user touches the slider) already respects it.
+    // -1 = "use model default" (currently 9 for MiniCPM-V).
+    g_image_max_slice_nums          = (jint) jimage_max_slice_nums;
+    mparams.image_max_slice_nums    = (jint) jimage_max_slice_nums;
 
     mparams.n_threads = N_THREADS;
 
@@ -172,8 +170,7 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_loadMmproj(JNIEnv *env, jobject,
     // on the selected ModelInfo id (4.6 -> 46).  See iOS opt-r1's
     // MBHomeViewController+LoadModel.swift for the symmetric move.
 
-    LOGi("%s: mmproj model loaded successfully! Vision: %s, slice-cap-hint: %d "
-         "(advisory only on master mtmd; effective slicing follows model default)",
+    LOGi("%s: mmproj model loaded successfully! Vision: %s, slice-cap: %d (applied)",
          __func__,
          mtmd_support_vision(g_ctx_vision) ? "yes" : "no",
          g_image_max_slice_nums);
@@ -205,22 +202,21 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_setMinicpmvVersionNative(JNIEnv * 
     LOGi("%s: minicpmv_version set to %d", __func__, g_minicpmv_version);
 }
 
-// Per-image slice cap.  No-op on upstream master mtmd: the
-// `mtmd_set_image_max_slice_nums` runtime API was removed, and slice
-// control now happens at mtmd_context creation time via
-// `image_max_tokens`.  Keeping this JNI entry point so the Kotlin call
-// sites (LlamaEngine.setImageMaxSliceNums / prefillVideoFrames) compile
-// and link, but the value is only used as an informational hint - the
-// chat-page slider has effectively become "next-launch only" until the
-// upper layer is reworked to re-init the mtmd context on change.
+// Per-image slice cap.  Now wires through to mtmd_set_image_max_slice_nums
+// (added back in llama.cpp submodule commit 87aee36b), which patches
+// clip_hparams.custom_image_max_slice_nums in place.  Safe to call
+// between images; takes effect on the next encode.
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_minicpm_1v_1demo_LlamaEngine_setImageMaxSliceNumsNative(JNIEnv * /*env*/,
                                                                         jobject,
                                                                         jint jn) {
     g_image_max_slice_nums = (int) jn;
-    LOGi("%s: image_max_slice_nums hint set to %d (advisory only on master mtmd)",
-         __func__, g_image_max_slice_nums);
+    if (g_ctx_vision) {
+        mtmd_set_image_max_slice_nums(g_ctx_vision, (int) jn);
+    }
+    LOGi("%s: image_max_slice_nums set to %d (live-applied to mtmd ctx=%p)",
+         __func__, g_image_max_slice_nums, (void*) g_ctx_vision);
 }
 
 static llama_context *init_context(llama_model *model, const int n_ctx = DEFAULT_CONTEXT_SIZE) {
