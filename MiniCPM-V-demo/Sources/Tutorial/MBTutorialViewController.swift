@@ -31,9 +31,14 @@ import SnapKit
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.mb_color(with: "#F2F2F7") ?? .systemGroupedBackground
-        title = "使用教程"
+        title = L.Tutorial.title.loc
 
         steps = MBTutorialContent.steps()
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(applyLanguage),
+                                               name: .languageDidChange,
+                                               object: nil)
 
         // 教程截图预热：4 张 1-3 MiB 的手机截屏 PNG，cellForRow 里如果首次同步
         // 调 UIImage(named:) 会一张张在 main thread 解码，每张几十 ms，叠加 4 张
@@ -58,18 +63,28 @@ import SnapKit
         navigationItem.largeTitleDisplayMode = .never
     }
 
+    @objc private func applyLanguage() {
+        title = L.Tutorial.title.loc
+        steps = MBTutorialContent.steps()
+        tableView.reloadData()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
     private func makeHeaderView() -> UIView {
         let header = UIView()
         header.backgroundColor = .clear
 
         let titleLabel = UILabel()
-        titleLabel.text = "MiniCPM-V 4.6 快速入门"
+        titleLabel.text = L.Tutorial.headerTitle.loc
         titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
         titleLabel.textColor = .black
         titleLabel.numberOfLines = 0
 
         let subtitleLabel = UILabel()
-        subtitleLabel.text = "按下面的步骤即可在手机上离线运行多模态大模型，无需联网即可对话和识图。"
+        subtitleLabel.text = L.Tutorial.headerSubtitle.loc
         subtitleLabel.font = .systemFont(ofSize: 14)
         subtitleLabel.textColor = UIColor.mb_color(with: "#3C3C43") ?? .darkGray
         subtitleLabel.numberOfLines = 0
@@ -96,7 +111,7 @@ import SnapKit
         footer.backgroundColor = .clear
 
         let label = UILabel()
-        label.text = "提示：模型回答由 AI 生成，不代表开发者立场，请自行甄别。"
+        label.text = L.Tutorial.footerDisclaimer.loc
         label.font = .systemFont(ofSize: 12)
         label.textColor = UIColor.mb_color(with: "#8E8E93") ?? .secondaryLabel
         label.textAlignment = .center

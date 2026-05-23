@@ -335,7 +335,7 @@ class MBV26ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.modelQ4_K_MDisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.modelQ4_K_MDisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.modelQ4_K_MDisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.modelQ4_K_MDisplayedName, progress)
@@ -378,7 +378,7 @@ class MBV26ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.modelMMProjDisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.modelMMProjDisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.modelMMProjDisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.modelMMProjDisplayedName, progress)
@@ -421,7 +421,7 @@ class MBV26ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.mlmodelcZipFileDisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.mlmodelcZipFileDisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.mlmodelcZipFileDisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.mlmodelcZipFileDisplayedName, progress)
@@ -483,19 +483,19 @@ class MBV26ModelDownloadManager: NSObject {
     /// - Returns: 格式化的时间字符串
     func formatTimeRemaining(_ timeInterval: TimeInterval) -> String {
         if timeInterval.isInfinite || timeInterval.isNaN || timeInterval <= 0 {
-            return "计算中..."
+            return L.Download.etaCalculating.loc
         }
-        
+
         let hours = Int(timeInterval) / 3600
         let minutes = Int(timeInterval) % 3600 / 60
         let seconds = Int(timeInterval) % 60
-        
+
         if hours > 0 {
-            return String(format: "%d小时%d分钟", hours, minutes)
+            return String(format: L.Download.etaHoursMinutesFormat.loc, hours, minutes)
         } else if minutes > 0 {
-            return String(format: "%d分钟%d秒", minutes, seconds)
+            return String(format: L.Download.etaMinutesSecondsFormat.loc, minutes, seconds)
         } else {
-            return String(format: "%d秒", seconds)
+            return String(format: L.Download.etaSecondsFormat.loc, seconds)
         }
     }
     

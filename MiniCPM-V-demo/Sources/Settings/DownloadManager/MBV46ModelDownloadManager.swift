@@ -232,7 +232,7 @@ class MBV46ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.modelv46_DisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.modelv46_DisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.modelv46_DisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.modelv46_DisplayedName, progress)
@@ -270,7 +270,7 @@ class MBV46ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.modelMMProjv46_DisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.modelMMProjv46_DisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.modelMMProjv46_DisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.modelMMProjv46_DisplayedName, progress)
@@ -308,7 +308,7 @@ class MBV46ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.mlmodelcv46_DisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.mlmodelcv46_DisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.mlmodelcv46_DisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.mlmodelcv46_DisplayedName, progress)

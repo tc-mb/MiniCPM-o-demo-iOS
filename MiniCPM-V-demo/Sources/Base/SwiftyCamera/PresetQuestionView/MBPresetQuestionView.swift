@@ -33,7 +33,7 @@ class MBPresetQuestionView: UIView {
     /// 预先设置好的问题
     lazy var presetQuestion01Button: UIButton = {
        let btn = UIButton()
-        btn.setTitle("此刻发生了什么？", for: UIControl.State())
+        btn.setTitle(L.Camera.presetQuestion1.loc, for: UIControl.State())
         btn.addTarget(self, action: #selector(handleTapButton), for: .touchUpInside)
         btn.backgroundColor = UIColor.mb_color(with: "#333333")?.withAlphaComponent(0.4)
         btn.layer.cornerRadius = 8
@@ -54,7 +54,7 @@ class MBPresetQuestionView: UIView {
     /// 预先设置好的问题
     lazy var presetQuestion02Button: UIButton = {
        let btn = UIButton()
-        btn.setTitle("视频的背景环境在哪里？", for: UIControl.State())
+        btn.setTitle(L.Camera.presetQuestion2.loc, for: UIControl.State())
         btn.addTarget(self, action: #selector(handleTapButton), for: .touchUpInside)
         btn.backgroundColor = UIColor.mb_color(with: "#333333")?.withAlphaComponent(0.4)
         btn.layer.cornerRadius = 8
@@ -75,7 +75,7 @@ class MBPresetQuestionView: UIView {
     /// 预先设置好的问题
     lazy var presetQuestion03Button: UIButton = {
        let btn = UIButton()
-        btn.setTitle("视频中有哪些物体？", for: UIControl.State())
+        btn.setTitle(L.Camera.presetQuestion3.loc, for: UIControl.State())
         btn.addTarget(self, action: #selector(handleTapButton), for: .touchUpInside)
         btn.backgroundColor = UIColor.mb_color(with: "#333333")?.withAlphaComponent(0.4)
         btn.layer.cornerRadius = 8
@@ -96,7 +96,7 @@ class MBPresetQuestionView: UIView {
     /// 预先设置好的问题
     lazy var presetQuestion04Button: UIButton = {
        let btn = UIButton()
-        btn.setTitle("视频是在室内还是室外？", for: UIControl.State())
+        btn.setTitle(L.Camera.presetQuestion4.loc, for: UIControl.State())
         btn.addTarget(self, action: #selector(handleTapButton), for: .touchUpInside)
         btn.backgroundColor = UIColor.mb_color(with: "#333333")?.withAlphaComponent(0.4)
         btn.layer.cornerRadius = 8
@@ -232,7 +232,7 @@ extension MBPresetQuestionView {
 
         if let retrievedDictionary = UserDefaults.standard.dictionary(forKey: userDefaultsKey) as? [String: [String: String]] {
             
-            presetQuestion01Button.setTitle("此刻发生了什么？", for: UIControl.State())
+            presetQuestion01Button.setTitle(L.Camera.presetQuestion1.loc, for: UIControl.State())
             if let q = retrievedDictionary["q1"],
                let t = q["q"],
                !t.isEmpty {
@@ -242,21 +242,21 @@ extension MBPresetQuestionView {
                 currentSelectedButtonTitle = t
             }
             
-            presetQuestion02Button.setTitle("视频的背景环境在哪里？", for: UIControl.State())
+            presetQuestion02Button.setTitle(L.Camera.presetQuestion2.loc, for: UIControl.State())
             if let q = retrievedDictionary["q2"],
                let t = q["q"],
                !t.isEmpty {
                 presetQuestion02Button.setTitle(t, for: UIControl.State())
             }
 
-            presetQuestion03Button.setTitle("视频中有哪些物体？", for: UIControl.State())
+            presetQuestion03Button.setTitle(L.Camera.presetQuestion3.loc, for: UIControl.State())
             if let q = retrievedDictionary["q3"],
                let t = q["q"],
                !t.isEmpty {
                 presetQuestion03Button.setTitle(t, for: UIControl.State())
             }
 
-            presetQuestion04Button.setTitle("视频是在室内还是室外？", for: UIControl.State())
+            presetQuestion04Button.setTitle(L.Camera.presetQuestion4.loc, for: UIControl.State())
             if let q = retrievedDictionary["q4"],
                let t = q["q"],
                !t.isEmpty {

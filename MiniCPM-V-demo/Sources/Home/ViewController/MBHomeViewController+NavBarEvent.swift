@@ -47,8 +47,8 @@ extension MBHomeViewController {
 
             let loaded = self.mtmdWrapperExample?.multiModelLoadingSuccess ?? false
             let message = loaded
-                ? "图片切片数已切换为 \(chosen)"
-                : "已保存切片数 \(chosen)，下次加载模型时生效"
+                ? String(format: L.Home.sliceChangedNowFormat.loc, "\(chosen)")
+                : String(format: L.Home.sliceSavedNextLoadFormat.loc, "\(chosen)")
             let hud = MBHUD.showAdded(to: self.view, animated: true)
             hud.mode = .text
             hud.label.text = message
@@ -60,15 +60,15 @@ extension MBHomeViewController {
     @objc func deleteButtonTapped() {
 
         if thinking {
-            self.showErrorTips("处理中，请稍等")
+            self.showErrorTips(L.Home.tipProcessingWait.loc)
             return
         }
 
-        let alertController = UIAlertController(title: "是否清除对话记录",
-                                                message: "清除后对话记录无法恢复，是否确认清除对话记录？",
+        let alertController = UIAlertController(title: L.Home.clearChatTitle.loc,
+                                                message: L.Home.clearChatMessage.loc,
                                                 preferredStyle: .alert)
         
-        let okayAction = UIAlertAction(title: "删除",
+        let okayAction = UIAlertAction(title: L.Common.delete.loc,
                                        style: .destructive) { [weak self] (action) in
             // 重置所有标记位
             self?.dataArray.removeAll()
@@ -95,7 +95,7 @@ extension MBHomeViewController {
             }
         }
         
-        let cancelAction = UIAlertAction(title: "取消",
+        let cancelAction = UIAlertAction(title: L.Common.cancel.loc,
                                          style: .cancel,
                                          handler: nil)
         

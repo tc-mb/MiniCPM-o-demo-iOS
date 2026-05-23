@@ -36,10 +36,9 @@ import SnapKit
     /// 列表对应的数据源
     var dataArray = [MBSettingsModel]()
     
-    /// 使用该模型按钮
+    /// 使用该模型按钮（title 由 updateUseModelButtonState 三态填写，不在 lazy init 时设置）
     lazy var useModelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("使用该模型", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = UIColor.mb_color(with: "#007AFF")
         button.layer.cornerRadius = 8
@@ -88,6 +87,27 @@ import SnapKit
         // Enable the interactive pop gesture recognizer
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(applyLanguage),
+                                               name: .languageDidChange,
+                                               object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func applyLanguage() {
+        // 模型名 self.title = modelName 不变（"MiniCPM-V 2.6 8B" 全英）
+        if let rightBtn = navigationItem.rightBarButtonItem {
+            rightBtn.accessibilityLabel = L.ModelDetail.redownloadA11yLabel.loc
+            rightBtn.accessibilityHint = L.ModelDetail.redownloadA11yHint.loc
+        }
+        // table cell 上的下载状态 string 重新本地化
+        loadTableViewData()
+        // 主按钮 title 也要刷新
+        updateUseModelButtonState()
     }
 
     public override func viewWillDisappear(_ animated: Bool) {
@@ -151,8 +171,8 @@ import SnapKit
                                             target: self,
                                             action: #selector(handleRightNavButton))
         rightNavButton.tintColor = .black
-        rightNavButton.accessibilityLabel = "重新下载"
-        rightNavButton.accessibilityHint = "删除所有已下载的模型文件并重新下载"
+        rightNavButton.accessibilityLabel = L.ModelDetail.redownloadA11yLabel.loc
+        rightNavButton.accessibilityHint = L.ModelDetail.redownloadA11yHint.loc
         self.navigationItem.rightBarButtonItem = rightNavButton
         
         // 白色顶导
@@ -194,12 +214,12 @@ import SnapKit
     }
     
     private func showRedownloadAlert() {
-        let alert = UIAlertController(title: "重新下载", 
-                                     message: "这将删除所有已下载的模型文件和缓存中的临时文件，然后重新下载。确定要继续吗？", 
+        let alert = UIAlertController(title: L.ModelDetail.redownloadTitle.loc,
+                                     message: L.ModelDetail.redownloadMessage.loc,
                                      preferredStyle: .alert)
         
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "确定", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L.Common.cancel.loc, style: .cancel))
+        alert.addAction(UIAlertAction(title: L.Common.ok.loc, style: .destructive) { [weak self] _ in
             self?.performRedownload()
         })
         
@@ -209,7 +229,7 @@ import SnapKit
     private func performRedownload() {
         // 显示加载提示
         let hud = MBHUD.showAdded(to: self.view, animated: true)
-        hud.label.text = "正在清理文件..."
+        hud.label.text = L.ModelDetail.redownloadHudCleaning.loc
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
@@ -232,7 +252,7 @@ import SnapKit
                 // 5. 显示成功提示
                 let successHud = MBHUD.showAdded(to: self.view, animated: true)
                 successHud.mode = .text
-                successHud.label.text = "清理完成，可以重新下载"
+                successHud.label.text = L.ModelDetail.redownloadHudCleaned.loc
                 successHud.hide(animated: true, afterDelay: 2.0)
             }
         }
@@ -336,8 +356,10 @@ import SnapKit
             downloadManager.setupDownloadManager(with: mtmdWrapperExample)
         } else {
             // 如果没有传入 llamaState，创建一个新的实例
-            let alert = UIAlertController(title: "错误", message: "未传入 llamaState，无法初始化下载管理器。", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "确定", style: .default, handler: { _ in
+            let alert = UIAlertController(title: L.Common.error.loc,
+                                          message: L.ModelDetail.alertNoWrapper.loc,
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: L.Common.ok.loc, style: .default, handler: { _ in
                 self.navigationController?.popViewController(animated: true)
             }))
             self.present(alert, animated: true, completion: nil)
@@ -378,12 +400,12 @@ import SnapKit
         for (index, model) in dataArray.enumerated() {
             if model.title == modelName {
                 if progress >= 1.0 {
-                    model.statusString = "已下载"
+                    model.statusString = L.Download.statusDownloaded.loc
                 } else if progress > 0 {
                     let percentage = Int(progress * 100)
                     model.statusString = "\(percentage)%"
                 } else {
-                    model.statusString = "下载中..."
+                    model.statusString = L.Download.statusDownloading.loc
                 }
                 
                 // 刷新对应的 cell
@@ -402,9 +424,9 @@ import SnapKit
         for (index, model) in dataArray.enumerated() {
             if model.title == modelName {
                 if success {
-                    model.statusString = "已下载"
+                    model.statusString = L.Download.statusDownloaded.loc
                 } else {
-                    model.statusString = "下载失败"
+                    model.statusString = L.Download.statusFailed.loc
                 }
                 
                 // 刷新对应的 cell
@@ -416,11 +438,10 @@ import SnapKit
                 // 显示下载结果提示
                 let hud = MBHUD.showAdded(to: self.view, animated: true)
                 hud.mode = .text
-                if success {
-                    hud.label.text = "\(modelName) 下载成功"
-                } else {
-                    hud.label.text = "\(modelName) 下载失败"
-                }
+                let toastKey = success
+                    ? L.ModelDetail.toastDownloadSuccessFormat
+                    : L.ModelDetail.toastDownloadFailedFormat
+                hud.label.text = String(format: toastKey.loc, modelName)
                 hud.hide(animated: true, afterDelay: 2.0)
                 
                 // 更新按钮状态
@@ -436,16 +457,16 @@ import SnapKit
             if model.title == progressInfo.modelName {
                 switch progressInfo.status {
                 case .notStarted:
-                    model.statusString = "未下载"
+                    model.statusString = L.Download.statusNotDownloaded.loc
                 case .downloading:
                     let percentage = Int(progressInfo.progress * 100)
                     model.statusString = "\(percentage)%"
                 case .paused:
-                    model.statusString = "已暂停"
+                    model.statusString = L.Download.statusPaused.loc
                 case .completed:
-                    model.statusString = "已下载"
+                    model.statusString = L.Download.statusDownloaded.loc
                 case .failed:
-                    model.statusString = "下载失败"
+                    model.statusString = L.Download.statusFailed.loc
                 }
                 
                 // 刷新对应的 cell
@@ -528,8 +549,10 @@ extension MBV26ModelDetailViewController: UITableViewDelegate {
         
         if isDownloaded {
             // 已下载，显示提示
-            let alert = UIAlertController(title: "模型已下载", message: "\(modelName) 已经下载完成，无需重复下载", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "确定", style: .default))
+            let alert = UIAlertController(title: L.ModelDetail.alertAlreadyDownloadedTitle.loc,
+                                          message: String(format: L.ModelDetail.alertAlreadyDownloadedMessageFormat.loc, modelName),
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: L.Common.ok.loc, style: .default))
             present(alert, animated: true)
         } else {
             // 未下载，开始下载
@@ -592,13 +615,13 @@ extension MBV26ModelDetailViewController {
     private func getInitialStatus(for downloadStatus: String) -> String {
         switch downloadStatus {
         case "downloaded":
-            return "已下载"
+            return L.Download.statusDownloaded.loc
         case "downloading":
-            return "下载中..."
+            return L.Download.statusDownloading.loc
         case "failed":
-            return "下载失败"
+            return L.Download.statusFailed.loc
         default:
-            return "未下载"
+            return L.Download.statusNotDownloaded.loc
         }
     }
     
@@ -617,18 +640,18 @@ extension MBV26ModelDetailViewController {
         switch currentButtonState() {
         case .needsDownload:
             useModelButton.isEnabled = true
-            useModelButton.setTitle("一键下载", for: .normal)
+            useModelButton.setTitle(L.ModelDetail.mainButtonOneTapDownload.loc, for: .normal)
             useModelButton.backgroundColor = UIColor.mb_color(with: "#007AFF")
             useModelButton.setTitleColor(.white, for: .normal)
         case .downloading:
             useModelButton.isEnabled = false
             let percent = Int(downloadManager.overallProgress() * 100)
-            useModelButton.setTitle("下载中 \(percent)%", for: .normal)
+            useModelButton.setTitle(String(format: L.ModelDetail.mainButtonDownloadingFormat.loc, percent), for: .normal)
             useModelButton.backgroundColor = UIColor.mb_color(with: "#CCCCCC")
             useModelButton.setTitleColor(.darkGray, for: .normal)
         case .ready:
             useModelButton.isEnabled = true
-            useModelButton.setTitle("使用该模型", for: .normal)
+            useModelButton.setTitle(L.ModelDetail.mainButtonUseThis.loc, for: .normal)
             useModelButton.backgroundColor = UIColor.mb_color(with: "#007AFF")
             useModelButton.setTitleColor(.white, for: .normal)
         }
@@ -648,7 +671,7 @@ extension MBV26ModelDetailViewController {
         // 显示成功提示
         let hud = MBHUD.showAdded(to: self.view, animated: true)
         hud.mode = .text
-        hud.label.text = "已设置 \(modelName) 为当前模型"
+        hud.label.text = String(format: L.ModelDetail.toastSetAsCurrentFormat.loc, modelName)
         hud.hide(animated: true, afterDelay: 2.0)
         
         // 返回上一页

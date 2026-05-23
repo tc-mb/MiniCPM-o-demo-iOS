@@ -146,7 +146,7 @@ import llama
     /// 免责声明
     lazy var bottomDisclaimerLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "提示：模型回答由 AI 生成，不代表开发者立场，请自行甄别。"
+        lb.text = L.Home.disclaimer.loc
         if MBUtils.isDeviceIPad() {
             lb.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         } else {
@@ -308,9 +308,37 @@ import llama
                                                selector: #selector(handleModelSelectionChanged(_:)),
                                                name: .mbModelSelectionChanged, object: nil)
 
+        // 运行时语言切换：刷新本页直接持有的所有可见文案
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(applyLanguage),
+                                               name: .languageDidChange,
+                                               object: nil)
+
         // 不在这里调 checkMultiModelLoadStatusAndLoadIt —— 推迟到 viewDidAppear
         // 首次回调，让 vc 的 view 先 layout + 显示第一帧，再开始 mtmd init。
         // 见 didStartInitialModelLoad 的注释。
+    }
+
+    /// `LocalizationManager.shared.setLanguage(_:)` 触发：刷新所有由本 VC 持有的
+    /// 静态字符串。tableView 内的 cell（welcome view、preset question、聊天气泡）
+    /// 走 reloadData 让其各自 view 在重建时取最新字符串；alert 这种"创建即定型"
+    /// 的临时 UI 不需要在这里管。
+    @objc private func applyLanguage() {
+        bottomDisclaimerLabel.text = L.Home.disclaimer.loc
+        placeholderLabel.text = L.Home.inputPlaceholder.loc
+        updateNavTitle()
+
+        // 当前可见的 header view 主动刷新文案；reloadData 会让其它 cell 重新走
+        // 数据源拿最新 .loc 字符串，但 welcome header 的 lazy view 已经实例化，
+        // 不重走 setupView，必须显式调 refreshTexts。
+        if let headerView = tableView.headerView(forSection: 0) as? MBHomeTableViewHeaderView {
+            headerView.welcomeView.refreshTexts()
+        }
+
+        // floatingActionView 也是 lazy var，初次创建后 text 不会自动更新。
+        floatingActionView.titleLabel.text = L.Floating.stopGenerating.loc
+
+        tableView.reloadData()
     }
 
     /// 用户在 V2.6 / V4 / V4.6 详情页点了"使用该模型"，把 wrapper reset 后再 load。
@@ -452,9 +480,9 @@ import llama
             }
 
             if !modelDisplayedName.isEmpty {
-                newTitle = "\(brandName)（当前模型：\(modelDisplayedName)）"
+                newTitle = String(format: L.Home.navTitleWithModelFormat.loc, brandName, modelDisplayedName)
             } else {
-                newTitle = "\(brandName)（请先下载模型）"
+                newTitle = String(format: L.Home.navTitleNoModelFormat.loc, brandName)
             }
         } else {
             newTitle = brandName
@@ -666,7 +694,7 @@ import llama
     func setupPlaceholder() {
         // 创建占位符 UILabel
         placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
-        placeholderLabel.text = "发消息"
+        placeholderLabel.text = L.Home.inputPlaceholder.loc
         placeholderLabel.textColor = UIColor.mb_color(with: "#8A8A8E")
         placeholderLabel.font = textInputView.font
         textInputView.addSubview(placeholderLabel)
@@ -890,13 +918,13 @@ import llama
 
         // 输入框的非空逻辑检查
         if inputText.isEmpty {
-            self.showErrorTips("请输入内容")
+            self.showErrorTips(L.Home.tipEmptyInput.loc)
             return
         }
         
         if thinking {
             // 如果上一次输出不没结束，禁止重复点击
-            self.showErrorTips("请稍等")
+            self.showErrorTips(L.Home.tipPleaseWait.loc)
             return
         }
 
@@ -937,7 +965,7 @@ import llama
             let perflogString = self.cachedImageEmbeddingPerfLog[imageURL],
            !perflogString.isEmpty {
             var perfLog = perflogString
-            perfLog = perfLog.replacingOccurrences(of: "Loaded model ", with: "\t预处理耗时：")
+            perfLog = perfLog.replacingOccurrences(of: "Loaded model ", with: L.Home.perfModelLoadedPrefix.loc)
             
             var size = "0 KB"
             let imageCount = image?.jpegData(compressionQuality: 1)?.count ?? 0

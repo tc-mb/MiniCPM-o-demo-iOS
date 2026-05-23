@@ -35,9 +35,14 @@ enum MBImageSliceSettingAlert {
         // reserves vertical space for our overlay subviews (slider +
         // value label + hint).  Each "\n" reserves roughly one font
         // line; tune until the pinned subviews fit on common phones.
+        // Reserve nine '\n' lines of vertical space inside the alert
+        // message so the slider/value/hint subviews fit. We keep this
+        // padding outside the i18n string itself to avoid translators
+        // accidentally compressing the leading whitespace.
+        let messageBody = L.ImageSlice.message.loc
         let alert = UIAlertController(
-            title: "图片切片数",
-            message: "\n\n\n\n\n\n\n\n\n切片越多，模型能识别的图片细节越清晰；同时图像 token 更多，回答耗时也越长。\n• 1：单张概览（最快，无切图）\n• 9：MiniCPM-V 模型上限（默认，最清晰）",
+            title: L.ImageSlice.title.loc,
+            message: "\n\n\n\n\n\n\n\n\n" + messageBody,
             preferredStyle: .alert
         )
 
@@ -65,14 +70,14 @@ enum MBImageSliceSettingAlert {
         // adding 9 ticks via a custom drawing layer is overkill for a
         // settings popup.
         let minLabel = UILabel()
-        minLabel.text = "1 极速"
+        minLabel.text = L.ImageSlice.labelMin.loc
         minLabel.font = UIFont.systemFont(ofSize: 11)
         minLabel.textColor = .secondaryLabel
         minLabel.translatesAutoresizingMaskIntoConstraints = false
         alert.view.addSubview(minLabel)
 
         let maxLabel = UILabel()
-        maxLabel.text = "9 最清晰"
+        maxLabel.text = L.ImageSlice.labelMax.loc
         maxLabel.font = UIFont.systemFont(ofSize: 11)
         maxLabel.textColor = .secondaryLabel
         maxLabel.textAlignment = .right
@@ -100,8 +105,8 @@ enum MBImageSliceSettingAlert {
         slider.addTarget(snap, action: #selector(MBImageSliceSliderProxy.sliderChanged(_:)), for: .valueChanged)
         objc_setAssociatedObject(slider, &MBImageSliceSliderProxy.assocKey, snap, .OBJC_ASSOCIATION_RETAIN)
 
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "完成", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: L.Common.cancel.loc, style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: L.Common.done.loc, style: .default) { _ in
             let chosen = Int(round(slider.value))
             onConfirm(chosen)
         })

@@ -37,4 +37,9 @@ class MBSettingsModel: NSObject {
     
     /// 是否优先显示状态文字而不是箭头图标（用于下载状态显示）
     var shouldShowStatusText: Bool = false
+
+    /// 右侧 detail 文字，与 statusString 区别：纯展示当前值（如 "中文" /
+    /// "English"），用次要灰色，不染主题蓝。Cell 在 statusLabel 位置渲染，
+    /// 同时仍可保留 accessoryIcon (chevron)。
+    var detailText: String?
 } 

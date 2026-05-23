@@ -50,7 +50,7 @@ class MBFloatingActionView: UIView {
             lb.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         }
         lb.textColor = UIColor.mb_color(with: "#4967FA")
-        lb.text = "终止生成"
+        lb.text = L.Floating.stopGenerating.loc
         return lb
     }()
     

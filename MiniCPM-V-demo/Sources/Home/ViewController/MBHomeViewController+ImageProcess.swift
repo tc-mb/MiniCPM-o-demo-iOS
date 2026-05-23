@@ -71,7 +71,7 @@ extension MBHomeViewController {
                                 status = .succeeded
                                 print("[UI]addImage: \(imgPath) ok")
                             } else {
-                                status = .failed("模型尚未加载完成，请稍候")
+                                status = .failed(L.Home.perfModelNotReady.loc)
                                 print("[UI]addImage skip: model not loaded yet")
                             }
                         } else {
@@ -121,14 +121,14 @@ extension MBHomeViewController {
                 switch status {
                 case .succeeded:
                     let timeInSeconds = String(format: "%.1f", elapsed)
-                    perfLog = "\t\t预处理耗时：\(timeInSeconds)s"
+                    perfLog = String(format: L.Home.perfPrepFormat.loc, timeInSeconds)
                 case .timeout:
-                    perfLog = "\t\t预处理超时（>\(Int(MTMDWrapper.defaultPrefillTimeoutSeconds))s）"
+                    perfLog = String(format: L.Home.perfTimeoutFormat.loc, Int(MTMDWrapper.defaultPrefillTimeoutSeconds))
                 case .failed(let reason):
                     let trimmed = reason.count > 24 ? String(reason.prefix(24)) + "…" : reason
-                    perfLog = "\t\t预处理失败：\(trimmed)"
+                    perfLog = String(format: L.Home.perfFailedFormat.loc, trimmed)
                 case .skipped:
-                    perfLog = "\t\t预处理已跳过"
+                    perfLog = L.Home.perfSkipped.loc
                 }
 
                 // 处理完成后，这个值总是 -1（让进度条收尾到 100%）
@@ -213,7 +213,7 @@ extension MBHomeViewController {
     @objc public func handleChooseImage(_ sender: UIButton) {
 
         if thinking {
-            self.showErrorTips("处理中，请稍等")
+            self.showErrorTips(L.Home.tipProcessingWait.loc)
             return
         }
 
@@ -221,7 +221,7 @@ extension MBHomeViewController {
         // 不然两次 prefill_image 在 DispatchQueue.global 上并发跑同一个
         // mtmd_context，n_past 与图像 token KV 会全部错位。
         if self.uploadSingleImageToModel {
-            self.showErrorTips("上一张图片预处理中，请稍等")
+            self.showErrorTips(L.Home.tipPreviousImageProcessing.loc)
             return
         }
 

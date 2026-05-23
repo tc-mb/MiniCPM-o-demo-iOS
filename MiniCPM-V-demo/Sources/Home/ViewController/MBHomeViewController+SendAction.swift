@@ -21,13 +21,13 @@ extension MBHomeViewController {
         // UI 上的症状是"用户消息发出去了、llm 没回复"，看起来像 App 卡死。
         // 这里和图片 / 视频路径对齐做一次状态 gating，给一个明确 toast。
         if self.mtmdWrapperExample?.multiModelLoadingSuccess != true {
-            self.showErrorTips("模型尚未加载完成，请稍候再发送。")
+            self.showErrorTips(L.Home.tipModelNotReady.loc)
             return
         }
 
         // 如果有录像的在处理中的视频帧，也要等
         if MBLiveCaptureVideoFrameManager.shared.capturedImageArray.count != 0 {
-            self.showErrorTips("图片预处理中，请稍等再点击发送。")
+            self.showErrorTips(L.Home.tipImageProcessing.loc)
             return
         }
 
@@ -37,7 +37,7 @@ extension MBHomeViewController {
         // n_past，最终模型不返回 / 输出胡乱的内容（用户报的"没回复"症状）。
         // 给一个明确的 toast 比静默丢弃发送更友好。
         if self.uploadSingleImageToModel {
-            self.showErrorTips("图片预处理中，请稍等再点击发送。")
+            self.showErrorTips(L.Home.tipImageProcessing.loc)
             return
         }
 

@@ -21,7 +21,7 @@ extension MBHomeViewController {
         if action == "copy" {
             if let text = model?.contentText {
                 UIPasteboard.general.string = text
-                self.showErrorTips("已复制", delay: 1)
+                self.showErrorTips(L.Home.toastCopied.loc, delay: 1)
             }
         } else if action == "regenerate" {
             // 重新生成
@@ -29,15 +29,15 @@ extension MBHomeViewController {
             self.regenerateLastOutput()
         } else if action == "voteup" {
             if model?.voteStatus == .voteup {
-                self.showErrorTips("已取消", delay: 1)
+                self.showErrorTips(L.Home.toastCancelled.loc, delay: 1)
             } else {
-                self.showErrorTips("已赞同", delay: 1)
+                self.showErrorTips(L.Home.toastLiked.loc, delay: 1)
             }
         } else if action == "votedown" {
             if model?.voteStatus == .votedown {
-                self.showErrorTips("已取消", delay: 1)
+                self.showErrorTips(L.Home.toastCancelled.loc, delay: 1)
             } else {
-                self.showErrorTips("已反对", delay: 1)
+                self.showErrorTips(L.Home.toastDisliked.loc, delay: 1)
             }
         }
     }

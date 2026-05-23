@@ -62,6 +62,24 @@ import llama
         // Enable the interactive pop gesture recognizer
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+
+        // 监听运行时语言切换：用户在本页选了 English 之后，此通知会让
+        // 整页重建（标题 + 4 个 section header + 全部 cell title / detailText）
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(applyLanguage),
+                                               name: .languageDidChange,
+                                               object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    /// 当 LocalizationManager.shared.currentLanguage 变化时调用：刷新本页所有可见文案。
+    @objc private func applyLanguage() {
+        self.title = L.Settings.title.loc
+        // loadTableViewData 内部 removeAll + 重新组装 4 个 section + reloadData
+        loadTableViewData()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -85,7 +103,7 @@ import llama
     // MARK: - 创建子视图
     
     func setupSubViews() {
-        self.title = "设置"
+        self.title = L.Settings.title.loc
         
         let titleDict: [NSAttributedString.Key : Any] = [NSAttributedString.Key.foregroundColor: UIColor.black]
         self.navigationController?.navigationBar.titleTextAttributes = titleDict
@@ -175,13 +193,13 @@ extension MBSettingsViewController: UITableViewDataSource {
         
         switch section {
         case 0:
-            titleLabel.text = "多模态模型管理"
+            titleLabel.text = L.Settings.sectionMultimodal.loc
         case 1:
-            titleLabel.text = "语言模型管理"
+            titleLabel.text = L.Settings.sectionLanguageModel.loc
         case 2:
-            titleLabel.text = "功能设置"
+            titleLabel.text = L.Settings.sectionFeature.loc
         case 3:
-            titleLabel.text = "其他设置"
+            titleLabel.text = L.Settings.sectionOther.loc
         default:
             titleLabel.text = ""
         }
@@ -220,8 +238,10 @@ extension MBSettingsViewController: UITableViewDelegate {
     private func handleModelSelection(model: MBSettingsModel, at indexPath: IndexPath) {
         guard let mtmdWrapperExample else {
             // 如果没有传入 mtmdWrapperExample，创建一个新的实例
-            let alert = UIAlertController(title: "错误", message: "未传入 mtmdWrapperExample，无法初始化下载管理器。", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "确定", style: .default, handler: { _ in
+            let alert = UIAlertController(title: L.Common.error.loc,
+                                          message: L.Settings.alertNoWrapper.loc,
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: L.Common.ok.loc, style: .default, handler: { _ in
                 self.navigationController?.popViewController(animated: true)
             }))
             self.present(alert, animated: true, completion: nil)
@@ -231,9 +251,12 @@ extension MBSettingsViewController: UITableViewDelegate {
         if model.status == "disabled" {
             let totalRAM = ProcessInfo.processInfo.physicalMemory
             let ramGB = String(format: "%.0f", Double(totalRAM) / 1024 / 1024 / 1024)
-            let alertMessage = "\(model.title ?? "该模型")参数量较大，当前设备内存不足（需 12 GB 以上，当前 \(ramGB) GB）。"
-            let alert = UIAlertController(title: "设备不支持", message: alertMessage, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "我知道了", style: .default))
+            let modelName = model.title ?? L.Settings.alertModelFallback.loc
+            let alertMessage = String(format: L.Settings.alertDeviceUnsupportedMessageFormat.loc, modelName, ramGB)
+            let alert = UIAlertController(title: L.Settings.alertDeviceUnsupportedTitle.loc,
+                                          message: alertMessage,
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: L.Common.gotIt.loc, style: .default))
             present(alert, animated: true)
             return
         }
@@ -256,19 +279,60 @@ extension MBSettingsViewController: UITableViewDelegate {
     }
     
     private func handleFeatureSelection(model: MBSettingsModel, at indexPath: IndexPath) {
-        // 处理功能设置逻辑
-        if let title = model.title, title == "实时理解设置" {
-            // 实时理解设置的处理逻辑
+        // 处理功能设置逻辑。
+        // 注意：用 .loc 后的字符串比较，意味着用户在英文环境下点 "Language"
+        // cell 也能命中（loc 返回 "Language"），中文环境下点"语言"也能命中。
+        guard let title = model.title else { return }
+        if title == L.Settings.rowLanguage.loc {
+            showLanguagePicker()
+        } else if title == L.Realtime.title.loc {
             showRealtimeUnderstandingPage()
         }
     }
     
     private func handleOtherSettings(model: MBSettingsModel, at indexPath: IndexPath) {
         // 处理其他设置逻辑
-        if let title = model.title, title == "关于我们" {
+        if let title = model.title, title == L.Settings.rowAbout.loc {
             // 关于我们的处理逻辑
             showAboutUs()
         }
+    }
+
+    /// 弹 ActionSheet 让用户在中文 / English 之间二选一。
+    /// 选好后调 LocalizationManager.setLanguage()，会通过通知触发本页 + 已打开
+    /// 的其它 VC 全部 reload，无需重启 app。
+    private func showLanguagePicker() {
+        let alert = UIAlertController(title: L.LanguagePicker.title.loc,
+                                      message: L.LanguagePicker.message.loc,
+                                      preferredStyle: .actionSheet)
+
+        for lang in AppLanguage.allCases {
+            let isCurrent = (LocalizationManager.shared.currentLanguage == lang)
+            // 给当前选中那行末尾加 ✓ 提示，避免用户重复点同一项造成困惑。
+            let title = isCurrent ? "\(lang.displayName)  ✓" : lang.displayName
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+                LocalizationManager.shared.setLanguage(lang)
+                // 立刻刷新本页：监听 .languageDidChange 已经会做这件事，
+                // 这里再调一次保证用户在切换瞬间就看到反馈，不依赖通知派发顺序。
+                self?.applyLanguage()
+            })
+        }
+        alert.addAction(UIAlertAction(title: L.Common.cancel.loc, style: .cancel))
+
+        // iPad action sheet 必须 anchor 到 sourceView 否则 crash。anchor 到
+        // tableView 的当前选中行，没选中行则 fallback 到 view 中央。
+        if let pop = alert.popoverPresentationController {
+            pop.sourceView = self.view
+            if let idx = tableView.indexPathForSelectedRow,
+               let cell = tableView.cellForRow(at: idx) {
+                pop.sourceView = cell
+                pop.sourceRect = cell.bounds
+            } else {
+                pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+                pop.permittedArrowDirections = []
+            }
+        }
+        present(alert, animated: true)
     }
 
     private func showRealtimeUnderstandingPage() {
@@ -284,9 +348,9 @@ extension MBSettingsViewController: UITableViewDelegate {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
         let appBuildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
         let versionInfo = "\(appVersion) (\(appBuildNumber))"
-        let message = "\(appName)\n版本 \(versionInfo)"
-        let alert = UIAlertController(title: "关于", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let message = "\(appName)\n\(L.Settings.aboutVersionLabel.loc) \(versionInfo)"
+        let alert = UIAlertController(title: L.Common.about.loc, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L.Common.ok.loc, style: .default))
         present(alert, animated: true)
     }
     
@@ -331,10 +395,10 @@ extension MBSettingsViewController {
         if !deviceSupports8B {
             model1.status = "disabled"
             let ramGB = String(format: "%.0f", Double(totalRAM) / 1024 / 1024 / 1024)
-            model1.statusString = "设备内存不足（需 12 GB，当前 \(ramGB) GB）"
+            model1.statusString = String(format: L.Settings.statusInsufficientRAMFormat.loc, ramGB)
         } else if currentSelectedModel == "V26MultiModel" {
             model1.status = "selected"
-            model1.statusString = "正在使用"
+            model1.statusString = L.Settings.statusInUse.loc
         } else {
             model1.status = "none"
         }
@@ -350,7 +414,7 @@ extension MBSettingsViewController {
         
         if currentSelectedModel == "V4MultiModel" {
             model2.status = "selected"
-            model2.statusString = "正在使用"
+            model2.statusString = L.Settings.statusInUse.loc
         } else {
             model2.status = "none"
         }
@@ -366,7 +430,7 @@ extension MBSettingsViewController {
         
         if currentSelectedModel == "V46MultiModel" {
             model3.status = "selected"
-            model3.statusString = "正在使用"
+            model3.statusString = L.Settings.statusInUse.loc
         } else {
             model3.status = "none"
         }
@@ -390,7 +454,7 @@ extension MBSettingsViewController {
         
         if currentSelectedModel == "V5TextModel" {
             model.status = "selected"
-            model.statusString = "正在使用"
+            model.statusString = L.Settings.statusInUse.loc
         } else {
             model.status = "none"
         }
@@ -406,11 +470,21 @@ extension MBSettingsViewController {
         
         // 实时理解设置（暂未调通，暂时隐藏）
         // let realtimeSetting = MBSettingsModel()
-        // realtimeSetting.title = "实时理解设置"
+        // realtimeSetting.title = L.Realtime.title.loc
         // realtimeSetting.icon = UIImage(systemName: "brain.head.profile")
         // realtimeSetting.accessoryIcon = UIImage(named: "setting_accessory_icon")
         // section.append(realtimeSetting)
-        
+
+        // 语言切换：detailText 显示当前选中的语言，点击后弹 ActionSheet。
+        // detailText 永远在 displayName 上读（"中文" / "English"），不参与
+        // i18n 字典——这是有意的：用户不论在哪种 UI 语言下都能直接识别母语。
+        let langModel = MBSettingsModel()
+        langModel.title = L.Settings.rowLanguage.loc
+        langModel.icon = UIImage(systemName: "globe")
+        langModel.accessoryIcon = UIImage(named: "setting_accessory_icon")
+        langModel.detailText = LocalizationManager.shared.currentLanguage.displayName
+        section.append(langModel)
+
         dataArray.append(section)
     }
     
@@ -419,7 +493,7 @@ extension MBSettingsViewController {
         var section = [MBSettingsModel]()
         
         let aboutModel = MBSettingsModel()
-        aboutModel.title = "关于我们"
+        aboutModel.title = L.Settings.rowAbout.loc
         aboutModel.icon = UIImage(systemName: "info.circle")
         aboutModel.accessoryIcon = UIImage(named: "setting_accessory_icon")
         

@@ -64,7 +64,7 @@ extension SwiftyCameraMainViewController {
             invalidateLiveStreamTimer()
             // 超时后，再点一下拍摄按钮（停止）
             buttonWasTapped()
-            self.showErrorTips("为避免上下文超长，请重启会话", delay: 3)
+            self.showErrorTips(L.Camera.liveStreamRestartContext.loc, delay: 3)
         }
 
         // 默认 1 帧后提问
@@ -162,7 +162,7 @@ extension SwiftyCameraMainViewController {
                 self.processing = false
                 self.embeddingCount = 0
                 self.invalidateLiveStreamTimer()
-                self.showErrorTips("运行时间及久，超出上下文，请重启进入。", delay: 3)
+                self.showErrorTips(L.Camera.liveStreamCtxTooLong.loc, delay: 3)
             }
         }
 

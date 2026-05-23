@@ -15,6 +15,10 @@ class MBHomeWelcomeView: UIView {
     /// 点击事件
     public var onTap: ((String?) -> Void)?
 
+    /// 当前是否处于纯文本模型态。`updateForModelType(isTextOnly:)` 调用时缓存，
+    /// 切语言时 `refreshTexts()` 据此决定文案；首次 setupView 时按多模态展示。
+    private var isTextOnlyState: Bool = false
+
     lazy var titleLabel: UILabel = {
         let lb = UILabel()
         lb.text = "Welcome to MiniCPM-V"
@@ -37,14 +41,14 @@ class MBHomeWelcomeView: UIView {
     /// tip1
     lazy var tips01ContainerView: MBHomeWelcomeTipsView = {
         let v = MBHomeWelcomeTipsView()
-        v.bindWith(icon: UIImage(named: "header_tips1_icon"), title: "请描述图片中的内容。")
+        v.bindWith(icon: UIImage(named: "header_tips1_icon"), title: L.Welcome.presetDescribeImage.loc)
         return v
     }()
 
     /// tip2
     lazy var tips02ContainerView: MBHomeWelcomeTipsView = {
         let v = MBHomeWelcomeTipsView()
-        v.bindWith(icon: UIImage(named: "header_tips2_icon"), title: "Describe the image.")
+        v.bindWith(icon: UIImage(named: "header_tips2_icon"), title: L.Welcome.presetDescribeTheImage.loc)
         return v
     }()
 
@@ -91,7 +95,7 @@ class MBHomeWelcomeView: UIView {
             .font: UIFont.systemFont(ofSize: 14),
             .paragraphStyle: para
         ]
-        let text = "让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话与互动、根据图片给出信息并进一步解读。"
+        let text = L.Welcome.subtitleMultimodal.loc
         descLabel.attributedText = NSAttributedString(string: text, attributes: attributes)
         addSubview(descLabel)
         self.descLabel.snp.makeConstraints { make in
@@ -143,11 +147,21 @@ class MBHomeWelcomeView: UIView {
 
     /// 根据模型类型切换欢迎卡片内容
     public func updateForModelType(isTextOnly: Bool) {
-        if isTextOnly {
+        self.isTextOnlyState = isTextOnly
+        applyTexts()
+    }
+
+    /// 切语言后由父 VC 调用刷新文案。
+    public func refreshTexts() {
+        applyTexts()
+    }
+
+    private func applyTexts() {
+        if isTextOnlyState {
             titleLabel.text = "Welcome to MiniCPM"
             tips01ContainerView.bindWith(
                 icon: UIImage(named: "header_tips1_icon"),
-                title: "帮我写一首关于春天的诗")
+                title: L.Welcome.presetSpringPoem.loc)
             tips02ContainerView.bindWith(
                 icon: UIImage(named: "header_tips3_icon"),
                 title: "Explain AI in brief.")
@@ -155,10 +169,10 @@ class MBHomeWelcomeView: UIView {
             titleLabel.text = "Welcome to MiniCPM-V"
             tips01ContainerView.bindWith(
                 icon: UIImage(named: "header_tips1_icon"),
-                title: "请描述图片中的内容。")
+                title: L.Welcome.presetDescribeImage.loc)
             tips02ContainerView.bindWith(
                 icon: UIImage(named: "header_tips2_icon"),
-                title: "Describe the image.")
+                title: L.Welcome.presetDescribeTheImage.loc)
         }
 
         let para = NSMutableParagraphStyle()
@@ -173,9 +187,9 @@ class MBHomeWelcomeView: UIView {
             .font: UIFont.systemFont(ofSize: 14),
             .paragraphStyle: para
         ]
-        let desc = isTextOnly
-            ? "让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话互动，回答你的各种问题。"
-            : "让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话与互动、根据图片给出信息并进一步解读。"
+        let desc = isTextOnlyState
+            ? L.Welcome.subtitleLanguageOnly.loc
+            : L.Welcome.subtitleMultimodal.loc
         descLabel.attributedText = NSAttributedString(string: desc, attributes: attributes)
     }
 }

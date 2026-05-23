@@ -60,7 +60,7 @@ class MBTextTableViewCell: UITableViewCell {
     /// 工具条：复制 Label
     lazy var toolbarCopyLabel: UILabel = {
         let lbl = UILabel()
-        lbl.text = "复制"
+        lbl.text = L.Home.actionCopy.loc
         lbl.textColor = UIColor.mb_color(with: "#666666")
         lbl.font = UIFont.systemFont(ofSize: 14)
         return lbl
@@ -76,7 +76,7 @@ class MBTextTableViewCell: UITableViewCell {
     /// 工具条：重新生成 Label
     lazy var toolbarRegenerateLabel: UILabel = {
         let lbl = UILabel()
-        lbl.text = "重新生成"
+        lbl.text = L.Home.actionRegenerate.loc
         lbl.textColor = UIColor.mb_color(with: "#666666")
         lbl.font = UIFont.systemFont(ofSize: 14)
         lbl.isHidden = true
@@ -773,7 +773,7 @@ extension MBTextTableViewCell {
             
             if !thinkContent.isEmpty {
                 let arrow = collapsed ? "▸" : "▾"
-                result.append(NSAttributedString(string: "💭 \(arrow) 思考过程\n", attributes: thinkAttributes))
+                result.append(NSAttributedString(string: "💭 \(arrow) \(L.Home.thinkProcessLabel.loc)\n", attributes: thinkAttributes))
                 if !collapsed {
                     result.append(NSAttributedString(string: thinkContent + "\n\n", attributes: thinkAttributes))
                 }
@@ -795,7 +795,7 @@ extension MBTextTableViewCell {
             let thinkStart = text.index(text.startIndex, offsetBy: min(thinkOpenTag.count, text.count))
             let thinkContent = String(text[thinkStart...]).trimmingCharacters(in: .whitespacesAndNewlines)
             
-            result.append(NSAttributedString(string: "💭 ▾ 思考中...\n", attributes: thinkAttributes))
+            result.append(NSAttributedString(string: "💭 ▾ \(L.Home.thinkInProgressLabel.loc)\n", attributes: thinkAttributes))
             if !thinkContent.isEmpty {
                 result.append(NSAttributedString(string: thinkContent, attributes: thinkAttributes))
             }

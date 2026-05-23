@@ -151,7 +151,28 @@ class MBSettingsTableViewCell: UITableViewCell {
         } else {
             // 普通类型的 cell（如模型选择）
             switchControl.isHidden = true
-            
+
+            // detailText 模式（纯展示当前值，配 chevron，不染主题蓝）
+            if let detail = model.detailText, !detail.isEmpty {
+                statusLabel.text = detail
+                statusLabel.textColor = UIColor.mb_color(with: "#8E8E93") ?? .gray
+                statusLabel.font = .systemFont(ofSize: 14, weight: .regular)
+                statusLabel.isHidden = false
+
+                accessoryImageView.image = model.accessoryIcon
+                accessoryImageView.tintColor = .black
+                accessoryImageView.isHidden = (model.accessoryIcon == nil)
+
+                // 与 selected 分支同款约束：给 accessoryImageView 留位
+                statusLabel.snp.remakeConstraints { make in
+                    make.centerY.equalTo(contentView)
+                    make.width.equalTo(140)
+                    make.right.equalTo(-44 - gap)
+                    make.height.equalTo(16)
+                }
+                return
+            }
+
             // 检查是否应该优先显示状态文字（用于下载页面）
             if model.shouldShowStatusText, let statusStr = model.statusString {
                 // 优先显示状态文字
@@ -186,7 +207,7 @@ class MBSettingsTableViewCell: UITableViewCell {
                     statusLabel.isHidden = false
                     debugLog("-->> Cell: 显示自定义状态文字: \(statusStr)")
                 } else {
-                    statusLabel.text = "正在使用"
+                    statusLabel.text = L.Settings.statusInUse.loc
                     statusLabel.isHidden = false
                     debugLog("-->> Cell: 显示默认状态文字: 正在使用")
                 }

@@ -31,7 +31,7 @@ extension MBHomeViewController {
                     // 是 0.1s 精度的 Double，直接 %.1f 格式化即可。不要再去拼
                     // arc4random()%6+1 这种"伪小数 hack"，会拼出 "5.3.4s" 这种
                     // 非法时间字符串。
-                    let perfLog = String(format: "\t\t预处理耗时：%.1fs", lastLogTime)
+                    let perfLog = String(format: L.Home.perfPrepFormat.loc, String(format: "%.1f", lastLogTime))
 
                     // 处理完成后，这个值总是 -1
                     latestCell.model?.processProgress = -1
@@ -51,7 +51,7 @@ extension MBHomeViewController {
     @objc public func handleCaptureVideo(_ sender: UIButton) {
         
         if !MBVideoSerialProcessQueueManager.shared.isQueueEmpty {
-            self.showErrorTips("上一个视频还在解析中，请稍等", delay: 3)
+            self.showErrorTips(L.Home.tipPreviousVideoProcessing.loc, delay: 3)
             return
         }
         
@@ -191,7 +191,7 @@ extension MBHomeViewController {
                     // "单帧大小"乘了帧数）。
                     let sizeStr = MBHomeViewController.formatBytesAsKBMB(videoFileBytes)
                     let timeStr = String(format: "%.1f", elapsed)
-                    let perfLog = "\t\t视频抽帧 \(imageCount) 帧，预处理耗时：\(timeStr)s"
+                    let perfLog = String(format: L.Home.perfVideoFramesFormat.loc, imageCount, timeStr)
 
                     // 处理完成后，这个值总是 -1
                     latestCell.model?.processProgress = -1

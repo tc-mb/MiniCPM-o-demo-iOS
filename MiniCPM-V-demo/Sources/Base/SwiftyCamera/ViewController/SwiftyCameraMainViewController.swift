@@ -93,8 +93,8 @@ class SwiftyCameraMainViewController: SwiftyCamViewController, SwiftyCamViewCont
             control.setTitleTextAttributes(selectedAttributes, for: .selected)
         }
         
-        control.insertSegment(withTitle: "单视频拍摄", at: 0, animated: false)
-        control.insertSegment(withTitle: "实时理解", at: 1, animated: false)
+        control.insertSegment(withTitle: L.Camera.modeSingleVideo.loc, at: 0, animated: false)
+        control.insertSegment(withTitle: L.Camera.modeRealtime.loc, at: 1, animated: false)
         control.addTarget(self, action: #selector(switchSegmentValueChanged), for: .valueChanged)
         
         return control
@@ -473,12 +473,10 @@ class SwiftyCameraMainViewController: SwiftyCamViewController, SwiftyCamViewCont
     
     /// 无法录像失败的回调
     func swiftyCamDidFailToConfigure(_ swiftyCam: SwiftyCamViewController) {
-        let message = NSLocalizedString("暂时无法拍摄录像",
-                                        comment: "Alert message when something goes wrong during capture session configuration")
-        let alertController = UIAlertController(title: "提示",
-                                                message: message,
+        let alertController = UIAlertController(title: L.Camera.recordUnavailableTitle.loc,
+                                                message: L.Camera.recordUnavailableMessage.loc,
                                                 preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("好", comment: "Alert OK button"),
+        alertController.addAction(UIAlertAction(title: L.Common.ok.loc,
                                                 style: .cancel,
                                                 handler: nil))
         present(alertController, animated: true, completion: nil)

@@ -934,26 +934,22 @@ open class SwiftyCamViewController: UIViewController {
         // prompt User with UIAlertView
         
         DispatchQueue.main.async(execute: { [unowned self] in
-            let message = NSLocalizedString("应用程序未能被允许使用相机, 请到设置页手工允许相机权限后再试。",
-                                            comment: "Alert message when the user has denied access to the camera")
-            
-            let alertController = UIAlertController(title: "提示",
-                                                    message: message,
+            let alertController = UIAlertController(title: L.Camera.permissionTitle.loc,
+                                                    message: L.Camera.permissionMessage.loc,
                                                     preferredStyle: .alert)
-            
-            alertController.addAction(UIAlertAction(title: NSLocalizedString("好", comment: "Alert OK button"),
+
+            alertController.addAction(UIAlertAction(title: L.Common.ok.loc,
                                                     style: .cancel,
                                                     handler: nil))
-            
-            alertController.addAction(UIAlertAction(title: NSLocalizedString("去开启",
-                                                                             comment: "Alert button to open Settings"),
+
+            alertController.addAction(UIAlertAction(title: L.Camera.permissionGoSettings.loc,
                                                     style: .default,
                                                     handler: { action in
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
             }))
-            
+
             self.present(alertController, animated: true, completion: nil)
         })
     }

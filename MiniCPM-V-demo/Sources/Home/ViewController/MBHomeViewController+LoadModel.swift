@@ -25,7 +25,7 @@ extension MBHomeViewController {
         // 静态多行文案在 vc 完全 attach 之后再被 alpha 动画显示出来，没有任何额外引用链，最稳。
         let hud = MBHUD.showAdded(to: self.view, animated: true)
         hud.mode = .indeterminate
-        hud.label.text = "正在加载模型...\n首次启动需要解析权重，请稍候"
+        hud.label.text = L.Home.hudLoadingModel.loc
         
         Task.detached(priority: .userInitiated) {
 
@@ -61,7 +61,7 @@ extension MBHomeViewController {
                   (selectedModelType.isTextOnly || mmprojURL != nil) else {
                 DispatchQueue.main.async {
                     hud.mode = .text
-                    hud.label.text = "初始化失败，请先下载模型"
+                    hud.label.text = L.Home.initFailedDownloadFirst.loc
                     hud.hide(animated: true, afterDelay: 3)
                 }
                 return
@@ -115,12 +115,12 @@ extension MBHomeViewController {
                    mtmdWrapper.multiModelLoadingSuccess == false {
                     // 模型加载失败，显示错误提示
                     hud.mode = .text
-                    hud.label.text = "初始化失败，请先下载模型"
+                    hud.label.text = L.Home.initFailedDownloadFirst.loc
                     hud.hide(animated: true, afterDelay: 3)
                 } else {
                     // 模型加载成功，隐藏 HUD
                     hud.mode = .text
-                    hud.label.text = "初始化完成"
+                    hud.label.text = L.Home.initDone.loc
                     hud.hide(animated: true, afterDelay: 2)
                 }
             }

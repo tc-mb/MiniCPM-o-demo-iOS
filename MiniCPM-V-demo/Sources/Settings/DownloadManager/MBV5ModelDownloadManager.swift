@@ -186,7 +186,7 @@ class MBV5ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.modelv5_DisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.modelv5_DisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.modelv5_DisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.modelv5_DisplayedName, progress)

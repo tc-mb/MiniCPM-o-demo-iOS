@@ -50,6 +50,10 @@
 		FA8511352E20DCC000748053 /* MBSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8511322E20DCC000748053 /* MBSettingsViewController.swift */; };
 		FA8511372E20DCC000748053 /* MBSettingsTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8511302E20DCC000748053 /* MBSettingsTableViewCell.swift */; };
 		FA8511382E20DCC000748053 /* MBSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85112F2E20DCC000748053 /* MBSettingsModel.swift */; };
+		775C12B5B2C742D88589D6AB /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FE26B4CBA446DAA06E91E4 /* L10n.swift */; };
+		C966CBF435FB411A8E9880CF /* L10nKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B54051DFB04A71A4236566 /* L10nKeys.swift */; };
+		5230E9C56E234D60B1609240 /* L10n+zh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E2BDD485E34482BA0BF270A /* L10n+zh.swift */; };
+		03436843C9704629BE16C117 /* L10n+en.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AC61316661440CAD95AE6F /* L10n+en.swift */; };
 		FA85113B2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */; };
 		FA9AB0022F03000200E00002 /* MiniCPMV46CoreMLBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */; };
 		FA9AB0112F03000200E00011 /* MarkdownEscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0102F03000200E00010 /* MarkdownEscape.swift */; };
@@ -173,6 +177,10 @@
 		FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV26ModelDetailViewController.swift; sourceTree = "<group>"; };
 		FA845F2D2C2EC20800695029 /* NSTextAttachment+MBPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSTextAttachment+MBPath.swift"; sourceTree = "<group>"; };
 		FA85112F2E20DCC000748053 /* MBSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsModel.swift; sourceTree = "<group>"; };
+		28FE26B4CBA446DAA06E91E4 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		99B54051DFB04A71A4236566 /* L10nKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10nKeys.swift; sourceTree = "<group>"; };
+		3E2BDD485E34482BA0BF270A /* L10n+zh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "L10n+zh.swift"; sourceTree = "<group>"; };
+		60AC61316661440CAD95AE6F /* L10n+en.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "L10n+en.swift"; sourceTree = "<group>"; };
 		FA8511302E20DCC000748053 /* MBSettingsTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsTableViewCell.swift; sourceTree = "<group>"; };
 		FA8511322E20DCC000748053 /* MBSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsViewController.swift; sourceTree = "<group>"; };
 		FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBRealtimeUnderstandingViewController.swift; sourceTree = "<group>"; };
@@ -378,8 +386,20 @@
 				FAC2A1D32C11B30400499465 /* Base */,
 				FA72852B2C1199D200A7FD14 /* Home */,
 				FB100A012E2D000100000001 /* Tutorial */,
+				0989B383FEFD4414AF588CEA /* Localization */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		0989B383FEFD4414AF588CEA /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				28FE26B4CBA446DAA06E91E4 /* L10n.swift */,
+				99B54051DFB04A71A4236566 /* L10nKeys.swift */,
+				3E2BDD485E34482BA0BF270A /* L10n+zh.swift */,
+				60AC61316661440CAD95AE6F /* L10n+en.swift */,
+			);
+			path = Localization;
 			sourceTree = "<group>";
 		};
 		FA49BA0D2C32A178005660C4 /* Extensions */ = {
@@ -850,6 +870,10 @@
 				FA8511352E20DCC000748053 /* MBSettingsViewController.swift in Sources */,
 				FA8511372E20DCC000748053 /* MBSettingsTableViewCell.swift in Sources */,
 				FA8511382E20DCC000748053 /* MBSettingsModel.swift in Sources */,
+				775C12B5B2C742D88589D6AB /* L10n.swift in Sources */,
+				C966CBF435FB411A8E9880CF /* L10nKeys.swift in Sources */,
+				5230E9C56E234D60B1609240 /* L10n+zh.swift in Sources */,
+				03436843C9704629BE16C117 /* L10n+en.swift in Sources */,
 				FA7CC0332E26368600A480AD /* MBHUD.swift in Sources */,
 				FAAFDFF92C37F85B00BF35BE /* debugLog.swift in Sources */,
 				FA35EE752C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift in Sources */,

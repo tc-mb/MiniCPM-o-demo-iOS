@@ -32,7 +32,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
     
     lazy var question1Label: UILabel = {
         let lb = UILabel()
-        lb.text = "问题选项"
+        lb.text = L.Realtime.questionOptionLabel.loc
         lb.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         lb.textColor = UIColor.mb_color(with: "#000000")
         lb.textAlignment = .left
@@ -41,7 +41,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
     
     lazy var question1LimitLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "实际 Prompt"
+        lb.text = L.Realtime.actualPromptLabel.loc
         lb.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         lb.textColor = UIColor.mb_color(with: "#000000")
         lb.textAlignment = .left
@@ -74,7 +74,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
     lazy var questionGapLabel: UILabel = {
         let lb = UILabel()
         lb.numberOfLines = 2
-        lb.text = "提问间隔(0-10000ms)"
+        lb.text = L.Realtime.questionIntervalLabel.loc
         lb.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         lb.textColor = UIColor.mb_color(with: "#000000")
         lb.textAlignment = .left
@@ -98,7 +98,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
     /// 提问抽帧数 label
     lazy var drawFramePerSecondLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "提问抽帧数"
+        lb.text = L.Realtime.frameSamplingLabel.loc
         lb.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         lb.textColor = UIColor.mb_color(with: "#000000")
         lb.textAlignment = .left
@@ -137,7 +137,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
     /// 保存按钮
     lazy var confirmButton: UIButton = {
         let btn = UIButton()
-        btn.setTitle("保存", for: .normal)
+        btn.setTitle(L.Common.save.loc, for: .normal)
         btn.setTitleColor(.white, for: .normal)
         btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         btn.addTarget(self, action: #selector(handleTapConfirmButton), for: .touchUpInside)
@@ -161,6 +161,20 @@ class MBRealtimeUnderstandingViewController: UIViewController {
         addTapGesture()
         
         setupKeyboardHandling()
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(applyLanguage),
+                                               name: .languageDidChange,
+                                               object: nil)
+    }
+
+    @objc private func applyLanguage() {
+        self.title = L.Realtime.title.loc
+        question1Label.text = L.Realtime.questionOptionLabel.loc
+        question1LimitLabel.text = L.Realtime.actualPromptLabel.loc
+        questionGapLabel.text = L.Realtime.questionIntervalLabel.loc
+        drawFramePerSecondLabel.text = L.Realtime.frameSamplingLabel.loc
+        confirmButton.setTitle(L.Common.save.loc, for: .normal)
     }
     
     deinit {
@@ -220,7 +234,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
         
         self.navigationController?.setNavigationBackgroundColor(UIColor.mb_color(with: "#FFFFFF") ?? .white)
         
-        self.title = "实时理解设置"
+        self.title = L.Realtime.title.loc
         let titleDict: [NSAttributedString.Key : Any] = [NSAttributedString.Key.foregroundColor: UIColor.black]
         self.navigationController?.navigationBar.titleTextAttributes = titleDict
         
@@ -475,7 +489,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
             if gapInt < 0 || gapInt > 10000 {
                 let hud = MBHUD.showAdded(to: self.view, animated: true)
                 hud.mode = .text
-                hud.label.text = "错误"
+                hud.label.text = L.Common.error.loc
                 hud.hide(animated: true, afterDelay: 2)
                 return
             }
@@ -492,7 +506,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
         
         let hud = MBHUD.showAdded(to: self.view, animated: true)
         hud.mode = .text
-        hud.label.text = "已保存"
+        hud.label.text = L.Common.saved.loc
         hud.hide(animated: true, afterDelay: 2)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -501,19 +515,15 @@ class MBRealtimeUnderstandingViewController: UIViewController {
     }
     
     @objc func handleResetNavIcon() {
-        let message = NSLocalizedString("删除所有已经输入的内容？",
-                                        comment: "Delete all inputed texts.")
-        
-        let alertController = UIAlertController(title: "提示",
-                                                message: message,
+        let alertController = UIAlertController(title: L.Common.tip.loc,
+                                                message: L.Realtime.deleteAllConfirmMessage.loc,
                                                 preferredStyle: .alert)
         
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("取消", comment: "Cancel"),
+        alertController.addAction(UIAlertAction(title: L.Common.cancel.loc,
                                                 style: .cancel,
                                                 handler: nil))
         
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("删除",
-                                                                         comment: "delete"),
+        alertController.addAction(UIAlertAction(title: L.Common.delete.loc,
                                                 style: .destructive,
                                                 handler: { [weak self] action in
             
@@ -532,7 +542,7 @@ class MBRealtimeUnderstandingViewController: UIViewController {
             // 弹 hud
             let hud = MBHUD.showAdded(to: self.view, animated: true)
             hud.mode = .text
-            hud.label.text = "已删除"
+            hud.label.text = L.Common.deleted.loc
             hud.hide(animated: true, afterDelay: 2)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {

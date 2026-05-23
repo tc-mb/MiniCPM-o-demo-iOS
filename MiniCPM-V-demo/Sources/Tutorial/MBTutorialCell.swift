@@ -156,7 +156,7 @@ class MBTutorialCell: UITableViewCell {
     func configure(_ step: MBTutorialStep) {
         symbolBg.backgroundColor = step.symbolBgColor
         symbolView.image = UIImage(systemName: step.symbolName)
-        indexLabel.text = "STEP \(step.index)"
+        indexLabel.text = String(format: L.Tutorial.stepLabelFormat.loc, step.index)
         titleLabel.text = step.title
 
         let para = NSMutableParagraphStyle()
@@ -189,7 +189,7 @@ class MBTutorialCell: UITableViewCell {
             }
         } else {
             screenshotView.image = nil
-            placeholderLabel.text = "（\(step.placeholderHint)\n截图待补充）"
+            placeholderLabel.text = String(format: L.Tutorial.placeholderFormat.loc, step.placeholderHint)
             placeholderLabel.isHidden = false
             screenshotView.snp.remakeConstraints { make in
                 make.top.equalTo(bodyLabel.snp.bottom).offset(14)

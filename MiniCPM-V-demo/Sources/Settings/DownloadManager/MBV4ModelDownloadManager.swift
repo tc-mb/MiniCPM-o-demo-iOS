@@ -338,7 +338,7 @@ class MBV4ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.modelv4_Q4_K_M_DisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.modelv4_Q4_K_M_DisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.modelv4_Q4_K_M_DisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.modelv4_Q4_K_M_DisplayedName, progress)
@@ -378,7 +378,7 @@ class MBV4ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.modelMMProjv4_DisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.modelMMProjv4_DisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.modelMMProjv4_DisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.modelMMProjv4_DisplayedName, progress)
@@ -418,7 +418,7 @@ class MBV4ModelDownloadManager: NSObject {
                 } else {
                     if status == "failed" {
                         self.setDownloadStatus(.failed, for: modelKey)
-                        self.progressHandler?(MiniCPMModelConst.mlmodelcv4_ZipFileDisplayedName + "下载失败", -1)
+                        self.progressHandler?(MiniCPMModelConst.mlmodelcv4_ZipFileDisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.mlmodelcv4_ZipFileDisplayedName, false)
                     } else {
                         self.progressHandler?(MiniCPMModelConst.mlmodelcv4_ZipFileDisplayedName, progress)
@@ -480,19 +480,19 @@ class MBV4ModelDownloadManager: NSObject {
     /// - Returns: 格式化的时间字符串
     func formatTimeRemaining(_ timeInterval: TimeInterval) -> String {
         if timeInterval.isInfinite || timeInterval.isNaN || timeInterval <= 0 {
-            return "计算中..."
+            return L.Download.etaCalculating.loc
         }
-        
+
         let hours = Int(timeInterval) / 3600
         let minutes = Int(timeInterval) % 3600 / 60
         let seconds = Int(timeInterval) % 60
-        
+
         if hours > 0 {
-            return String(format: "%d小时%d分钟", hours, minutes)
+            return String(format: L.Download.etaHoursMinutesFormat.loc, hours, minutes)
         } else if minutes > 0 {
-            return String(format: "%d分钟%d秒", minutes, seconds)
+            return String(format: L.Download.etaMinutesSecondsFormat.loc, minutes, seconds)
         } else {
-            return String(format: "%d秒", seconds)
+            return String(format: L.Download.etaSecondsFormat.loc, seconds)
         }
     }
     
