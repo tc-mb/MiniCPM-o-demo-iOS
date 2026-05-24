@@ -13,6 +13,7 @@ import promptAction from '@ohos.promptAction';
 import router from '@ohos.router';
 import hilog from '@ohos.hilog';
 import fs from '@ohos.file.fs';
+import resourceManager from '@ohos.resourceManager';
 
 import { LlamaEngine, DEFAULT_PREDICT_LENGTH, TokenStream } from '../engine/LlamaEngine';
 import { LlamaState, LlamaStateName } from '../engine/LlamaState';
@@ -34,6 +35,7 @@ import {
   videoInfoString,
   PickedVideo,
 } from '../utils/VideoFrameExtractor';
+import { LocaleManager } from '../manager/LocaleManager';
 
 const DOMAIN = 0xC0DE;
 const TAG = 'Index';
@@ -82,8 +84,19 @@ struct Index {
   // Lazy: rebuilt each time the user taps the slider button so that
   // `initialValue` reflects the latest persisted choice.
   private imageSliceDialogController: CustomDialogController | null = null;
+  // Tracks the locale tag at page creation time so onPageShow can
+  // detect a locale change (e.g. user switched language in ModelManager)
+  // and refresh non-$r() strings like statusText.
+  private createdWithLocale: string = '';
+  private resMgr: resourceManager.ResourceManager | null = null;
+
+  private str(name: string): string {
+    return this.resMgr!.getStringByNameSync(name);
+  }
 
   aboutToAppear(): void {
+    this.resMgr = getContext(this).resourceManager;
+    this.createdWithLocale = LocaleManager.currentLanguageSync();
     this.engine = LlamaEngine.getInstance(getContext(this));
     this.messageList.push(ChatMessage.welcome());
     this.engine.addListener(this.engineListener);
@@ -97,6 +110,26 @@ struct Index {
   aboutToDisappear(): void {
     if (this.engine) {
       this.engine.removeListener(this.engineListener);
+    }
+  }
+
+  onPageShow(): void {
+    // Detect locale change (e.g. user switched language in ModelManager)
+    // and force statusText to re-resolve from resources.
+    const currentLocale = LocaleManager.currentLanguageSync();
+    if (this.createdWithLocale !== currentLocale) {
+      this.createdWithLocale = currentLocale;
+      // Trigger statusText refresh by re-evaluating from engine state.
+      if (this.engine) {
+        const state = this.engine.getCurrentState();
+        this.onEngineState(state);
+      }
+      // $r() bindings auto-refresh via setAppPreferredLanguage; only
+      // programmatically-resolved strings (statusText) need a manual nudge.
+      // Force a stateName re-assignment to trigger build() re-evaluation.
+      const tmp = this.stateName;
+      this.stateName = 'Uninitialized';
+      this.stateName = tmp;
     }
   }
 
@@ -136,7 +169,7 @@ struct Index {
       case 'Error':
         this.isModelReady = false;
         if (state.errorMessage) {
-          promptAction.showToast({ message: `错误: ${state.errorMessage}`, duration: 3000 });
+          promptAction.showToast({ message: `${this.str('status_error')}: ${state.errorMessage}`, duration: 3000 });
         }
         break;
       default:
@@ -160,7 +193,7 @@ struct Index {
         (!selectedModel.isTextOnly && !!mmprojPath && !fs.accessSync(mmprojPath));
     if (needsDownload) {
       hilog.info(DOMAIN, TAG, 'Default model missing, auto-downloading...');
-      promptAction.showToast({ message: '首次使用，正在下载模型...', duration: 3000 });
+      promptAction.showToast({ message: this.str('toast_first_use_downloading'), duration: 3000 });
       try {
         await LlamaEngine.downloadModels(ctx, (msg: string) => {
           hilog.info(DOMAIN, TAG, 'download: %{public}s', msg);
@@ -169,7 +202,7 @@ struct Index {
         hilog.error(DOMAIN, TAG, 'auto download failed: %{public}s', `${e}`);
         this.engine.resetToInitialized();
         this.hasAutoLoaded = false;
-        promptAction.showToast({ message: `下载失败: ${e}`, duration: 5000 });
+        promptAction.showToast({ message: `${this.str('toast_download_failed').replace('%s', `${e}`)}`, duration: 5000 });
         return;
       }
       // Path strings may have been refreshed by legacy-name migrations.
@@ -178,7 +211,7 @@ struct Index {
     }
 
     if (!fs.accessSync(modelPath)) {
-      promptAction.showToast({ message: '模型文件不存在', duration: 4000 });
+      promptAction.showToast({ message: this.str('toast_model_file_missing'), duration: 4000 });
       return;
     }
     try {
@@ -189,7 +222,7 @@ struct Index {
       hilog.error(DOMAIN, TAG, 'loadDefaultModel failed: %{public}s', `${e}`);
       this.engine.resetToInitialized();
       this.hasAutoLoaded = false;
-      promptAction.showToast({ message: `模型加载失败: ${e}`, duration: 4000 });
+      promptAction.showToast({ message: this.str('toast_model_load_failed').replace('%s', `${e}`), duration: 4000 });
     }
   }
 
@@ -204,15 +237,15 @@ struct Index {
     // and `确定` second (right), and tint `确定` with the primary color to
     // keep it visually emphasised.
     AlertDialog.show({
-      title: '清空对话',
-      message: '确定要清空当前对话历史吗？模型上下文将被重置。',
+      title: this.str('clear_chat'),
+      message: this.str('clear_chat_confirm'),
       autoCancel: true,
       primaryButton: {
-        value: '取消',
+        value: this.str('btn_cancel'),
         action: () => undefined,
       },
       secondaryButton: {
-        value: '确定',
+        value: this.str('btn_confirm'),
         fontColor: $r('app.color.primary'),
         action: () => this.doClear(),
       },
@@ -228,9 +261,9 @@ struct Index {
       this.messageList.push(ChatMessage.welcome());
       this.messageIdCounter = 1;
       this.isImagePrefilled = false;
-      promptAction.showToast({ message: '对话已清空', duration: 1500 });
+      promptAction.showToast({ message: this.str('clear_chat_toast'), duration: 1500 });
     } catch (e) {
-      promptAction.showToast({ message: `清空失败: ${e}`, duration: 3000 });
+      promptAction.showToast({ message: this.str('toast_clear_chat_failed').replace('%s', `${e}`), duration: 3000 });
     }
   }
 
@@ -241,7 +274,7 @@ struct Index {
   private debugChoiceCursor: number = 0;
   private onLongPressImageDebug(): void {
     if (!this.isModelReady || !this.isVisionSupported) {
-      promptAction.showToast({ message: '模型未就绪', duration: 1500 });
+      promptAction.showToast({ message: this.str('toast_model_not_ready'), duration: 1500 });
       return;
     }
     const c = DEBUG_IMAGE_CHOICES[this.debugChoiceCursor % DEBUG_IMAGE_CHOICES.length];
@@ -289,11 +322,11 @@ struct Index {
 
   private async onClickPickImage(): Promise<void> {
     if (!this.isModelReady) {
-      promptAction.showToast({ message: '请先加载模型', duration: 1500 });
+      promptAction.showToast({ message: this.str('toast_load_model_first'), duration: 1500 });
       return;
     }
     if (!this.isVisionSupported) {
-      promptAction.showToast({ message: '当前模型不支持图像输入', duration: 1500 });
+      promptAction.showToast({ message: this.str('toast_vision_not_supported'), duration: 1500 });
       return;
     }
     let pickedUri: PickedMediaUri | null = null;
@@ -301,7 +334,7 @@ struct Index {
       pickedUri = await pickImageOrVideoUri();
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'pickImageOrVideoUri failed: %{public}s', `${e}`);
-      promptAction.showToast({ message: `选择媒体失败: ${e}`, duration: 3000 });
+      promptAction.showToast({ message: this.str('toast_pick_media_failed').replace('%s', `${e}`), duration: 3000 });
       return;
     }
     if (!pickedUri) return;
@@ -319,7 +352,7 @@ struct Index {
       picked = await decodeImageFromUri(uri);
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'decodeImageFromUri failed: %{public}s', `${e}`);
-      promptAction.showToast({ message: `图片解码失败: ${e}`, duration: 3000 });
+      promptAction.showToast({ message: this.str('toast_image_decode_failed').replace('%s', `${e}`), duration: 3000 });
       return;
     }
 
@@ -339,7 +372,7 @@ struct Index {
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'prefillImage failed: %{public}s', `${e}`);
-      promptAction.showToast({ message: `图片处理失败: ${e}`, duration: 3000 });
+      promptAction.showToast({ message: this.str('toast_image_process_failed').replace('%s', `${e}`), duration: 3000 });
     }
   }
 
@@ -358,7 +391,7 @@ struct Index {
   private async handlePickedVideo(uri: string): Promise<void> {
     if (!this.engine!.isVideoUnderstandingSupported()) {
       promptAction.showToast({
-        message: '视频理解仅在 MiniCPM-V-4.6 上可用，请前往“模型管理”切换模型',
+        message: this.str('video_only_v46'),
         duration: 4000,
       });
       return;
@@ -370,12 +403,12 @@ struct Index {
       video = await extractVideoFromUri(uri);
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'video extract failed: %{public}s', `${e}`);
-      promptAction.showToast({ message: `视频抽帧失败: ${e}`, duration: 4000 });
+      promptAction.showToast({ message: this.str('toast_video_extract_failed').replace('%s', `${e}`), duration: 4000 });
       return;
     }
     if (!video) return;
 
-    const baseInfo = videoInfoString(video);
+    const baseInfo = videoInfoString(video, this.resMgr!);
     hilog.info(DOMAIN, TAG, 'Video info: %{public}s', baseInfo);
 
     const message = ChatMessage.user(id, '', video.thumbnail, baseInfo, true, true);
@@ -387,7 +420,7 @@ struct Index {
         const idx = this.messageList.indexOfId(id);
         if (idx >= 0) {
           const m = this.messageList.getData(idx);
-          m.imageInfo = `${baseInfo} · 处理中 ${current}/${total}`;
+          m.imageInfo = this.str('video_processing_progress').replace('%s', baseInfo).replace('%d', `${current}`).replace('%d', `${total}`);
           this.messageList.notifyChange(idx);
         }
       });
@@ -396,7 +429,7 @@ struct Index {
       const idx = this.messageList.indexOfId(id);
       if (idx >= 0) {
         const m = this.messageList.getData(idx);
-        m.imageInfo = `${baseInfo} · 预处理 ${elapsedSec}s`;
+        m.imageInfo = this.str('video_preprocessing_done').replace('%s', baseInfo).replace('%s', elapsedSec);
         m.isPrefilling = false;
         this.messageList.notifyChange(idx);
       }
@@ -406,7 +439,7 @@ struct Index {
       if (idx >= 0) {
         this.messageList.removeAt(idx);
       }
-      promptAction.showToast({ message: `视频处理失败: ${e}`, duration: 4000 });
+      promptAction.showToast({ message: this.str('toast_video_process_failed').replace('%s', `${e}`), duration: 4000 });
     }
   }
 
@@ -438,7 +471,7 @@ struct Index {
     if (!this.engine) return;
     const text = this.inputText.trim();
     if (text.length === 0) {
-      promptAction.showToast({ message: '请输入文字消息', duration: 1500 });
+      promptAction.showToast({ message: this.str('toast_empty_input'), duration: 1500 });
       return;
     }
     this.inputText = '';
@@ -469,7 +502,7 @@ struct Index {
       this.messageList.notifyChange(aiIdx);
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'sendUserPrompt failed: %{public}s', `${e}`);
-      aiMsg.text = `${aiMsg.text}\n\n[生成失败: ${e}]`;
+      aiMsg.text = `${aiMsg.text}\n\n[${this.str('generation_failed_inline').replace('%s', `${e}`)}]`;
       aiMsg.isGenerating = false;
       this.messageList.notifyChange(aiIdx);
     } finally {
@@ -650,17 +683,17 @@ struct Index {
   // Translates the engine state into a one-line status under the title.
   private statusText(): string {
     switch (this.stateName) {
-      case 'Uninitialized':           return '未初始化';
-      case 'Initializing':            return '正在初始化...';
-      case 'Initialized':             return '已初始化';
-      case 'LoadingModel':            return '正在加载模型...';
-      case 'ModelReady':              return '模型已就绪';
-      case 'ProcessingSystemPrompt':  return '处理系统提示词...';
-      case 'PrefillingImage':         return '正在处理图片...';
-      case 'ProcessingUserPrompt':    return '处理用户输入...';
-      case 'Generating':              return '正在生成...';
-      case 'UnloadingModel':          return '正在卸载...';
-      case 'Error':                   return '错误';
+      case 'Uninitialized':           return this.str('status_uninitialized');
+      case 'Initializing':            return this.str('status_initializing');
+      case 'Initialized':             return this.str('status_initialized');
+      case 'LoadingModel':            return this.str('status_loading');
+      case 'ModelReady':              return this.str('status_ready');
+      case 'ProcessingSystemPrompt':  return this.str('status_processing_system_prompt');
+      case 'PrefillingImage':         return this.str('status_prefilling_image');
+      case 'ProcessingUserPrompt':    return this.str('status_processing_user_prompt');
+      case 'Generating':              return this.str('status_generating');
+      case 'UnloadingModel':          return this.str('status_unloading');
+      case 'Error':                   return this.str('status_error');
       default:                        return '';
     }
   }

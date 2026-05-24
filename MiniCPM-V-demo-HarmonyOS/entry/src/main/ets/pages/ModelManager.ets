@@ -5,6 +5,7 @@ import promptAction from '@ohos.promptAction';
 import router from '@ohos.router';
 import fs from '@ohos.file.fs';
 import hilog from '@ohos.hilog';
+import resourceManager from '@ohos.resourceManager';
 
 import { LlamaEngine } from '../engine/LlamaEngine';
 import { LlamaState, LlamaStateName } from '../engine/LlamaState';
@@ -15,6 +16,7 @@ import {
   findModelById,
 } from '../engine/ModelInfo';
 import { deleteSelectedModelFiles } from '../utils/DownloadManager';
+import { LocaleManager, AppLanguage } from '../manager/LocaleManager';
 
 const DOMAIN = 0xC0DE;
 const TAG = 'ModelManager';
@@ -27,17 +29,27 @@ struct ModelManager {
   @State selectedId: string = DEFAULT_MODEL.id;
   @State modelExists: boolean = false;
   @State downloading: boolean = false;
-  @State busy: boolean = false;
+  @State downloadProgress: number = 0;
+  @State loading: boolean = false;
+  @State currentLang: AppLanguage = AppLanguage.ZH;
+  private loadingLock: boolean = false;
 
   private engine: LlamaEngine | null = null;
   private engineListener = (s: LlamaState) => this.onEngineState(s);
+  private resMgr: resourceManager.ResourceManager | null = null;
+
+  private str(name: string): string {
+    return this.resMgr!.getStringByNameSync(name);
+  }
 
   aboutToAppear(): void {
+    this.resMgr = getContext(this).resourceManager;
     this.engine = LlamaEngine.getInstance(getContext(this));
     const m = LlamaEngine.getSelectedModel(getContext(this));
     this.selectedId = m.id;
     this.modelExists = LlamaEngine.modelsExist(getContext(this));
     this.engine.addListener(this.engineListener);
+    this.currentLang = LocaleManager.currentLanguageSync();
   }
 
   aboutToDisappear(): void {
@@ -51,17 +63,17 @@ struct ModelManager {
   private onEngineState(state: LlamaState): void {
     this.stateName = state.name;
     switch (state.name) {
-      case 'Uninitialized':           this.statusText = '未初始化'; break;
-      case 'Initializing':            this.statusText = '正在初始化...'; break;
-      case 'Initialized':             this.statusText = '已初始化，等待加载模型'; break;
-      case 'LoadingModel':            this.statusText = '正在加载模型...'; break;
-      case 'ModelReady':              this.statusText = '模型已就绪'; break;
+      case 'Uninitialized':           this.statusText = this.str('status_uninitialized'); break;
+      case 'Initializing':            this.statusText = this.str('status_initializing'); break;
+      case 'Initialized':             this.statusText = this.str('status_initialized'); break;
+      case 'LoadingModel':            this.statusText = this.str('status_loading'); break;
+      case 'ModelReady':              this.statusText = this.str('status_ready'); break;
       case 'ProcessingSystemPrompt':
       case 'ProcessingUserPrompt':
-      case 'Generating':              this.statusText = '正在生成...'; break;
-      case 'PrefillingImage':         this.statusText = '正在处理图片...'; break;
-      case 'UnloadingModel':          this.statusText = '正在卸载模型...'; break;
-      case 'Error':                   this.statusText = `错误: ${state.errorMessage ?? ''}`; break;
+      case 'Generating':              this.statusText = this.str('status_generating'); break;
+      case 'PrefillingImage':         this.statusText = this.str('status_prefilling_image'); break;
+      case 'UnloadingModel':          this.statusText = this.str('status_unloading'); break;
+      case 'Error':                   this.statusText = `${this.str('status_error')}: ${state.errorMessage ?? ''}`; break;
       default:                        this.statusText = ''; break;
     }
     this.modelExists = LlamaEngine.modelsExist(getContext(this));
@@ -75,10 +87,7 @@ struct ModelManager {
     this.selectedId = modelId;
     this.modelExists = LlamaEngine.modelsExist(getContext(this));
     const m = findModelById(modelId);
-    promptAction.showToast({ message: `已选择: ${m.displayName}`, duration: 1500 });
-    // Persist selection in background. Defer auto-load to next frame so the
-    // Radio checked state renders immediately without being blocked by the
-    // model unload/load cycle.
+    promptAction.showToast({ message: this.str('toast_model_selected').replace('%s', m.displayName), duration: 1500 });
     LlamaEngine.setSelectedModel(getContext(this), modelId);
     if (this.modelExists) {
       setTimeout(() => { this.onClickLoad(); }, 100);
@@ -87,71 +96,83 @@ struct ModelManager {
 
   private async onClickDownload(): Promise<void> {
     if (this.modelExists) {
-      promptAction.showToast({ message: '模型文件已存在，无需重复下载', duration: 1500 });
+      promptAction.showToast({ message: this.str('toast_already_downloaded'), duration: 1500 });
       return;
     }
     this.downloading = true;
-    this.busy = true;
-    this.statusText = '正在下载模型...';
+    this.downloadProgress = 0;
+    this.statusText = this.str('status_downloading');
     try {
       await LlamaEngine.downloadModels(getContext(this), (msg) => {
         this.statusText = msg;
+        // Parse "XX%" from progress messages like "file.gguf: 42% (123/456 MB) [HuggingFace]"
+        const pctMatch = msg.match(/(\d+)%/);
+        if (pctMatch) {
+          this.downloadProgress = parseInt(pctMatch[1], 10);
+        }
       });
       this.modelExists = LlamaEngine.modelsExist(getContext(this));
-      this.statusText = '下载完成! 请点击加载模型';
-      promptAction.showToast({ message: '下载完成!', duration: 1500 });
+      this.statusText = this.str('download_complete_status');
+      promptAction.showToast({ message: this.str('download_complete_toast'), duration: 1500 });
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'download failed: %{public}s', `${e}`);
-      this.statusText = `下载失败: ${e}`;
-      promptAction.showToast({ message: `下载失败: ${e}`, duration: 4000 });
+      this.statusText = this.str('toast_download_failed').replace('%s', `${e}`);
+      promptAction.showToast({ message: this.str('toast_download_failed').replace('%s', `${e}`), duration: 4000 });
     } finally {
       this.downloading = false;
-      this.busy = false;
     }
   }
 
-  private async onClickLoad(): Promise<void> {
-    if (!this.engine) return;
-    if (this.stateName === 'LoadingModel') {
-      promptAction.showToast({ message: '模型正在加载中...', duration: 1500 });
-      return;
-    }
+  private onClickLoad(): void {
+    if (!this.engine || this.loadingLock) return;
+    this.loadingLock = true;
+
     const ctx = getContext(this);
     const modelPath = LlamaEngine.modelPath(ctx);
     const mmprojPath = LlamaEngine.mmprojPath(ctx);
     if (!fs.accessSync(modelPath)) {
-      promptAction.showToast({ message: '模型文件不存在，请先下载', duration: 4000 });
+      promptAction.showToast({ message: this.str('toast_model_not_found'), duration: 4000 });
+      this.loadingLock = false;
       return;
     }
     const isReload = this.stateName === 'ModelReady';
 
-    this.busy = true;
-    try {
-      if (isReload) {
-        hilog.info(DOMAIN, TAG, 'Unloading model for reload...');
-        await this.engine.unloadModel();
+    // Set @State immediately so the button greys out this frame.
+    this.loading = true;
+    this.statusText = this.str('status_loading');
+
+    // Defer the blocking native call by one frame so the UI re-renders first.
+    setTimeout(async () => {
+      try {
+        if (isReload) {
+          hilog.info(DOMAIN, TAG, 'Unloading model for reload...');
+          await this.engine!.unloadModel();
+        }
+        const mm = (mmprojPath && fs.accessSync(mmprojPath)) ? mmprojPath : null;
+        await this.engine!.loadModel(modelPath, mm);
+        promptAction.showToast({ message: this.str('toast_model_loaded'), duration: 1500 });
+      } catch (e) {
+        hilog.error(DOMAIN, TAG, 'load failed: %{public}s', `${e}`);
+        this.engine!.resetToInitialized();
+        this.statusText = this.str('toast_load_failed').replace('%s', `${e}`);
+      } finally {
+        this.loading = false;
+        this.loadingLock = false;
       }
-      const mm = (mmprojPath && fs.accessSync(mmprojPath)) ? mmprojPath : null;
-      await this.engine.loadModel(modelPath, mm);
-      // No default system prompt: aligned with iOS opt-r1.
-      promptAction.showToast({ message: '模型加载成功!', duration: 1500 });
-    } catch (e) {
-      hilog.error(DOMAIN, TAG, 'load failed: %{public}s', `${e}`);
-      this.engine.resetToInitialized();
-      this.statusText = `加载失败: ${e}`;
-    } finally {
-      this.busy = false;
-    }
+    }, 50);
   }
 
   private onClickDelete(): void {
     const m = findModelById(this.selectedId);
+    const filesLine = m.mmprojFileName
+      ? `\n• ${m.ggufFileName}\n• ${m.mmprojFileName}`
+      : `\n• ${m.ggufFileName}`;
     AlertDialog.show({
-      title: '删除模型文件',
-      message: `确定要删除 ${m.displayName} 的模型文件吗？\n\n这将删除:\n• ${m.ggufFileName}${m.mmprojFileName ? '\n• ' + m.mmprojFileName : ''}\n\n删除后需要重新下载才能使用。`,
+      title: this.str('delete_dialog_title'),
+      message: `${this.str('delete_dialog_message_prefix').replace('%s', m.displayName)}\n${filesLine}\n\n${this.str('delete_dialog_message_suffix')}`,
       autoCancel: true,
-      primaryButton: { value: '删除', action: () => this.doDelete() },
-      secondaryButton: { value: '取消', action: () => undefined },
+      primaryButton: { value: this.str('btn_delete'), action: () => this.doDelete() },
+      secondaryButton: { value: this.str('btn_cancel'), action: () => undefined },
     });
   }
 
@@ -160,13 +181,55 @@ struct ModelManager {
       const deleted = await deleteSelectedModelFiles(getContext(this));
       this.modelExists = LlamaEngine.modelsExist(getContext(this));
       if (deleted) {
-        this.statusText = '模型文件已删除';
-        promptAction.showToast({ message: '模型文件已删除', duration: 1500 });
+        this.statusText = this.str('model_files_deleted');
+        promptAction.showToast({ message: this.str('model_files_deleted'), duration: 1500 });
       } else {
-        promptAction.showToast({ message: '没有可删除的文件', duration: 1500 });
+        promptAction.showToast({ message: this.str('toast_no_files_to_delete'), duration: 1500 });
       }
     } catch (e) {
-      promptAction.showToast({ message: `删除失败: ${e}`, duration: 3000 });
+      promptAction.showToast({ message: this.str('toast_delete_failed').replace('%s', `${e}`), duration: 3000 });
+    }
+  }
+
+  private showLanguagePicker(): void {
+    const options: AppLanguage[] = [AppLanguage.ZH, AppLanguage.EN];
+    const current = this.currentLang;
+    AlertDialog.show({
+      title: this.str('language_picker_title'),
+      message: ' ',
+      autoCancel: true,
+      primaryButton: {
+        value: current === AppLanguage.ZH ? `${LocaleManager.displayName(AppLanguage.ZH)}  ✓` : LocaleManager.displayName(AppLanguage.ZH),
+        action: () => {
+          if (current !== AppLanguage.ZH) {
+            this.switchLanguage(AppLanguage.ZH);
+          }
+        },
+      },
+      secondaryButton: {
+        value: current === AppLanguage.EN ? `${LocaleManager.displayName(AppLanguage.EN)}  ✓` : LocaleManager.displayName(AppLanguage.EN),
+        action: () => {
+          if (current !== AppLanguage.EN) {
+            this.switchLanguage(AppLanguage.EN);
+          }
+        },
+      },
+    });
+  }
+
+  private async switchLanguage(lang: AppLanguage): Promise<void> {
+    await LocaleManager.setLanguage(getContext(this), lang);
+    this.currentLang = lang;
+    // Re-resolve all non-$r() strings after locale change.
+    // Force a re-render by refreshing state-driven text.
+    this.refreshLocalizedState();
+  }
+
+  private refreshLocalizedState(): void {
+    // Re-evaluate statusText for the current engine state.
+    if (this.engine) {
+      const state = this.engine.getCurrentState();
+      this.onEngineState(state);
     }
   }
 
@@ -177,6 +240,7 @@ struct ModelManager {
   build() {
     Column() {
       this.AppBar();
+      this.LanguageRow();
       this.StatusBar();
       this.ModelList();
       this.ActionBar();
@@ -207,6 +271,26 @@ struct ModelManager {
     .border({ width: { bottom: 0.5 }, color: $r('app.color.outline') });
   }
 
+  @Builder LanguageRow() {
+    Row() {
+      Text($r('app.string.settings_language'))
+        .fontSize(16)
+        .fontColor($r('app.color.on_surface'))
+        .layoutWeight(1);
+      Text(LocaleManager.displayName(this.currentLang))
+        .fontSize(14)
+        .fontColor($r('app.color.on_surface_variant'));
+      Text(' ›')
+        .fontSize(16)
+        .fontColor($r('app.color.on_surface_variant'));
+    }
+    .width('100%')
+    .padding({ left: 16, right: 16, top: 14, bottom: 14 })
+    .backgroundColor($r('app.color.surface'))
+    .border({ width: { bottom: 0.5 }, color: $r('app.color.outline') })
+    .onClick(() => this.showLanguagePicker());
+  }
+
   @Builder StatusBar() {
     Column() {
       Text(this.statusText)
@@ -215,7 +299,7 @@ struct ModelManager {
         .width('100%')
         .padding({ left: 16, right: 16, top: 12, bottom: 8 });
       if (this.downloading) {
-        Progress({ value: 0, total: 100, type: ProgressType.Linear })
+        Progress({ value: this.downloadProgress, total: 100, type: ProgressType.Linear })
           .width('100%').height(4)
           .margin({ left: 16, right: 16, bottom: 8 });
       }
@@ -240,7 +324,7 @@ struct ModelManager {
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
                 .fontColor($r('app.color.on_surface'));
-              Text(m.description)
+              Text(this.str(m.descriptionResName))
                 .fontSize(13)
                 .fontColor($r('app.color.on_surface_variant'))
                 .margin({ top: 4 });
@@ -266,25 +350,25 @@ struct ModelManager {
 
   @Builder ActionBar() {
     Row({ space: 12 }) {
-      Button(this.modelExists ? '已下载' : '下载模型')
+      Button(this.modelExists ? this.str('btn_downloaded') : this.str('btn_download'))
         .layoutWeight(1).height(44)
         .backgroundColor($r('app.color.surface_variant'))
         .fontColor($r('app.color.on_surface'))
-        .enabled(!this.modelExists && !this.busy)
+        .enabled(!this.modelExists && !this.downloading)
         .onClick(() => this.onClickDownload());
 
-      Button(this.stateName === 'ModelReady' ? '重新加载' : '加载模型')
+      Button(this.loading ? this.str('status_loading') : (this.stateName === 'ModelReady' ? this.str('btn_reload') : this.str('btn_load')))
         .layoutWeight(1).height(44)
-        .backgroundColor($r('app.color.primary'))
-        .fontColor($r('app.color.on_primary'))
-        .enabled(this.modelExists && !this.busy)
+        .backgroundColor(this.loading ? $r('app.color.surface_variant') : $r('app.color.primary'))
+        .fontColor(this.loading ? $r('app.color.on_surface_variant') : $r('app.color.on_primary'))
+        .enabled(this.modelExists && !this.loading && !this.downloading)
         .onClick(() => this.onClickLoad());
 
       Button($r('app.string.btn_delete'))
         .layoutWeight(1).height(44)
         .backgroundColor($r('app.color.surface_variant'))
         .fontColor($r('app.color.on_surface'))
-        .enabled(this.modelExists && !this.busy)
+        .enabled(this.modelExists && !this.loading && !this.downloading)
         .onClick(() => this.onClickDelete());
     }
     .width('100%')

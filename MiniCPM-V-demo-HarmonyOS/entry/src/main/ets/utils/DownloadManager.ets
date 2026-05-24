@@ -25,6 +25,7 @@ import common from '@ohos.app.ability.common';
 import dataPreferences from '@ohos.data.preferences';
 import hilog from '@ohos.hilog';
 import { BusinessError } from '@ohos.base';
+import resourceManager from '@ohos.resourceManager';
 
 import {
   ModelInfo,
@@ -52,6 +53,10 @@ interface MultiSourceJob {
   md5:     string | null;
 }
 
+function str(rm: resourceManager.ResourceManager, name: string): string {
+  return rm.getStringByNameSync(name);
+}
+
 // Async because the underlying preferences API is async; called from
 // LlamaEngine.downloadModels which itself is awaited.
 async function getSelectedModelAsync(context: common.Context): Promise<ModelInfo> {
@@ -69,16 +74,13 @@ export async function downloadModelsForSelected(
   context: common.Context,
   onProgress: ProgressListener,
 ): Promise<void> {
+  const rm = context.resourceManager;
   const model = await getSelectedModelAsync(context);
   const dir = `${context.filesDir}/models/${model.id}`;
   if (!fs.accessSync(dir)) {
     fs.mkdirSync(dir, true);
   }
 
-  // Per file, build the *full* candidate-source list. HF + MS run in
-  // parallel; directGgufUrl/directMmprojUrl, if present, are registered as
-  // an extra race candidate. The first source to deliver bytes wins, the
-  // others get cancelled. Mirrors iOS opt-r1's MBModelDownloadHelperV2.
   const ggufSources:   RaceSource[] = [];
   const mmprojSources: RaceSource[] = [];
 
@@ -93,10 +95,10 @@ export async function downloadModelsForSelected(
     }
   }
   if (model.directGgufUrl) {
-    ggufSources.push({ label: '直链', url: model.directGgufUrl });
+    ggufSources.push({ label: str(rm, 'source_direct'), url: model.directGgufUrl });
   }
   if (!model.isTextOnly && model.directMmprojUrl) {
-    mmprojSources.push({ label: '直链', url: model.directMmprojUrl });
+    mmprojSources.push({ label: str(rm, 'source_direct'), url: model.directMmprojUrl });
   }
   if (ggufSources.length === 0) {
     throw new Error(`Model ${model.id} has no GGUF download source configured`);
@@ -106,7 +108,7 @@ export async function downloadModelsForSelected(
   }
 
   const labelSummary = ggufSources.map(s => s.label).join('+');
-  onProgress(`${labelSummary} 多源 race 启动...`);
+  onProgress(str(rm, 'download_race_start').replace('%s', labelSummary));
 
   const jobs: MultiSourceJob[] = [
     { name: model.ggufFileName,   sources: ggufSources,   md5: model.ggufMd5 },
@@ -117,21 +119,11 @@ export async function downloadModelsForSelected(
   for (const job of jobs) {
     await downloadFileWithSources(context, dir, job, onProgress);
   }
-  onProgress('所有模型文件下载完成!');
+  onProgress(str(rm, 'download_all_complete'));
 }
 
 /**
  * Multi-source race download.
- *
- * If the file already exists locally with a matching MD5, return early.
- * Otherwise launch one @ohos.request.agent download task per source in
- * parallel. The first task whose first `progress` callback reports
- * `processed > 0` wins; the other tasks are `stop()`'d, removed from the
- * agent queue, and their .tmp staging files are deleted.
- *
- * If every source fails (or the winner subsequently fails), the combined
- * error is surfaced. The bytes from a losing source never reach the target
- * path.
  */
 async function downloadFileWithSources(
   context: common.Context,
@@ -139,14 +131,15 @@ async function downloadFileWithSources(
   job: MultiSourceJob,
   onProgress: ProgressListener,
 ): Promise<void> {
+  const rm = context.resourceManager;
   const targetPath = `${dir}/${job.name}`;
 
   // Fast path: target already present and MD5 matches the manifest.
   if (fs.accessSync(targetPath) && job.md5) {
-    onProgress(`校验已存在的 ${job.name} ...`);
+    onProgress(str(rm, 'download_verifying_existing').replace('%s', job.name));
     const actual = await computeMd5(targetPath);
     if (actual.toLowerCase() === job.md5.toLowerCase()) {
-      onProgress(`${job.name} 已就绪 (MD5 校验通过)`);
+      onProgress(str(rm, 'download_file_ready').replace('%s', job.name));
       return;
     }
     hilog.warn(DOMAIN, TAG, '%{public}s MD5 mismatch (got %{public}s, want %{public}s); re-downloading',
@@ -167,8 +160,8 @@ async function downloadFileWithSources(
     // Per-source state.
     const tmpPaths: string[] = job.sources.map((_, i) => `${targetPath}.r${i}.tmp`);
     const tasks: (request.agent.Task | null)[] = job.sources.map(() => null);
-    const createFailures: number[] = [];   // indices that failed at agent.create()
-    const taskFailures:   number[] = [];   // indices that started but failed mid-download
+    const createFailures: number[] = [];
+    const taskFailures:   number[] = [];
     let winnerIdx = -1;
     let settled = false;
     let lastProgressTime = 0;
@@ -231,7 +224,7 @@ async function downloadFileWithSources(
             winnerIdx = idx;
             hilog.info(DOMAIN, TAG, '%{public}s race winner: idx=%{public}d source=%{public}s',
                        job.name, idx, src.label);
-            onProgress(`[${src.label}] 胜出，开始下载 ${job.name}...`);
+            onProgress(str(rm, 'download_race_winner').replace('%s', src.label).replace('%s', job.name));
             cleanupLosers(idx);
           }
           if (winnerIdx !== idx) return;
@@ -257,7 +250,6 @@ async function downloadFileWithSources(
         task.on('completed', async () => {
           if (settled) return;
           if (winnerIdx !== idx) {
-            // A loser somehow finished after being told to stop; clean it up.
             stopLoser(idx);
             return;
           }
@@ -267,38 +259,42 @@ async function downloadFileWithSources(
             fs.renameSync(tmpPaths[idx], targetPath);
 
             if (job.md5) {
-              onProgress(`[${src.label}] 校验 ${job.name} MD5...`);
+              onProgress(str(rm, 'download_verifying_md5').replace('%s', src.label).replace('%s', job.name));
               const actual = await computeMd5(targetPath);
               if (actual.toLowerCase() !== job.md5.toLowerCase()) {
                 hilog.error(DOMAIN, TAG, '%{public}s MD5 mismatch: expected %{public}s, got %{public}s',
                             job.name, job.md5, actual);
                 try { fs.unlinkSync(targetPath); } catch (_) { /* ignore */ }
-                reject(new Error(`${job.name} MD5 校验失败 (期望 ${job.md5}, 实际 ${actual})，文件已删除，请重试`));
+                reject(new Error(
+                  str(rm, 'download_md5_failed').replace('%s', job.name).replace('%s', job.md5).replace('%s', actual)
+                ));
                 return;
               }
               hilog.info(DOMAIN, TAG, '%{public}s MD5 OK (%{public}s)', job.name, actual);
             }
 
             const size = fs.statSync(targetPath).size;
-            onProgress(`${job.name} 下载完成 (${Math.floor(size / (1024 * 1024))} MB)`);
+            const mbSize = Math.floor(size / (1024 * 1024));
+            onProgress(str(rm, 'download_file_complete').replace('%s', job.name).replace('%d', `${mbSize}`));
             resolve();
           } catch (e) {
             reject(e as object);
           } finally {
             request.agent.remove(task.tid).catch(() => undefined);
-            cleanupLosers(idx);  // double-check losers were cleaned
+            cleanupLosers(idx);
           }
         });
 
         task.on('failed', () => {
           if (settled) return;
-          // Winner failing -> bubble up immediately; no more candidates.
           if (winnerIdx === idx) {
             settled = true;
             request.agent.show(task.tid).then(info => {
-              reject(new Error(`${src.label} 下载失败: ${JSON.stringify(info.faults)}`));
+              reject(new Error(
+                str(rm, 'download_source_failed_detail').replace('%s', src.label).replace('%s', JSON.stringify(info.faults))
+              ));
             }).catch(() => {
-              reject(new Error(`${src.label} 下载失败`));
+              reject(new Error(str(rm, 'download_source_failed').replace('%s', src.label)));
             }).finally(() => {
               request.agent.remove(task.tid).catch(() => undefined);
               try {
@@ -307,7 +303,6 @@ async function downloadFileWithSources(
             });
             return;
           }
-          // Loser failed -> count, and if all candidates failed, settle.
           taskFailures.push(idx);
           hilog.warn(DOMAIN, TAG, '%{public}s race source %{public}s failed (%{public}d/%{public}d)',
                      job.name, src.label, taskFailures.length + createFailures.length, job.sources.length);
@@ -331,8 +326,6 @@ async function downloadFileWithSources(
           }
         });
       }).catch((e: BusinessError) => {
-        // agent.create itself failed (e.g. unsupported URL scheme). Count
-        // this as a source failure and check the total.
         hilog.warn(DOMAIN, TAG, '%{public}s race source %{public}s agent.create failed: %{public}s',
                    job.name, src.label, `${e}`);
         createFailures.push(idx);
@@ -353,8 +346,9 @@ async function downloadSingleSource(
   md5: string | null,
   onProgress: ProgressListener,
 ): Promise<void> {
+  const rm = context.resourceManager;
   const targetPath = `${dir}/${fileName}`;
-  onProgress(`[${src.label}] 下载 ${fileName}...`);
+  onProgress(str(rm, 'download_fetching_file').replace('%s', src.label).replace('%s', fileName));
   hilog.info(DOMAIN, TAG, 'Downloading %{public}s from %{public}s: %{public}s',
              fileName, src.label, src.url);
 
@@ -389,7 +383,7 @@ async function downloadSingleSource(
             onProgress(`${fileName}: ${pct}% (${mb}/${totalMb} MB)`);
           } else {
             const mb = Math.floor(got / (1024 * 1024));
-            onProgress(`${fileName}: ${mb} MB downloaded`);
+            onProgress(`${fileName}: ${mb} MB`);
           }
         }
       });
@@ -418,19 +412,22 @@ async function downloadSingleSource(
   });
 
   if (md5) {
-    onProgress(`[${src.label}] 校验 ${fileName} MD5...`);
+    onProgress(str(rm, 'download_verifying_md5').replace('%s', src.label).replace('%s', fileName));
     const actual = await computeMd5(targetPath);
     if (actual.toLowerCase() !== md5.toLowerCase()) {
       hilog.error(DOMAIN, TAG, '%{public}s MD5 mismatch: expected %{public}s, got %{public}s',
                   fileName, md5, actual);
       try { fs.unlinkSync(targetPath); } catch (_) { /* ignore */ }
-      throw new Error(`${fileName} MD5 校验失败 (期望 ${md5}, 实际 ${actual})，文件已删除，请重试`);
+      throw new Error(
+        str(rm, 'download_md5_failed').replace('%s', fileName).replace('%s', md5).replace('%s', actual)
+      );
     }
     hilog.info(DOMAIN, TAG, '%{public}s MD5 OK (%{public}s)', fileName, actual);
   }
 
   const size = fs.statSync(targetPath).size;
-  onProgress(`${fileName} 下载完成 (${Math.floor(size / (1024 * 1024))} MB)`);
+  const mbSize = Math.floor(size / (1024 * 1024));
+  onProgress(str(rm, 'download_file_complete').replace('%s', fileName).replace('%d', `${mbSize}`));
 }
 
 // Streaming MD5 — keeps memory bounded on the 1GB+ mmproj. 64KB chunks

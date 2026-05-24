@@ -107,6 +107,10 @@ export class LlamaEngine {
   private state: LlamaState = LlamaState.Uninitialized;
   private listeners: StateListener[] = [];
 
+  getCurrentState(): LlamaState {
+    return this.state;
+  }
+
   // Mirror of Dispatchers.IO.limitedParallelism(1): every native invocation
   // is appended to this promise so we never have two LLM calls in flight at
   // the same time.

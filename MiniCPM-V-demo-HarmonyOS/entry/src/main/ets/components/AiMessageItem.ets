@@ -137,7 +137,7 @@ export struct AiMessageItem {
                 Text(this.thinkingExpanded ? '▾' : '▸')
                   .fontSize(14)
                   .fontColor($r('app.color.on_surface_variant'));
-                Text(isStillThinking(this.message.text) ? '思考中…' : '思考过程')
+                Text(isStillThinking(this.message.text) ? $r('app.string.thinking_in_progress') : $r('app.string.thinking_process'))
                   .fontSize(13)
                   .fontColor($r('app.color.on_surface_variant'))
                   .fontWeight(FontWeight.Medium);

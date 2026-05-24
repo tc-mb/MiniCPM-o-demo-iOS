@@ -15,7 +15,7 @@
 export class ModelInfo {
   readonly id: string;
   readonly displayName: string;
-  readonly description: string;
+  readonly descriptionResName: string;
   readonly ggufFileName: string;
   readonly mmprojFileName: string;
   readonly hfRepo: string | null;
@@ -36,7 +36,7 @@ export class ModelInfo {
   constructor(
     id: string,
     displayName: string,
-    description: string,
+    descriptionResName: string,
     ggufFileName: string,
     mmprojFileName: string = '',
     hfRepo: string | null = null,
@@ -52,7 +52,7 @@ export class ModelInfo {
   ) {
     this.id = id;
     this.displayName = displayName;
-    this.description = description;
+    this.descriptionResName = descriptionResName;
     this.ggufFileName = ggufFileName;
     this.mmprojFileName = mmprojFileName;
     this.hfRepo = hfRepo;
@@ -91,7 +91,7 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
   new ModelInfo(
     'minicpm-v-4',
     'MiniCPM-V-4 (Q4_K_M)',
-    '轻量级多模态模型，支持图文理解 (4.1B)',
+    'model_desc_v4',
     'ggml-model-Q4_K_M.gguf',
     'mmproj-model-f16.gguf',
     'openbmb/MiniCPM-V-4-gguf',
@@ -111,7 +111,7 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
   new ModelInfo(
     'minicpm-v-4_6-instruct',
     'MiniCPM-V-4.6 (Q4_K_M)',
-    '新一代多模态模型，支持图文理解 (1.2B)',
+    'model_desc_v46',
     'MiniCPM-V-4_6-Q4_K_M.gguf',
     'mmproj-model-f16.gguf',
     'openbmb/MiniCPM-V-4.6-gguf',
@@ -133,7 +133,7 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
   new ModelInfo(
     'minicpm5-0.9b',
     'MiniCPM5-0.9B (Q4_K_M)',
-    '轻量级纯文本模型 (0.9B)',
+    'model_desc_minicpm5',
     'MiniCPM5-0.9B-Q4_K_M.gguf',
     '',
     null,

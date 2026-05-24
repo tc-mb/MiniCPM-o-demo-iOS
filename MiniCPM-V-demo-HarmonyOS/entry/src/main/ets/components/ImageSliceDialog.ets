@@ -14,6 +14,7 @@
 import { LlamaEngine, MIN_IMAGE_SLICE, MAX_IMAGE_SLICE } from '../engine/LlamaEngine';
 import promptAction from '@ohos.promptAction';
 import hilog from '@ohos.hilog';
+import resourceManager from '@ohos.resourceManager';
 
 const DOMAIN = 0xC0DE;
 const TAG = 'ImageSliceDialog';
@@ -28,8 +29,14 @@ export struct ImageSliceDialog {
   initialValue: number = 1;
 
   @State currentValue: number = 1;
+  private resMgr: resourceManager.ResourceManager | null = null;
+
+  private str(name: string): string {
+    return this.resMgr!.getStringByNameSync(name);
+  }
 
   aboutToAppear(): void {
+    this.resMgr = getContext(this).resourceManager;
     this.currentValue = Math.max(MIN_IMAGE_SLICE, Math.min(MAX_IMAGE_SLICE, this.initialValue));
   }
 
@@ -96,7 +103,7 @@ export struct ImageSliceDialog {
       // Action row.  Cancel left / OK right matches the rest of the app
       // (see onClickClear's AlertDialog ordering).
       Row() {
-        Button('取消')
+        Button($r('app.string.btn_cancel'))
           .backgroundColor(Color.Transparent)
           .fontColor($r('app.color.on_surface_variant'))
           .layoutWeight(1)
@@ -105,7 +112,7 @@ export struct ImageSliceDialog {
             this.controller?.close();
           });
 
-        Button('确定')
+        Button($r('app.string.btn_confirm'))
           .backgroundColor(Color.Transparent)
           .fontColor($r('app.color.primary'))
           .layoutWeight(1)
@@ -126,19 +133,19 @@ export struct ImageSliceDialog {
     const chosen = this.currentValue;
     this.controller?.close();
     if (!this.engine) {
-      promptAction.showToast({ message: `已保存切片数 ${chosen}`, duration: 1500 });
+      promptAction.showToast({ message: this.str('image_slice_saved_toast').replace('%d', `${chosen}`), duration: 1500 });
       return;
     }
     try {
       await this.engine.updateImageMaxSliceNums(chosen);
       const visionReady = this.engine.isVisionSupported();
       const message = visionReady
-        ? `图片切片数已切换为 ${chosen}`
-        : `已保存切片数 ${chosen}，下次加载模型时生效`;
+        ? this.str('image_slice_apply_toast').replace('%d', `${chosen}`)
+        : this.str('image_slice_pending_toast').replace('%d', `${chosen}`);
       promptAction.showToast({ message, duration: 1800 });
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'updateImageMaxSliceNums failed: %{public}s', `${e}`);
-      promptAction.showToast({ message: `切换失败: ${e}`, duration: 2500 });
+      promptAction.showToast({ message: this.str('image_slice_switch_failed').replace('%s', `${e}`), duration: 2500 });
     }
   }
 }

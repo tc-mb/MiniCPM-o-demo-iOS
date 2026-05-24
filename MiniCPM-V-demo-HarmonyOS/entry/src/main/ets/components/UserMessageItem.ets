@@ -43,9 +43,10 @@ export struct UserMessageItem {
               .fontColor($r('app.color.on_surface_variant'));
           }
           if (this.message.isPrefilling) {
-            Progress({ value: 0, total: 100, type: ProgressType.Linear })
-              .width(220)
-              .height(4);
+            LoadingProgress()
+              .width(24)
+              .height(24)
+              .color($r('app.color.primary'));
           }
         }
         if (this.message.text.length > 0) {

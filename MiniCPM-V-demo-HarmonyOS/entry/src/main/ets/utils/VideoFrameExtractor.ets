@@ -22,6 +22,7 @@ import { media } from '@kit.MediaKit';
 import { BusinessError } from '@ohos.base';
 import fs from '@ohos.file.fs';
 import hilog from '@ohos.hilog';
+import resourceManager from '@ohos.resourceManager';
 
 const DOMAIN = 0xC0DE;
 const TAG = 'VideoFrameExtractor';
@@ -203,10 +204,17 @@ function computeSampleTimestamps(durationSec: number): number[] {
 }
 
 /** Human-readable summary used in chat-cell perf log. */
-export function videoInfoString(v: PickedVideo): string {
+export function videoInfoString(v: PickedVideo, rm?: resourceManager.ResourceManager): string {
   const sec = v.durationMs / 1000.0;
   const sizeStr = v.fileSizeBytes > 0 ? ` (${Math.floor(v.fileSizeBytes / 1024)} KB)` : '';
-  const resStr = (v.width > 0 && v.height > 0) ? `${v.width}x${v.height}` : '视频';
+  const videoLabel = rm ? rm.getStringByNameSync('video_label') : 'Video';
+  const resStr = (v.width > 0 && v.height > 0) ? `${v.width}x${v.height}` : videoLabel;
   const durStr = `${sec.toFixed(1)}s`;
-  return `${resStr}${sizeStr} · ${durStr} · 抽帧 ${v.frames.length} 张`;
+  const baseStr = `${resStr}${sizeStr} · ${durStr}`;
+  if (rm) {
+    return rm.getStringByNameSync('video_frame_info')
+      .replace('%s', baseStr)
+      .replace('%d', `${v.frames.length}`);
+  }
+  return `${baseStr} · ${v.frames.length} frames`;
 }

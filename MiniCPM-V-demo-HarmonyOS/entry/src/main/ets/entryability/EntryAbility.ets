@@ -9,14 +9,18 @@ import window from '@ohos.window';
 import hilog from '@ohos.hilog';
 
 import { LlamaEngine } from '../engine/LlamaEngine';
+import { LocaleManager } from '../manager/LocaleManager';
 
 const DOMAIN = 0xC0DE;
 const TAG = 'EntryAbility';
 
 export default class EntryAbility extends UIAbility {
-  onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+  async onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): Promise<void> {
     hilog.info(DOMAIN, TAG, 'Ability onCreate (launchReason=%{public}d)',
                launchParam.launchReason);
+    // Apply persisted locale before any UI renders (must complete before
+    // onWindowStageCreate so the first page uses the correct language).
+    await LocaleManager.applyOnAppStart(this.context);
     LlamaEngine.migrateLegacyLayoutIfNeeded(this.context);
     LlamaEngine.warmSelectedId(this.context);
   }
