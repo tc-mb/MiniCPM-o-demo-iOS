@@ -152,15 +152,15 @@ object VideoFrameExtractor {
     }
 
     /** Human-readable summary used in chat-cell perf log. */
-    fun formatVideoInfo(result: Result): String {
+    fun formatVideoInfo(context: Context, result: Result): String {
         val sec = result.durationMs / 1000.0
         val sizeStr = if (result.fileSizeBytes > 0) {
             " (${result.fileSizeBytes / 1024} KB)"
         } else ""
         val resStr = if (result.width > 0 && result.height > 0) {
             "${result.width}x${result.height}"
-        } else "视频"
+        } else context.getString(R.string.video_label)
         val durStr = String.format("%.1fs", sec)
-        return "$resStr$sizeStr · ${durStr} · 抽帧 ${result.frameCount} 张"
+        return context.getString(R.string.video_frame_info, resStr, sizeStr, durStr, result.frameCount)
     }
 }

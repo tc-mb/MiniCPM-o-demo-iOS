@@ -1,5 +1,7 @@
 package com.example.minicpm_v_demo
 
+import android.content.Context
+
 /**
  * Metadata for a downloadable MiniCPM-V variant.
  *
@@ -29,7 +31,7 @@ package com.example.minicpm_v_demo
 data class ModelInfo(
     val id: String,
     val displayName: String,
-    val description: String,
+    val descriptionResName: String,
     val ggufFileName: String,
     val mmprojFileName: String? = null,
     val hfRepo: String? = null,
@@ -46,6 +48,11 @@ data class ModelInfo(
     /** True for text-only models that have no vision projector. */
     val isTextOnly: Boolean
         get() = mmprojFileName == null
+
+    fun getDescription(context: Context): String {
+        val resId = context.resources.getIdentifier(descriptionResName, "string", context.packageName)
+        return if (resId != 0) context.getString(resId) else descriptionResName
+    }
 
     /** Path segment to request on HF/MS for the gguf, falling back to local name. */
     val ggufRemotePath: String
@@ -69,7 +76,7 @@ data class ModelInfo(
             ModelInfo(
                 id = "minicpm-v-4",
                 displayName = "MiniCPM-V-4 (Q4_K_M)",
-                description = "轻量级多模态模型，支持图文理解 (4.1B)",
+                descriptionResName = "model_desc_v4",
                 ggufFileName = "ggml-model-Q4_K_M.gguf",
                 mmprojFileName = "mmproj-model-f16.gguf",
                 hfRepo = "openbmb/MiniCPM-V-4-gguf",
@@ -88,7 +95,7 @@ data class ModelInfo(
             ModelInfo(
                 id = "minicpm-v-4_6-instruct",
                 displayName = "MiniCPM-V-4.6 (Q4_K_M)",
-                description = "新一代多模态模型，支持图文理解 (1.2B)",
+                descriptionResName = "model_desc_v46",
                 ggufFileName = "MiniCPM-V-4_6-Q4_K_M.gguf",
                 mmprojFileName = "mmproj-model-f16.gguf",
                 hfRepo = "openbmb/MiniCPM-V-4.6-gguf",
@@ -102,7 +109,7 @@ data class ModelInfo(
             ModelInfo(
                 id = "minicpm5-0.9b",
                 displayName = "MiniCPM5-0.9B (Q4_K_M)",
-                description = "轻量级纯文本模型 (0.9B)",
+                descriptionResName = "model_desc_minicpm5",
                 ggufFileName = "MiniCPM5-0.9B-Q4_K_M.gguf",
                 directGgufUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf",
                 ggufMd5 = "71a80b3f5013e2410d9db7ce6cbd5f37"

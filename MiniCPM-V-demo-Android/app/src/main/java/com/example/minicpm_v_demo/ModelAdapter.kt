@@ -29,7 +29,7 @@ class ModelAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val model = models[position]
         holder.tvName.text = model.displayName
-        holder.tvDesc.text = model.description
+        holder.tvDesc.text = model.getDescription(holder.itemView.context)
 
         val isSelected = model.id == currentSelectedId
         holder.tvSelected.text = if (isSelected) "●" else "○"

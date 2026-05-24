@@ -64,11 +64,11 @@ class ModelDownloadService : Service() {
         // Only one download at a time. If a job is already running, just
         // re-attach the foreground notification and bail.
         if (downloadJob?.isActive == true) {
-            startForegroundWithNotification(buildNotification("正在下载模型..."))
+            startForegroundWithNotification(buildNotification(getString(R.string.status_downloading)))
             return START_NOT_STICKY
         }
 
-        startForegroundWithNotification(buildNotification("准备下载..."))
+        startForegroundWithNotification(buildNotification(getString(R.string.download_preparing)))
         acquireWakeLock()
         ModelDownloadController.markStarted()
 
@@ -79,11 +79,11 @@ class ModelDownloadService : Service() {
                     updateNotification(message)
                 }
                 ModelDownloadController.markCompleted()
-                updateNotification("下载完成")
+                updateNotification(getString(R.string.download_complete_short))
             } catch (e: Exception) {
                 Log.e(TAG, "Download failed", e)
                 ModelDownloadController.markFailed(e.message ?: e::class.java.simpleName)
-                updateNotification("下载失败: ${e.message}")
+                updateNotification(getString(R.string.download_failed, e.message))
             } finally {
                 releaseWakeLock()
                 stopForegroundCompat()
@@ -146,7 +146,7 @@ class ModelDownloadService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("MiniCPM-V 模型下载")
+            .setContentTitle(getString(R.string.notification_download_title))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setSmallIcon(android.R.drawable.stat_sys_download)
@@ -157,7 +157,7 @@ class ModelDownloadService : Service() {
             .setContentIntent(contentPi)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                "取消",
+                getString(R.string.cancel),
                 cancelPi
             )
             .build()
@@ -221,10 +221,10 @@ class ModelDownloadService : Service() {
             if (nm.getNotificationChannel(CHANNEL_ID) != null) return
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "模型下载",
+                context.getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "在后台下载 MiniCPM-V 模型权重时显示进度"
+                description = context.getString(R.string.notification_channel_desc)
                 setShowBadge(false)
             }
             nm.createNotificationChannel(channel)
@@ -259,7 +259,7 @@ object ModelDownloadController {
         get() = _status.value is Status.Running
 
     internal fun markStarted() {
-        _status.value = Status.Running("准备下载...")
+        _status.value = Status.Running("")
     }
 
     internal fun publishProgress(message: String) {

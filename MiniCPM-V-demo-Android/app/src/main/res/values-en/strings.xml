@@ -1,0 +1,138 @@
+<resources>
+    <!-- Keys not listed here fall back to values/strings.xml (Chinese default).
+         Brand names (app_name, app_title, welcome_title, etc.), preset English
+         prompts (suggestion_2, suggestion_2_text, disclaimer), and other strings
+         that are already English are intentionally omitted. -->
+
+    <string name="welcome_desc">I can help you learn, get inspired, and work faster — and I can also understand images for you.</string>
+    <string name="welcome_desc_text">I can help you learn, get inspired, and work faster — ask me anything.</string>
+    <string name="suggestion_1">What\'s in this photo?</string>
+    <string name="suggestion_1_text">Write a poem on spring.</string>
+    <string name="model_management">Model Management</string>
+    <string name="status_uninitialized">Not initialized — download or load a model</string>
+    <string name="status_initializing">Initializing…</string>
+    <string name="status_initialized">Initialized — load a model</string>
+    <string name="status_loading">Loading model…</string>
+    <string name="status_ready">Model ready</string>
+    <string name="status_generating">Generating…</string>
+    <string name="status_downloading">Downloading model…</string>
+    <string name="hint_server">Server address (e.g. 192.168.1.100:8888)</string>
+    <string name="download">Download</string>
+    <string name="load_model">Load Model</string>
+    <string name="hint_input">Message</string>
+    <string name="add_image">Add Image</string>
+    <string name="send">Send</string>
+    <string name="stop_generating">Stop</string>
+    <string name="image_desc">Image</string>
+    <string name="clear_chat">Clear Chat</string>
+    <string name="clear_chat_confirm">Clear current chat?</string>
+    <string name="clear_chat_toast">Chat cleared</string>
+
+    <!-- Image slicing settings -->
+    <string name="image_slice_settings">Image Slices</string>
+    <string name="image_slice_dialog_title">Image Slices</string>
+    <string name="image_slice_label_min">1\nFastest</string>
+    <string name="image_slice_label_max">9\nSharpest</string>
+    <string name="image_slice_hint">More slices = sharper detail but more image tokens and slower replies.\n• 1: overview only (fastest, no slicing)\n• 9: MiniCPM-V upper bound (default, sharpest)</string>
+    <string name="image_slice_apply_toast">Image slices set to %1$d</string>
+    <string name="image_slice_pending_toast">Saved slices = %1$d; takes effect on next model load</string>
+
+    <!-- Common buttons / labels -->
+    <string name="confirm">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="later">Later</string>
+    <string name="go_download">Download</string>
+    <string name="reload_model">Reload</string>
+    <string name="no_model_file">No model file</string>
+    <string name="select_model">Select Model</string>
+    <string name="delete_model_files">Delete Model Files</string>
+
+    <!-- MainActivity -->
+    <string name="toast_load_model_first">Please load a model first</string>
+    <string name="toast_wait_video">Please wait for video processing to finish</string>
+    <string name="toast_empty_input">Please enter a message</string>
+    <string name="toast_clear_chat_failed">Failed to clear chat: %1$s</string>
+    <string name="toast_model_load_failed">Failed to load model: %1$s</string>
+    <string name="toast_image_failed">Failed to process image: %1$s</string>
+    <string name="toast_video_failed">Failed to process video: %1$s</string>
+    <string name="toast_unsupported_file">Unsupported file type: %1$s</string>
+    <string name="error_decode_image">Unable to decode image</string>
+    <string name="error_read_image">Unable to read image</string>
+    <string name="video_only_v46">Video understanding is only available on MiniCPM-V-4.6. Please switch models in Model Management.</string>
+    <string name="video_processing_progress">%1$s · Processing %2$d/%3$d</string>
+    <string name="video_preprocessing_done">%1$s · Preprocess %2$.1fs</string>
+
+    <!-- Download prompt dialog -->
+    <string name="download_prompt_title">Model Download Required</string>
+    <string name="download_prompt_all_missing">No model files found. Please go to Model Management to download.</string>
+    <string name="download_prompt_mmproj_missing">The vision model (mmproj) has been updated.\nPlease go to Model Management to re-download, otherwise image recognition will not work.</string>
+    <string name="download_prompt_incomplete">Model files are incomplete. Please go to Model Management to re-download.</string>
+    <string name="download_prompt_hint">You can tap the Model Management button at any time to download</string>
+
+    <!-- ModelManagerActivity -->
+    <string name="status_prefilling_image">Processing image…</string>
+    <string name="status_unloading">Unloading model…</string>
+    <string name="status_error">Error: %1$s</string>
+    <string name="switched_to_load">Switched to %1$s — please load the model</string>
+    <string name="switched_to_download">Switched to %1$s — please download first</string>
+    <string name="switching_to">Switching to %1$s…</string>
+    <string name="toast_load_success">%1$s loaded successfully!</string>
+    <string name="toast_load_failed">Load failed: %1$s</string>
+    <string name="toast_downloading">Downloading…</string>
+    <string name="toast_already_downloaded">Model files already exist, no need to re-download</string>
+    <string name="toast_already_loading">Model is loading…</string>
+    <string name="toast_model_not_found">Model file not found, please download first</string>
+    <string name="toast_model_loaded">Model loaded successfully!</string>
+    <string name="download_complete_status">Download complete! Tap Load Model</string>
+    <string name="download_complete_toast">Download complete!</string>
+    <string name="download_cancelled">Download cancelled</string>
+    <string name="download_failed">Download failed: %1$s</string>
+    <string name="toast_notification_denied">Notification permission denied. Download will continue, but you won\'t see progress notifications.</string>
+    <string name="delete_dialog_title">Delete Model Files</string>
+    <string name="delete_dialog_message">Delete %1$s model files?\n\nThis will remove:\n%2$s\n\nYou will need to re-download to use the model.</string>
+    <string name="model_files_deleted">Model files deleted</string>
+    <string name="toast_no_files_to_delete">No files to delete</string>
+    <string name="toast_delete_failed">Delete failed: %1$s</string>
+
+    <!-- ChatAdapter -->
+    <string name="thinking_in_progress">Thinking…</string>
+    <string name="thinking_process">Thinking</string>
+
+    <!-- ModelInfo descriptions -->
+    <string name="model_desc_v4">Lightweight multimodal model with image understanding (4.1B)</string>
+    <string name="model_desc_v46">Next-gen multimodal model with image understanding (1.2B)</string>
+    <string name="model_desc_minicpm5">Lightweight text-only model (0.9B)</string>
+
+    <!-- VideoFrameExtractor -->
+    <string name="video_label">Video</string>
+    <string name="video_frame_info">%1$s%2$s · %3$s · %4$d frames</string>
+
+    <!-- ModelDownloadService / notification -->
+    <string name="download_preparing">Preparing download…</string>
+    <string name="download_complete_short">Download complete</string>
+    <string name="notification_download_title">MiniCPM-V Model Download</string>
+    <string name="notification_channel_name">Model Download</string>
+    <string name="notification_channel_desc">Shows progress when downloading MiniCPM-V model weights in the background</string>
+
+    <!-- LlamaEngine download progress -->
+    <string name="source_direct">Direct</string>
+    <string name="download_race_start">%1$s multi-source race started…</string>
+    <string name="download_all_complete">All model files downloaded!</string>
+    <string name="download_verifying_existing">Verifying existing %1$s…</string>
+    <string name="download_verifying_existing_src">[%1$s] Verifying existing %2$s…</string>
+    <string name="download_file_ready">%1$s ready (MD5 verified)</string>
+    <string name="download_resuming">Resuming %1$s, %2$d MB downloaded…</string>
+    <string name="download_resuming_src">[%1$s] Resuming %2$s, %3$d MB downloaded…</string>
+    <string name="download_race_fetching">%1$s race fetching %2$s…</string>
+    <string name="download_fetching_file">[%1$s] Downloading %2$s…</string>
+    <string name="download_race_winner">[%1$s] won, downloading %2$s…</string>
+    <string name="download_verifying_md5">[%1$s] Verifying %2$s MD5…</string>
+    <string name="download_md5_failed">%1$s MD5 verification failed (expected %2$s, got %3$s). File deleted, please retry.</string>
+    <string name="download_file_complete">%1$s downloaded (%2$d MB)</string>
+    <string name="download_416_mismatch">%1$s returned 416 but local cache size mismatch, please retry</string>
+
+    <!-- Language picker -->
+    <string name="settings_language">Language</string>
+    <string name="language_picker_title">Choose Language</string>
+</resources>

@@ -210,10 +210,10 @@ class ChatAdapter(
                 layoutThinking.visibility = View.VISIBLE
 
                 if (parsed.isThinking) {
-                    tvThinkingLabel.text = "思考中…"
+                    tvThinkingLabel.text = itemView.context.getString(R.string.thinking_in_progress)
                     thinkingExpanded = true
                 } else {
-                    tvThinkingLabel.text = "思考过程"
+                    tvThinkingLabel.text = itemView.context.getString(R.string.thinking_process)
                 }
 
                 tvThinkingArrow.text = if (thinkingExpanded) "▾" else "▸"

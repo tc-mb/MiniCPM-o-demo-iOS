@@ -54,7 +54,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="思考过程"
+                        android:text="@string/thinking_process"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:textColor="?attr/colorOnSurfaceVariant"

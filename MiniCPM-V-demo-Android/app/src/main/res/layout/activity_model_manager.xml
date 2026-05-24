@@ -28,7 +28,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="选择模型"
+                android:text="@string/select_model"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="?attr/colorOnSurface"
@@ -102,7 +102,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="删除模型文件"
+                        android:text="@string/delete_model_files"
                         android:textColor="?attr/colorError"
                         app:strokeColor="?attr/colorError"
                         app:cornerRadius="12dp" />
@@ -116,6 +116,40 @@
                         app:trackCornerRadius="4dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/colorOutline"
+                android:alpha="0.3"
+                android:layout_marginVertical="16dp" />
+
+            <LinearLayout
+                android:id="@+id/btn_language"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_language"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:id="@+id/tv_language_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

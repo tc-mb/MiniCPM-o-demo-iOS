@@ -39,4 +39,103 @@
     <string name="image_slice_hint">切片越多，模型能识别的图片细节越清晰；同时图像 token 更多，回答耗时也越长。\n• 1：单张概览（最快，无切图）\n• 9：MiniCPM-V 模型上限（默认，最清晰）</string>
     <string name="image_slice_apply_toast">图片切片数已切换为 %1$d</string>
     <string name="image_slice_pending_toast">已保存切片数 %1$d，下次加载模型时生效</string>
+
+    <!-- Common buttons / labels -->
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="later">稍后</string>
+    <string name="go_download">去下载</string>
+    <string name="reload_model">重新加载</string>
+    <string name="no_model_file">无模型文件</string>
+    <string name="select_model">选择模型</string>
+    <string name="delete_model_files">删除模型文件</string>
+
+    <!-- MainActivity -->
+    <string name="toast_load_model_first">请先加载模型</string>
+    <string name="toast_wait_video">请等待视频处理完成</string>
+    <string name="toast_empty_input">请输入文字消息</string>
+    <string name="toast_clear_chat_failed">清空对话失败: %1$s</string>
+    <string name="toast_model_load_failed">模型加载失败: %1$s</string>
+    <string name="toast_image_failed">处理图片失败: %1$s</string>
+    <string name="toast_video_failed">处理视频失败: %1$s</string>
+    <string name="toast_unsupported_file">不支持的文件类型: %1$s</string>
+    <string name="error_decode_image">无法解码图片</string>
+    <string name="error_read_image">无法读取图片</string>
+    <string name="video_only_v46">视频理解仅在 MiniCPM-V-4.6 上可用，请前往"模型管理"切换模型</string>
+    <string name="video_processing_progress">%1$s · 处理中 %2$d/%3$d</string>
+    <string name="video_preprocessing_done">%1$s · 预处理 %2$.1fs</string>
+
+    <!-- Download prompt dialog -->
+    <string name="download_prompt_title">需要下载模型</string>
+    <string name="download_prompt_all_missing">未检测到模型文件。请前往"模型管理"下载后再使用。</string>
+    <string name="download_prompt_mmproj_missing">本次升级更新了图像模型（mmproj）。\n请前往"模型管理"重新下载，否则无法使用图片识别功能。</string>
+    <string name="download_prompt_incomplete">模型文件不完整。请前往"模型管理"重新下载。</string>
+    <string name="download_prompt_hint">可随时点击右上角"模型管理"按钮下载</string>
+
+    <!-- ModelManagerActivity -->
+    <string name="status_prefilling_image">正在处理图片...</string>
+    <string name="status_unloading">正在卸载模型...</string>
+    <string name="status_error">错误: %1$s</string>
+    <string name="switched_to_load">已切换至 %1$s，请加载模型</string>
+    <string name="switched_to_download">已切换至 %1$s，请先下载模型</string>
+    <string name="switching_to">正在切换至 %1$s...</string>
+    <string name="toast_load_success">%1$s 加载成功!</string>
+    <string name="toast_load_failed">加载失败: %1$s</string>
+    <string name="toast_downloading">正在下载中...</string>
+    <string name="toast_already_downloaded">模型文件已存在，无需重复下载</string>
+    <string name="toast_already_loading">模型正在加载中...</string>
+    <string name="toast_model_not_found">模型文件不存在，请先下载</string>
+    <string name="toast_model_loaded">模型加载成功!</string>
+    <string name="download_complete_status">下载完成! 请点击加载模型</string>
+    <string name="download_complete_toast">下载完成!</string>
+    <string name="download_cancelled">已取消下载</string>
+    <string name="download_failed">下载失败: %1$s</string>
+    <string name="toast_notification_denied">未授权通知权限，下载会继续，但你将看不到进度通知</string>
+    <string name="delete_dialog_title">删除模型文件</string>
+    <string name="delete_dialog_message">确定要删除 %1$s 的模型文件吗？\n\n这将删除:\n%2$s\n\n删除后需要重新下载才能使用。</string>
+    <string name="model_files_deleted">模型文件已删除</string>
+    <string name="toast_no_files_to_delete">没有可删除的文件</string>
+    <string name="toast_delete_failed">删除失败: %1$s</string>
+
+    <!-- ChatAdapter -->
+    <string name="thinking_in_progress">思考中…</string>
+    <string name="thinking_process">思考过程</string>
+
+    <!-- ModelInfo descriptions -->
+    <string name="model_desc_v4">轻量级多模态模型，支持图文理解 (4.1B)</string>
+    <string name="model_desc_v46">新一代多模态模型，支持图文理解 (1.2B)</string>
+    <string name="model_desc_minicpm5">轻量级纯文本模型 (0.9B)</string>
+
+    <!-- VideoFrameExtractor -->
+    <string name="video_label">视频</string>
+    <string name="video_frame_info">%1$s%2$s · %3$s · 抽帧 %4$d 张</string>
+
+    <!-- ModelDownloadService / notification -->
+    <string name="download_preparing">准备下载...</string>
+    <string name="download_complete_short">下载完成</string>
+    <string name="notification_download_title">MiniCPM-V 模型下载</string>
+    <string name="notification_channel_name">模型下载</string>
+    <string name="notification_channel_desc">在后台下载 MiniCPM-V 模型权重时显示进度</string>
+
+    <!-- LlamaEngine download progress -->
+    <string name="source_direct">直链</string>
+    <string name="download_race_start">%1$s 多源 race 启动…</string>
+    <string name="download_all_complete">所有模型文件下载完成!</string>
+    <string name="download_verifying_existing">校验已存在的 %1$s …</string>
+    <string name="download_verifying_existing_src">[%1$s] 校验已存在的 %2$s …</string>
+    <string name="download_file_ready">%1$s 已就绪 (MD5 校验通过)</string>
+    <string name="download_resuming">续传 %1$s，已下 %2$d MB…</string>
+    <string name="download_resuming_src">[%1$s] 续传 %2$s，已下 %3$d MB…</string>
+    <string name="download_race_fetching">%1$s race 拉取 %2$s…</string>
+    <string name="download_fetching_file">[%1$s] 下载 %2$s…</string>
+    <string name="download_race_winner">[%1$s] 胜出，开始下载 %2$s…</string>
+    <string name="download_verifying_md5">[%1$s] 校验 %2$s MD5…</string>
+    <string name="download_md5_failed">%1$s MD5 校验失败 (期望 %2$s, 实际 %3$s)，文件已删除，请重试</string>
+    <string name="download_file_complete">%1$s 下载完成 (%2$d MB)</string>
+    <string name="download_416_mismatch">%1$s 返回 416 但本地缓存大小异常，请重试</string>
+
+    <!-- Language picker -->
+    <string name="settings_language">语言</string>
+    <string name="language_picker_title">选择语言</string>
 </resources>

@@ -33,6 +33,7 @@ class ModelManagerActivity : AppCompatActivity() {
     private lateinit var btnDeleteModel: MaterialButton
     private lateinit var progressDownload: LinearProgressIndicator
     private lateinit var recyclerModels: RecyclerView
+    private lateinit var tvLanguageValue: TextView
 
     private lateinit var engine: LlamaEngine
     private lateinit var modelAdapter: ModelAdapter
@@ -48,7 +49,7 @@ class ModelManagerActivity : AppCompatActivity() {
             if (!granted) {
                 Toast.makeText(
                     this,
-                    "未授权通知权限，下载会继续，但你将看不到进度通知",
+                    getString(R.string.toast_notification_denied),
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -68,6 +69,7 @@ class ModelManagerActivity : AppCompatActivity() {
         btnDeleteModel = findViewById(R.id.btn_delete_model)
         progressDownload = findViewById(R.id.progress_download)
         recyclerModels = findViewById(R.id.recycler_models)
+        tvLanguageValue = findViewById(R.id.tv_language_value)
 
         engine = LlamaEngine.getInstance(applicationContext)
 
@@ -75,10 +77,12 @@ class ModelManagerActivity : AppCompatActivity() {
         updateLoadButtonState()
         observeEngineState()
         observeDownloadStatus()
+        updateLanguageDisplay()
 
         btnDownload.setOnClickListener { onDownloadClicked() }
         btnLoadModel.setOnClickListener { loadSelectedModel() }
         btnDeleteModel.setOnClickListener { confirmDeleteModel() }
+        findViewById<View>(R.id.btn_language).setOnClickListener { showLanguagePicker() }
     }
 
     private fun setupModelList() {
@@ -96,7 +100,7 @@ class ModelManagerActivity : AppCompatActivity() {
                     if (wasLoaded) {
                         reloadSelectedModel()
                     } else {
-                        tvModelStatus.text = "已切换至 ${model.displayName}，请加载模型"
+                        tvModelStatus.text = getString(R.string.switched_to_load, model.displayName)
                     }
                 }
             }
@@ -111,7 +115,7 @@ class ModelManagerActivity : AppCompatActivity() {
         val modelPath = LlamaEngine.modelPath(applicationContext)
 
         if (!File(modelPath).exists()) {
-            tvModelStatus.text = "已切换至 ${model.displayName}，请先下载模型"
+            tvModelStatus.text = getString(R.string.switched_to_download, model.displayName)
             lifecycleScope.launch(Dispatchers.IO) {
                 try { engine.unloadModel() } catch (_: Exception) {}
                 withContext(Dispatchers.Main) { updateLoadButtonState() }
@@ -121,7 +125,7 @@ class ModelManagerActivity : AppCompatActivity() {
 
         btnLoadModel.isEnabled = false
         btnDownload.isEnabled = false
-        tvModelStatus.text = "正在切换至 ${model.displayName}..."
+        tvModelStatus.text = getString(R.string.switching_to, model.displayName)
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -132,13 +136,13 @@ class ModelManagerActivity : AppCompatActivity() {
                 LlamaEngine.markModelSwitched(applicationContext)
                 withContext(Dispatchers.Main) {
                     updateLoadButtonState()
-                    Toast.makeText(this@ModelManagerActivity, "${model.displayName} 加载成功!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ModelManagerActivity, getString(R.string.toast_load_success, model.displayName), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error reloading model", e)
                 engine.resetToInitialized()
                 withContext(Dispatchers.Main) {
-                    tvModelStatus.text = "加载失败: ${e.message}"
+                    tvModelStatus.text = getString(R.string.toast_load_failed, e.message)
                     updateLoadButtonState()
                 }
             }
@@ -175,16 +179,16 @@ class ModelManagerActivity : AppCompatActivity() {
                         tvModelStatus.text = getString(R.string.status_generating)
                     }
                     is LlamaState.PrefillingImage -> {
-                        tvModelStatus.text = "正在处理图片..."
+                        tvModelStatus.text = getString(R.string.status_prefilling_image)
                     }
                     is LlamaState.Generating -> {
                         tvModelStatus.text = getString(R.string.status_generating)
                     }
                     is LlamaState.UnloadingModel -> {
-                        tvModelStatus.text = "正在卸载模型..."
+                        tvModelStatus.text = getString(R.string.status_unloading)
                     }
                     is LlamaState.Error -> {
-                        tvModelStatus.text = "错误: ${state.exception.message}"
+                        tvModelStatus.text = getString(R.string.status_error, state.exception.message)
                         btnLoadModel.isEnabled = true
                         btnDownload.isEnabled = true
                     }
@@ -199,19 +203,19 @@ class ModelManagerActivity : AppCompatActivity() {
         btnLoadModel.isEnabled = exists
         btnDeleteModel.visibility = if (exists) View.VISIBLE else View.GONE
         btnLoadModel.text = when {
-            isReady -> "重新加载"
+            isReady -> getString(R.string.reload_model)
             exists -> getString(R.string.load_model)
-            else -> "无模型文件"
+            else -> getString(R.string.no_model_file)
         }
     }
 
     private fun onDownloadClicked() {
         if (ModelDownloadController.isRunning) {
-            Toast.makeText(this, "正在下载中...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_downloading, Toast.LENGTH_SHORT).show()
             return
         }
         if (LlamaEngine.modelsExist(this)) {
-            Toast.makeText(this, "模型文件已存在，无需重复下载", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_already_downloaded, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -265,15 +269,15 @@ class ModelManagerActivity : AppCompatActivity() {
                         }
                         is ModelDownloadController.Status.Completed -> {
                             progressDownload.visibility = View.GONE
-                            tvModelStatus.text = "下载完成! 请点击加载模型"
-                            Toast.makeText(this@ModelManagerActivity, "下载完成!", Toast.LENGTH_SHORT).show()
+                            tvModelStatus.text = getString(R.string.download_complete_status)
+                            Toast.makeText(this@ModelManagerActivity, R.string.download_complete_toast, Toast.LENGTH_SHORT).show()
                             btnDownload.isEnabled = true
                             updateLoadButtonState()
                             ModelDownloadController.acknowledge()
                         }
                         is ModelDownloadController.Status.Cancelled -> {
                             progressDownload.visibility = View.GONE
-                            tvModelStatus.text = "已取消下载"
+                            tvModelStatus.text = getString(R.string.download_cancelled)
                             btnDownload.isEnabled = true
                             updateLoadButtonState()
                             ModelDownloadController.acknowledge()
@@ -281,10 +285,10 @@ class ModelManagerActivity : AppCompatActivity() {
                         is ModelDownloadController.Status.Failed -> {
                             Log.w(TAG, "Download failed: ${status.message}")
                             progressDownload.visibility = View.GONE
-                            tvModelStatus.text = "下载失败: ${status.message}"
+                            tvModelStatus.text = getString(R.string.download_failed, status.message)
                             Toast.makeText(
                                 this@ModelManagerActivity,
-                                "下载失败: ${status.message}",
+                                getString(R.string.download_failed, status.message),
                                 Toast.LENGTH_LONG
                             ).show()
                             btnDownload.isEnabled = true
@@ -300,7 +304,7 @@ class ModelManagerActivity : AppCompatActivity() {
     private fun loadSelectedModel() {
         val currentState = engine.state.value
         if (currentState is LlamaState.LoadingModel) {
-            Toast.makeText(this, "模型正在加载中...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_already_loading, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -308,7 +312,7 @@ class ModelManagerActivity : AppCompatActivity() {
         val mmprojPath = LlamaEngine.mmprojPath(applicationContext)
 
         if (!File(modelPath).exists()) {
-            Toast.makeText(this, "模型文件不存在，请先下载", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.toast_model_not_found, Toast.LENGTH_LONG).show()
             return
         }
 
@@ -335,13 +339,13 @@ class ModelManagerActivity : AppCompatActivity() {
                     btnLoadModel.isEnabled = true
                     btnDownload.isEnabled = true
                     updateLoadButtonState()
-                    Toast.makeText(this@ModelManagerActivity, "模型加载成功!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ModelManagerActivity, R.string.toast_model_loaded, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading model", e)
                 engine.resetToInitialized()
                 withContext(Dispatchers.Main) {
-                    tvModelStatus.text = "加载失败: ${e.message}"
+                    tvModelStatus.text = getString(R.string.toast_load_failed, e.message)
                     btnLoadModel.isEnabled = true
                     btnDownload.isEnabled = true
                     updateLoadButtonState()
@@ -359,10 +363,10 @@ class ModelManagerActivity : AppCompatActivity() {
             }
         }
         AlertDialog.Builder(this)
-            .setTitle("删除模型文件")
-            .setMessage("确定要删除 ${model.displayName} 的模型文件吗？\n\n这将删除:\n$fileList\n\n删除后需要重新下载才能使用。")
-            .setPositiveButton("删除") { _, _ -> deleteModelFiles() }
-            .setNegativeButton("取消", null)
+            .setTitle(R.string.delete_dialog_title)
+            .setMessage(getString(R.string.delete_dialog_message, model.displayName, fileList))
+            .setPositiveButton(R.string.delete) { _, _ -> deleteModelFiles() }
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -379,19 +383,42 @@ class ModelManagerActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     updateLoadButtonState()
                     if (deleted) {
-                        tvModelStatus.text = "模型文件已删除"
-                        Toast.makeText(this@ModelManagerActivity, "模型文件已删除", Toast.LENGTH_SHORT).show()
+                        tvModelStatus.text = getString(R.string.model_files_deleted)
+                        Toast.makeText(this@ModelManagerActivity, R.string.model_files_deleted, Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(this@ModelManagerActivity, "没有可删除的文件", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ModelManagerActivity, R.string.toast_no_files_to_delete, Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error deleting model", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ModelManagerActivity, "删除失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ModelManagerActivity, getString(R.string.toast_delete_failed, e.message), Toast.LENGTH_SHORT).show()
                 }
             }
         }
+    }
+
+    private fun updateLanguageDisplay() {
+        tvLanguageValue.text = LocaleManager.currentLanguage(this).displayName
+    }
+
+    private fun showLanguagePicker() {
+        val current = LocaleManager.currentLanguage(this)
+        val options = LocaleManager.AppLanguage.entries.toTypedArray()
+        val items = options.map {
+            if (it == current) "${it.displayName}  \u2713" else it.displayName
+        }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.language_picker_title)
+            .setItems(items) { _, which ->
+                val picked = options[which]
+                if (picked != current) {
+                    LocaleManager.setLanguageAndRestart(this, picked)
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     companion object {

@@ -56,9 +56,12 @@ class MainActivity : AppCompatActivity() {
     private var loadedModelId: String? = null
     private var messageIdCounter = 1L
     private val messages = mutableListOf<ChatMessage>()
+    private var createdWithLocale: String? = null
+    private var isLocaleRestart = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createdWithLocale = LocaleManager.currentLanguage(this).tag
         setContentView(R.layout.activity_main)
 
         // Edge-to-edge: pad the root content for status/nav bars and the IME
@@ -110,9 +113,9 @@ class MainActivity : AppCompatActivity() {
                 etInput.setText(suggestion)
                 handleUserInput()
             } else if (!isModelReady) {
-                Toast.makeText(this, "请先加载模型", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.toast_load_model_first, Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "请等待视频处理完成", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.toast_wait_video, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -179,10 +182,10 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(R.string.clear_chat)
             .setMessage(R.string.clear_chat_confirm)
-            .setPositiveButton("确定") { _, _ ->
+            .setPositiveButton(R.string.confirm) { _, _ ->
                 clearChat()
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -244,7 +247,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error clearing context", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "清空对话失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, getString(R.string.toast_clear_chat_failed, e.message), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -363,7 +366,7 @@ class MainActivity : AppCompatActivity() {
                 engine.resetToInitialized()
                 hasAutoLoaded = false
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "模型加载失败: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, getString(R.string.toast_model_load_failed, e.message), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -372,23 +375,23 @@ class MainActivity : AppCompatActivity() {
     private fun promptDownloadModels(ggufMissing: Boolean, mmprojMissing: Boolean) {
         val message = when {
             ggufMissing && mmprojMissing ->
-                "未检测到模型文件。请前往“模型管理”下载后再使用。"
+                getString(R.string.download_prompt_all_missing)
             mmprojMissing ->
-                "本次升级更新了图像模型（mmproj）。\n请前往“模型管理”重新下载，否则无法使用图片识别功能。"
+                getString(R.string.download_prompt_mmproj_missing)
             else ->
-                "模型文件不完整。请前往“模型管理”重新下载。"
+                getString(R.string.download_prompt_incomplete)
         }
         AlertDialog.Builder(this)
-            .setTitle("需要下载模型")
+            .setTitle(R.string.download_prompt_title)
             .setMessage(message)
             .setCancelable(false)
-            .setPositiveButton("去下载") { _, _ ->
+            .setPositiveButton(R.string.go_download) { _, _ ->
                 startActivity(Intent(this, ModelManagerActivity::class.java))
             }
-            .setNegativeButton("稍后") { _, _ ->
+            .setNegativeButton(R.string.later) { _, _ ->
                 Toast.makeText(
                     this,
-                    "可随时点击右上角“模型管理”按钮下载",
+                    R.string.download_prompt_hint,
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -403,7 +406,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleSelectedMedia(uri: Uri) {
         if (!isModelReady) {
-            Toast.makeText(this, "请先加载模型", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_load_model_first, Toast.LENGTH_SHORT).show()
             return
         }
         val mime = contentResolver.getType(uri).orEmpty()
@@ -411,7 +414,7 @@ class MainActivity : AppCompatActivity() {
             mime.startsWith("video/") -> handleSelectedVideo(uri)
             mime.startsWith("image/") || mime.isEmpty() -> handleSelectedImage(uri)
             else -> {
-                Toast.makeText(this, "不支持的文件类型: $mime", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.toast_unsupported_file, mime), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -421,11 +424,11 @@ class MainActivity : AppCompatActivity() {
             try {
                 val imageData = contentResolver.openInputStream(uri)?.use { input ->
                     val bitmap = BitmapFactory.decodeStream(input)
-                        ?: throw RuntimeException("无法解码图片")
+                        ?: throw RuntimeException(getString(R.string.error_decode_image))
                     val stream = ByteArrayOutputStream()
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
                     Pair(stream.toByteArray(), bitmap)
-                } ?: throw RuntimeException("无法读取图片")
+                } ?: throw RuntimeException(getString(R.string.error_read_image))
 
                 val (imageBytes, bitmap) = imageData
 
@@ -466,7 +469,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing image", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "处理图片失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, getString(R.string.toast_image_failed, e.message), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -487,7 +490,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleSelectedVideo(uri: Uri) {
         if (!engine.isVideoUnderstandingSupported) {
             Toast.makeText(this,
-                "视频理解仅在 MiniCPM-V-4.6 上可用，请前往“模型管理”切换模型",
+                R.string.video_only_v46,
                 Toast.LENGTH_LONG).show()
             return
         }
@@ -498,7 +501,7 @@ class MainActivity : AppCompatActivity() {
             val startNs = System.nanoTime()
             try {
                 val extracted = VideoFrameExtractor.extract(applicationContext, uri)
-                val info = VideoFrameExtractor.formatVideoInfo(extracted)
+                val info = VideoFrameExtractor.formatVideoInfo(applicationContext, extracted)
                 Log.i(TAG, "Video info: $info")
 
                 withContext(Dispatchers.Main) {
@@ -522,7 +525,7 @@ class MainActivity : AppCompatActivity() {
                         if (index >= 0) {
                             val cur = messages[index] as ChatMessage.UserMessage
                             messages[index] = cur.copy(
-                                imageInfo = "$info · 处理中 $current/$total"
+                                imageInfo = getString(R.string.video_processing_progress, info, current, total)
                             )
                             chatAdapter.submitList(messages.toList())
                         }
@@ -538,7 +541,7 @@ class MainActivity : AppCompatActivity() {
                     if (index >= 0) {
                         val cur = messages[index] as ChatMessage.UserMessage
                         messages[index] = cur.copy(
-                            imageInfo = "$info · 预处理 ${elapsedMs / 1000.0}s",
+                            imageInfo = getString(R.string.video_preprocessing_done, info, elapsedMs / 1000.0),
                             isPrefilling = false
                         )
                         chatAdapter.submitList(messages.toList())
@@ -553,7 +556,7 @@ class MainActivity : AppCompatActivity() {
                         messages.removeAt(index)
                         chatAdapter.submitList(messages.toList())
                     }
-                    Toast.makeText(this@MainActivity, "处理视频失败: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, getString(R.string.toast_video_failed, e.message), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -575,7 +578,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleUserInput() {
         val userMsg = etInput.text.toString().trim()
         if (userMsg.isEmpty()) {
-            Toast.makeText(this, "请输入文字消息", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_empty_input, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -666,6 +669,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        val currentTag = LocaleManager.currentLanguage(this).tag
+        if (createdWithLocale != null && createdWithLocale != currentTag) {
+            isLocaleRestart = true
+            LocaleManager.recreateSeamlessly(this)
+            return
+        }
         if (!::engine.isInitialized) return
         val selectedId = LlamaEngine.getSelectedModel(applicationContext).id
 
@@ -703,7 +712,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        if (::engine.isInitialized) {
+        if (isFinishing && !isLocaleRestart && ::engine.isInitialized) {
             engine.destroy()
         }
         super.onDestroy()

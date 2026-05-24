@@ -330,10 +330,10 @@ class LlamaEngine private constructor(
                 }
             }
             if (!model.directGgufUrl.isNullOrBlank()) {
-                ggufSources.add(FileSource("直链", URL(model.directGgufUrl)))
+                ggufSources.add(FileSource(context.getString(R.string.source_direct), URL(model.directGgufUrl)))
             }
             if (!model.isTextOnly && !model.directMmprojUrl.isNullOrBlank()) {
-                mmprojSources.add(FileSource("直链", URL(model.directMmprojUrl)))
+                mmprojSources.add(FileSource(context.getString(R.string.source_direct), URL(model.directMmprojUrl)))
             }
 
             if (ggufSources.isEmpty()) {
@@ -351,13 +351,13 @@ class LlamaEngine private constructor(
             }
 
             val racedLabel = files.first().sources.joinToString("+") { it.label }
-            onProgress("$racedLabel 多源 race 启动...")
+            onProgress(context.getString(R.string.download_race_start, racedLabel))
 
             for (file in files) {
-                downloadFileMultiSource(dir, file.name, file.sources, file.md5, onProgress)
+                downloadFileMultiSource(context, dir, file.name, file.sources, file.md5, onProgress)
             }
 
-            onProgress("所有模型文件下载完成!")
+            onProgress(context.getString(R.string.download_all_complete))
         }
 
         /**
@@ -383,6 +383,7 @@ class LlamaEngine private constructor(
          * the exact moment we want to compare for a winner.
          */
         private suspend fun downloadFileMultiSource(
+            context: Context,
             dir: File,
             fileName: String,
             sources: List<FileSource>,
@@ -394,7 +395,7 @@ class LlamaEngine private constructor(
             // Single source -> bypass race plumbing entirely.
             if (sources.size == 1) {
                 val (label, url) = sources.first()
-                downloadFile(dir, fileName, url, label, expectedMd5, onProgress)
+                downloadFile(context, dir, fileName, url, label, expectedMd5, onProgress)
                 return
             }
 
@@ -404,10 +405,10 @@ class LlamaEngine private constructor(
             // Fast path: same as downloadFile - if target already exists and
             // MD5 matches the manifest, treat as done.
             if (targetFile.exists() && expectedMd5 != null) {
-                onProgress("校验已存在的 $fileName ...")
+                onProgress(context.getString(R.string.download_verifying_existing, fileName))
                 val actual = computeMd5(targetFile)
                 if (actual.equals(expectedMd5, ignoreCase = true)) {
-                    onProgress("$fileName 已就绪 (MD5 校验通过)")
+                    onProgress(context.getString(R.string.download_file_ready, fileName))
                     Log.i(TAG, "$fileName already present and MD5 matches, skipping download")
                     if (tmpFile.exists()) tmpFile.delete()
                     return
@@ -419,10 +420,10 @@ class LlamaEngine private constructor(
 
             val resumeFrom = if (tmpFile.exists()) tmpFile.length() else 0L
             if (resumeFrom > 0) {
-                onProgress("续传 $fileName，已下 ${resumeFrom / (1024 * 1024)} MB...")
+                onProgress(context.getString(R.string.download_resuming, fileName, (resumeFrom / (1024 * 1024)).toInt()))
                 Log.i(TAG, "Resuming $fileName from $resumeFrom bytes via ${sources.size}-way race")
             } else {
-                onProgress("${sources.joinToString("+") { it.label }} race 拉取 $fileName...")
+                onProgress(context.getString(R.string.download_race_fetching, sources.joinToString("+") { it.label }, fileName))
                 Log.i(TAG, "Race-downloading $fileName from ${sources.size} sources")
             }
 
@@ -498,7 +499,7 @@ class LlamaEngine private constructor(
                 }
 
                 val winner = winnerSlot.await()
-                onProgress("[${winner.source}] 胜出，开始下载 $fileName...")
+                onProgress(context.getString(R.string.download_race_winner, winner.source, fileName))
                 Log.i(TAG, "race winner for $fileName: idx=${winner.index} source=${winner.source} code=${winner.responseCode}")
 
                 // Cancel everyone else first so their sockets stop pulling
@@ -510,7 +511,7 @@ class LlamaEngine private constructor(
                     }
                 }
 
-                streamWinnerToDisk(winner, tmpFile, targetFile, fileName, expectedMd5, resumeFrom, onProgress)
+                streamWinnerToDisk(context, winner, tmpFile, targetFile, fileName, expectedMd5, resumeFrom, onProgress)
             }
         }
 
@@ -522,6 +523,7 @@ class LlamaEngine private constructor(
          * to single-source downloads.
          */
         private fun streamWinnerToDisk(
+            context: Context,
             winner: RaceWinner,
             tmpFile: File,
             targetFile: File,
@@ -587,20 +589,20 @@ class LlamaEngine private constructor(
                 }
 
                 if (expectedMd5 != null) {
-                    onProgress("[$source] 校验 $fileName MD5...")
+                    onProgress(context.getString(R.string.download_verifying_md5, source, fileName))
                     val actual = computeMd5(targetFile)
                     if (!actual.equals(expectedMd5, ignoreCase = true)) {
                         Log.e(TAG, "$fileName MD5 mismatch: expected $expectedMd5, got $actual")
                         targetFile.delete()
                         if (tmpFile.exists()) tmpFile.delete()
                         throw RuntimeException(
-                            "$fileName MD5 校验失败 (期望 $expectedMd5, 实际 $actual)，文件已删除，请重试"
+                            context.getString(R.string.download_md5_failed, fileName, expectedMd5, actual)
                         )
                     }
                     Log.i(TAG, "$fileName MD5 OK ($actual)")
                 }
 
-                onProgress("$fileName 下载完成 (${targetFile.length() / (1024 * 1024)} MB)")
+                onProgress(context.getString(R.string.download_file_complete, fileName, (targetFile.length() / (1024 * 1024)).toInt()))
                 Log.i(TAG, "$fileName saved to ${targetFile.absolutePath} (winner=$source)")
             } finally {
                 try { conn.disconnect() } catch (_: Throwable) {}
@@ -619,6 +621,7 @@ class LlamaEngine private constructor(
         //   - 206 Partial Content : append missing tail to existing .tmp
         //   - 416 Range Not Satisfiable : .tmp is already the full file -> finalize
         private fun downloadFile(
+            context: Context,
             dir: File,
             fileName: String,
             url: URL,
@@ -633,10 +636,10 @@ class LlamaEngine private constructor(
             // skip re-downloading. Saves 500MB-1GB on app reinstall / dev
             // iteration when the previous download is still valid.
             if (targetFile.exists() && expectedMd5 != null) {
-                onProgress("[$source] 校验已存在的 $fileName ...")
+                onProgress(context.getString(R.string.download_verifying_existing_src, source, fileName))
                 val actual = computeMd5(targetFile)
                 if (actual.equals(expectedMd5, ignoreCase = true)) {
-                    onProgress("$fileName 已就绪 (MD5 校验通过)")
+                    onProgress(context.getString(R.string.download_file_ready, fileName))
                     Log.i(TAG, "$fileName already present and MD5 matches, skipping download")
                     // Stale .tmp from an even older interrupted attempt - drop it.
                     if (tmpFile.exists()) tmpFile.delete()
@@ -652,10 +655,10 @@ class LlamaEngine private constructor(
             val resumeFrom = if (tmpFile.exists()) tmpFile.length() else 0L
             if (resumeFrom > 0) {
                 val mb = resumeFrom / (1024 * 1024)
-                onProgress("[$source] 续传 $fileName，已下 ${mb} MB...")
+                onProgress(context.getString(R.string.download_resuming_src, source, fileName, mb.toInt()))
                 Log.i(TAG, "Resuming $fileName from $resumeFrom bytes ($source: $url)")
             } else {
-                onProgress("[$source] 下载 $fileName...")
+                onProgress(context.getString(R.string.download_fetching_file, source, fileName))
                 Log.i(TAG, "Downloading $fileName from $source: $url")
             }
 
@@ -684,7 +687,7 @@ class LlamaEngine private constructor(
                         // mirror? truncated download earlier?). Reset.
                         Log.w(TAG, "$fileName: HTTP 416 but local size ${tmpFile.length()} != server $totalLen; restarting")
                         tmpFile.delete()
-                        throw RuntimeException("$source 返回 416 但本地缓存大小异常，请重试")
+                        throw RuntimeException(context.getString(R.string.download_416_mismatch, source))
                     }
                 } else {
                     val acceptedResume = responseCode == HttpURLConnection.HTTP_PARTIAL // 206
@@ -759,7 +762,7 @@ class LlamaEngine private constructor(
                 }
 
                 if (expectedMd5 != null) {
-                    onProgress("[$source] 校验 $fileName MD5...")
+                    onProgress(context.getString(R.string.download_verifying_md5, source, fileName))
                     val actual = computeMd5(targetFile)
                     if (!actual.equals(expectedMd5, ignoreCase = true)) {
                         Log.e(TAG, "$fileName MD5 mismatch: expected $expectedMd5, got $actual")
@@ -768,13 +771,13 @@ class LlamaEngine private constructor(
                         targetFile.delete()
                         if (tmpFile.exists()) tmpFile.delete()
                         throw RuntimeException(
-                            "$fileName MD5 校验失败 (期望 $expectedMd5, 实际 $actual)，文件已删除，请重试"
+                            context.getString(R.string.download_md5_failed, fileName, expectedMd5, actual)
                         )
                     }
                     Log.i(TAG, "$fileName MD5 OK ($actual)")
                 }
 
-                onProgress("$fileName 下载完成 (${targetFile.length() / (1024 * 1024)} MB)")
+                onProgress(context.getString(R.string.download_file_complete, fileName, (targetFile.length() / (1024 * 1024)).toInt()))
                 Log.i(TAG, "$fileName saved to ${targetFile.absolutePath}")
             } finally {
                 conn.disconnect()
