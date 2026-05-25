@@ -1,0 +1,70 @@
+// Template for build-profile.json5 (which is gitignored).
+//
+// First-time setup on a fresh checkout:
+//   1. Open this project in DevEco Studio.
+//   2. File > Project Structure > Project > Signing Configs >
+//      tick "Automatically generate signature" and log in with a Huawei
+//      account.  DevEco will (a) create a debug keystore under
+//      ~/.ohos/config/, and (b) write a real build-profile.json5 in this
+//      directory with the right certpath / profile / storeFile / encrypted
+//      passwords filled in.
+//   3. From then on hvigorw / DevEco can sign & install hap on a real device.
+//
+// The keystore / passwords are bound to your local machine + Huawei account,
+// so they are intentionally NOT committed.  See ../.gitignore for the rule
+// that excludes build-profile.json5 itself.
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "<filled by DevEco — points to ~/.ohos/config/default_*.cer>",
+          "keyAlias": "debugKey",
+          "keyPassword": "<filled by DevEco — encrypted local password>",
+          "profile":  "<filled by DevEco — points to ~/.ohos/config/default_*.p7b>",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "<filled by DevEco — points to ~/.ohos/config/default_*.p12>",
+          "storePassword": "<filled by DevEco — encrypted local password>"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        // SDK on the dev mac: HarmonyOS 6.1.0 (API 23). Test device:
+        // nova 14 vitality (TYR-AL00) reports HarmonyOS 6.0.2.130 / API 22.
+        // We compile against the latest local SDK and keep compatibility down
+        // to API 12 so the same .hap also installs on older HarmonyOS NEXT
+        // 5.0+ phones.
+        "compatibleSdkVersion": "5.0.0(12)",
+        "compatibleSdkVersionStage": "release",
+        "targetSdkVersion": "6.1.0(23)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      { "name": "debug" },
+      { "name": "release" }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": ["default"]
+        }
+      ]
+    }
+  ]
+}

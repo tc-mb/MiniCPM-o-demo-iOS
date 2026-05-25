@@ -92,3 +92,12 @@ MiniCPM-V-demo-Android/.idea/
 MiniCPM-V-demo-HarmonyOS/entry/oh_modules/
 MiniCPM-V-demo-HarmonyOS/oh_modules/
 
+# HarmonyOS 调试签名配置：build-profile.json5 由 DevEco Studio
+# "Automatically generate signature" 写入本机 ~/.ohos/config/ 下的 .p12
+# 路径 + 加密 password，每台机器都不一样且属于本地凭据，不入库。
+# 见 build-profile.json5.example 与 README 鸿蒙端 "环境要求 / 签名" 一节。
+MiniCPM-V-demo-HarmonyOS/build-profile.json5
+
+# HarmonyOS hvigor 本地构建 state / cache / outputs（相当于 Gradle 的 .gradle/）。
+.hvigor/
+
