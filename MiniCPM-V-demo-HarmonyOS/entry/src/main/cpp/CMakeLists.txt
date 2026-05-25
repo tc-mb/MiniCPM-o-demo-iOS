@@ -97,3 +97,16 @@ target_link_libraries(entry PRIVATE
         mtmd
         libace_napi.z.so
         libhilog_ndk.z.so)
+
+
+# ------------------------------------------------------------------
+# Fix for HarmonyOS HAP packaging of versioned shared libraries.
+# Without this, hvigor drops intermediate .so.0 symlinks and the
+# dynamic linker fails because libllama_napi.so's NEEDED entries
+# reference the SONAMEs.
+# ------------------------------------------------------------------
+set_target_properties(llama         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set_target_properties(ggml          PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set_target_properties(ggml-base     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set_target_properties(ggml-cpu      PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set_target_properties(llama-common  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
