@@ -2,8 +2,8 @@
   "app": {
     "bundleName": "com.openbmb.minicpmv",
     "vendor": "openbmb",
-    "versionCode": 6,
-    "versionName": "2.0",
+    "versionCode": 7,
+    "versionName": "2.2",
     "icon": "$media:app_icon",
     "label": "$string:app_name"
   }

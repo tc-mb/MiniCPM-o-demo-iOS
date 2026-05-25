@@ -106,13 +106,28 @@ data class ModelInfo(
                 // OBS-only `aad0d36e..` merger-converted variant.
                 mmprojMd5 = "54aea6e04d752f47309a48f12795a1a3"
             ),
+            // MiniCPM5-1B: text-only model, no mmproj needed. Switched from the
+            // pre-release OBS direct link to OpenBMB's official HF (primary) +
+            // ModelScope (backup) GGUF repos now that the model is publicly
+            // released. The repo serves Q4_K_M / Q8_0 / F16 variants under the
+            // canonical `MiniCPM5-1B-*.gguf` naming; LEGACY_FILE_RENAMES below
+            // is intentionally empty because the pre-release `0.9B` variant
+            // was re-converted (different gguf metadata / different bytes), so
+            // any local copy must be re-downloaded rather than renamed.
             ModelInfo(
+                // id kept as the original pre-release identifier so the
+                // per-model directory `{root}/minicpm5-0.9b/` is still found
+                // for users upgrading from v1.3. The user-facing display name
+                // and the on-disk gguf filename track the post-release `1B`
+                // canonical naming.
                 id = "minicpm5-0.9b",
                 displayName = "MiniCPM5-1B (Q4_K_M)",
                 descriptionResName = "model_desc_minicpm5",
-                ggufFileName = "MiniCPM5-0.9B-Q4_K_M.gguf",
-                directGgufUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf",
-                ggufMd5 = "71a80b3f5013e2410d9db7ce6cbd5f37"
+                ggufFileName = "MiniCPM5-1B-Q4_K_M.gguf",
+                hfRepo = "openbmb/MiniCPM5-1B-GGUF",
+                msRepo = "OpenBMB/MiniCPM5-1B-GGUF"
+                // No MD5 here on purpose: HF / ModelScope serve via git-LFS
+                // which already provides hash-based integrity checks.
             )
         )
 

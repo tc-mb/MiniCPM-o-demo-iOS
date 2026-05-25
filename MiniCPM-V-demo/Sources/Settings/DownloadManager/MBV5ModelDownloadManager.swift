@@ -99,11 +99,29 @@ class MBV5ModelDownloadManager: NSObject {
             modelName: MiniCPMModelConst.modelv5_FileName,
             modelUrl: MiniCPMModelConst.modelv5_URLString,
             filename: MiniCPMModelConst.modelv5_FileName,
-            backupModelUrl: nil
+            backupModelUrl: MiniCPMModelConst.modelv5_BackUpURLString
         )
-        
+
+        purgeStaleModelv5()
         reconcileStatusFromDisk()
         restoreDownloadProgress()
+    }
+
+    /// 启动时清理老 0.9B 命名版本（对齐 MBV46ModelDownloadManager 的 stale mmproj 清理逻辑）。
+    /// modelsExist() fast-path 只看文件存在不校 MD5，残留旧文件会被误用导致加载失败。
+    private func purgeStaleModelv5() {
+        let docs = getDocumentsDirectory()
+        let fm = FileManager.default
+        for stale in MiniCPMModelConst.staleModelv5_FileNames {
+            let url = docs.appendingPathComponent(stale)
+            guard fm.fileExists(atPath: url.path) else { continue }
+            do {
+                try fm.removeItem(at: url)
+                debugLog("-->> 已清理老 MiniCPM5 残留: \(stale)")
+            } catch {
+                debugLog("-->> 清理老 MiniCPM5 残留失败 \(stale): \(error.localizedDescription)")
+            }
+        }
     }
     
     func reconcileStatusFromDisk() {

@@ -193,3 +193,12 @@ Download the language model file (e.g., `ggml-model-Q4_K_M.gguf`) and the vision
 * ModelScope: [https://modelscope.cn/models/OpenBMB/MiniCPM-V-4.6-gguf](https://modelscope.cn/models/OpenBMB/MiniCPM-V-4.6-gguf)
 
 Download the language model file (e.g., `MiniCPM-V-4_6-Q4_K_M.gguf`) and the vision model file (`mmproj-model-f16.gguf`) from the repository.
+
+### 2.4 MiniCPM5-1B GGUF Files (text-only)
+
+#### Download Official GGUF Files
+
+* HuggingFace: [https://huggingface.co/openbmb/MiniCPM5-1B-GGUF](https://huggingface.co/openbmb/MiniCPM5-1B-GGUF)
+* ModelScope: [https://modelscope.cn/models/OpenBMB/MiniCPM5-1B-GGUF](https://modelscope.cn/models/OpenBMB/MiniCPM5-1B-GGUF)
+
+Download the language model file (e.g., `MiniCPM5-1B-Q4_K_M.gguf`) from the repository. MiniCPM5 is text-only, so no `mmproj` is required.

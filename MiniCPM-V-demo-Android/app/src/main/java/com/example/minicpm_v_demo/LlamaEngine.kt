@@ -173,6 +173,16 @@ class LlamaEngine private constructor(
                 // filenames here; their bytes are not necessarily compatible
                 // with the demo's current clip.cpp. They are purged outright
                 // by [STALE_MMPROJ_NAMES] below.
+            ),
+            "minicpm5-0.9b" to listOf(
+                // Pre-release name (`0.9B`) → post-release HF/MS name (`1B`).
+                // The pre-release gguf came from a pre-public OBS bucket and
+                // may be byte-identical to or slightly different from the
+                // OpenBMB-published HF/MS variant; the downstream MD5/LFS
+                // check inside downloadFile will accept the matching bytes
+                // or quietly trigger a re-download, so renaming is always
+                // safe.
+                "MiniCPM5-0.9B-Q4_K_M.gguf" to "MiniCPM5-1B-Q4_K_M.gguf"
             )
         )
 

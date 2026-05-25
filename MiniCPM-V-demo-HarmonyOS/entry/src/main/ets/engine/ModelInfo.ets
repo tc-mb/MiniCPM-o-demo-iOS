@@ -128,23 +128,30 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     // `aad0d36e..` merger-converted variant.
     '54aea6e04d752f47309a48f12795a1a3'
   ),
-  // MiniCPM5-0.9B: text-only model, no mmproj needed. Downloaded via OBS
-  // direct link (华为云 OBS). Mirrors Android ModelInfo.kt registration.
+  // MiniCPM5-1B: text-only model, no mmproj needed. Switched from the
+  // pre-release OBS direct link to OpenBMB's official HF (primary) +
+  // ModelScope (backup) GGUF repos now that the model is publicly released.
+  // Mirrors Android ModelInfo.kt registration. The on-disk model.id is
+  // intentionally kept as the pre-release `minicpm5-0.9b` so existing
+  // per-model directories from v1.3 are still discoverable; the user-facing
+  // display name and the gguf filename track the post-release `1B` naming.
+  // No MD5 here on purpose: HF / ModelScope serve via git-LFS which already
+  // provides hash-based integrity checks.
   new ModelInfo(
     'minicpm5-0.9b',
     'MiniCPM5-1B (Q4_K_M)',
     'model_desc_minicpm5',
-    'MiniCPM5-0.9B-Q4_K_M.gguf',
+    'MiniCPM5-1B-Q4_K_M.gguf',
     '',
-    null,
-    null,
+    'openbmb/MiniCPM5-1B-GGUF',
+    'OpenBMB/MiniCPM5-1B-GGUF',
     'main',
     'master',
     null,
     null,
-    'https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf',
     null,
-    '71a80b3f5013e2410d9db7ce6cbd5f37',
+    null,
+    null,
     null
   ),
 ];
@@ -165,6 +172,12 @@ export const LEGACY_FILE_RENAMES: Record<string, LegacyRename[]> = {
   'minicpm-v-4_6-instruct': [
     { oldName: 'MiniCPM-V4.6-instruct-Q4_K_M.gguf', newName: 'MiniCPM-V-4_6-Q4_K_M.gguf' },
     { oldName: 'minicpmv46-llm-Q4_K_M.gguf',         newName: 'MiniCPM-V-4_6-Q4_K_M.gguf' },
+  ],
+  'minicpm5-0.9b': [
+    // Pre-release name (`0.9B`) → post-release HF/MS name (`1B`).
+    // If the bytes match the HF/MS variant the downstream LFS hash check
+    // accepts the file; otherwise the file is quietly re-downloaded.
+    { oldName: 'MiniCPM5-0.9B-Q4_K_M.gguf', newName: 'MiniCPM5-1B-Q4_K_M.gguf' },
   ],
 };
 

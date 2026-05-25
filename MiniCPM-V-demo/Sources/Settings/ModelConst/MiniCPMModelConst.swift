@@ -162,19 +162,32 @@ struct MiniCPMModelConst {
     ]
     
     
-    // MARK: - MiniCPM 5 纯文本模型（0.9B）
-    
-    /// MiniCPM5 主模型文件名
-    static let modelv5_FileName = "MiniCPM5-0.9B-Q4_K_M.gguf"
-    
+    // MARK: - MiniCPM 5 纯文本模型（1B）
+
+    /// MiniCPM5 主模型文件名（对齐 HF / ModelScope 上的官方命名 `MiniCPM5-1B-Q4_K_M.gguf`）。
+    /// 老文件名 `MiniCPM5-0.9B-Q4_K_M.gguf` 登记在 `staleModelv5_FileNames` 里，启动时主动 purge。
+    static let modelv5_FileName = "MiniCPM5-1B-Q4_K_M.gguf"
+
     /// MiniCPM5 显示名
     static let modelv5_DisplayedName = "MiniCPM5-1B LLM INT4"
-    
-    /// MiniCPM5 主模型下载地址（华为云 OBS）
-    static let modelv5_URLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf"
-    
-    /// MiniCPM5 主模型 MD5
-    static let modelv5_MD5 = "71a80b3f5013e2410d9db7ce6cbd5f37"
+
+    /// MiniCPM5 主模型下载地址（HuggingFace 主源，对齐 v4.6 的源策略）
+    static let modelv5_URLString = "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/main/MiniCPM5-1B-Q4_K_M.gguf"
+
+    /// MiniCPM5 主模型备用下载地址（ModelScope 国内镜像，HF 不通时由 MBModelDownloadHelperV2 自动 fallback）
+    static let modelv5_BackUpURLString = "https://modelscope.cn/api/v1/models/OpenBMB/MiniCPM5-1B-GGUF/repo?Revision=master&FilePath=MiniCPM5-1B-Q4_K_M.gguf"
+
+    /// MiniCPM5 主模型 MD5（HF / ModelScope 同源，sha256=81b64d05..）
+    static let modelv5_MD5 = "a5f29552a5abcc0533f18066851fe8dc"
+
+    /// 启动时主动 purge 的老 MiniCPM5 文件名集合。
+    ///
+    /// 用途：处理"老用户从 OBS 下载过旧 0.9B 命名版本"的迁移场景。旧文件在新的
+    /// `modelv5_FileName = MiniCPM5-1B-Q4_K_M.gguf` 期望下不会被加载，但 1B 命名版本是
+    /// 重转过的 gguf，字节级不同（HF 上 sha256 不同），强制让用户重新从 HF/MS 下载。
+    static let staleModelv5_FileNames: [String] = [
+        "MiniCPM5-0.9B-Q4_K_M.gguf",  // OBS 上的开源前 0.9B 命名版本
+    ]
     
     
     // MARK: - MiniCPM-V 4.6 ANE 模块
