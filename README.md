@@ -113,7 +113,7 @@ If Xcode fails with `There is no XCFramework found at '.../llama.xcframework'`, 
 Requirements:
 
 * Android Studio (Giraffe or newer)
-* Android SDK + NDK (the project pins NDK `28.2.13676358` and CMake `3.22.1`)
+* Android SDK + NDK (the project pins NDK `27.0.12077973` and CMake `3.22.1`)
 * A physical device with a 64-bit ARM SoC (`arm64-v8a`)
 * Device RAM: see the per-model requirements in [Part 2](#part-2-gguf-model-files)
 

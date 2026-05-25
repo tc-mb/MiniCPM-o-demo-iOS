@@ -113,7 +113,7 @@ Build 过程中会出现 `ignoring duplicate libraries` 和 `skipping debug map 
 环境要求：
 
 * Android Studio（Giraffe 或更新版本）
-* Android SDK + NDK（项目固定 NDK `28.2.13676358`、CMake `3.22.1`）
+* Android SDK + NDK（项目固定 NDK `27.0.12077973`、CMake `3.22.1`）
 * 64 位 ARM 架构（`arm64-v8a`）的真机
 * 设备内存：参见[第二部分](#第二部分gguf-模型文件)中按模型给出的内存要求
 
