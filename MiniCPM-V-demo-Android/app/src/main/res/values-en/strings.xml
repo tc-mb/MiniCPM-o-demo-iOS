@@ -102,7 +102,7 @@
     <!-- ModelInfo descriptions -->
     <string name="model_desc_v4">Lightweight multimodal model with image understanding (4.1B)</string>
     <string name="model_desc_v46">Next-gen multimodal model with image understanding (1.2B)</string>
-    <string name="model_desc_minicpm5">Lightweight text-only model (0.9B)</string>
+    <string name="model_desc_minicpm5">Lightweight text-only model (1B)</string>
 
     <!-- VideoFrameExtractor -->
     <string name="video_label">Video</string>

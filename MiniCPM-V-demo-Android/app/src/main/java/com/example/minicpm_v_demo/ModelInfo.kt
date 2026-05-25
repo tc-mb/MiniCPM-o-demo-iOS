@@ -108,7 +108,7 @@ data class ModelInfo(
             ),
             ModelInfo(
                 id = "minicpm5-0.9b",
-                displayName = "MiniCPM5-0.9B (Q4_K_M)",
+                displayName = "MiniCPM5-1B (Q4_K_M)",
                 descriptionResName = "model_desc_minicpm5",
                 ggufFileName = "MiniCPM5-0.9B-Q4_K_M.gguf",
                 directGgufUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf",

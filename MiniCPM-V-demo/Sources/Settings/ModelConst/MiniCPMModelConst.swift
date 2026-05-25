@@ -168,7 +168,7 @@ struct MiniCPMModelConst {
     static let modelv5_FileName = "MiniCPM5-0.9B-Q4_K_M.gguf"
     
     /// MiniCPM5 显示名
-    static let modelv5_DisplayedName = "MiniCPM 5 0.9B LLM INT4"
+    static let modelv5_DisplayedName = "MiniCPM5-1B LLM INT4"
     
     /// MiniCPM5 主模型下载地址（华为云 OBS）
     static let modelv5_URLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-0.9B-Q4_K_M.gguf"

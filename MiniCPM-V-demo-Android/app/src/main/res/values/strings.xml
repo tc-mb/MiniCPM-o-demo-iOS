@@ -105,7 +105,7 @@
     <!-- ModelInfo descriptions -->
     <string name="model_desc_v4">轻量级多模态模型，支持图文理解 (4.1B)</string>
     <string name="model_desc_v46">新一代多模态模型，支持图文理解 (1.2B)</string>
-    <string name="model_desc_minicpm5">轻量级纯文本模型 (0.9B)</string>
+    <string name="model_desc_minicpm5">轻量级纯文本模型 (1B)</string>
 
     <!-- VideoFrameExtractor -->
     <string name="video_label">视频</string>

@@ -106,7 +106,7 @@
 
     { "name": "model_desc_v4", "value": "轻量级多模态模型，支持图文理解 (4.1B)" },
     { "name": "model_desc_v46", "value": "新一代多模态模型，支持图文理解 (1.2B)" },
-    { "name": "model_desc_minicpm5", "value": "轻量级纯文本模型 (0.9B)" },
+    { "name": "model_desc_minicpm5", "value": "轻量级纯文本模型 (1B)" },
 
     { "name": "source_direct", "value": "直链" },
     { "name": "download_race_start", "value": "%s 多源 race 启动..." },

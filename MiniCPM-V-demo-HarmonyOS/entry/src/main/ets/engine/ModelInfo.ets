@@ -132,7 +132,7 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
   // direct link (华为云 OBS). Mirrors Android ModelInfo.kt registration.
   new ModelInfo(
     'minicpm5-0.9b',
-    'MiniCPM5-0.9B (Q4_K_M)',
+    'MiniCPM5-1B (Q4_K_M)',
     'model_desc_minicpm5',
     'MiniCPM5-0.9B-Q4_K_M.gguf',
     '',

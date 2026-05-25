@@ -12,7 +12,7 @@ import llama
 
 @objc public class MBV5ModelDetailViewController: UIViewController, UIGestureRecognizerDelegate {
     
-    var modelName: String = "MiniCPM 5 0.9B"
+    var modelName: String = "MiniCPM5-1B"
     
     private let downloadManager = MBV5ModelDownloadManager.shared
     

@@ -101,7 +101,7 @@
 
     { "name": "model_desc_v4", "value": "Lightweight multimodal model with image understanding (4.1B)" },
     { "name": "model_desc_v46", "value": "Next-gen multimodal model with image understanding (1.2B)" },
-    { "name": "model_desc_minicpm5", "value": "Lightweight text-only model (0.9B)" },
+    { "name": "model_desc_minicpm5", "value": "Lightweight text-only model (1B)" },
 
     { "name": "source_direct", "value": "Direct" },
     { "name": "download_race_start", "value": "%s multi-source race started…" },

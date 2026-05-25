@@ -271,7 +271,7 @@ extension MBSettingsViewController: UITableViewDelegate {
             } else if title == "MiniCPM-V 4.6" {
                 let detailVC = MBV46ModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
-            } else if title == "MiniCPM 5 0.9B" {
+            } else if title == "MiniCPM5-1B" {
                 let detailVC = MBV5ModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
             }
@@ -447,7 +447,7 @@ extension MBSettingsViewController {
         let currentSelectedModel = UserDefaults.standard.string(forKey: "current_selected_model")
         
         let model = MBSettingsModel()
-        model.title = "MiniCPM 5 0.9B"
+        model.title = "MiniCPM5-1B"
         model.icon = UIImage(systemName: "text.bubble")
         model.accessoryIcon = UIImage(named: "setting_accessory_icon")
         model.selectedIcon = UIImage(systemName: "checkmark.circle.fill")
