@@ -1,5 +1,5 @@
 [submodule "llama.cpp"]
 	path = llama.cpp
-	url = https://github.com/tc-mb/llama.cpp.git
-	branch = MiniCPM-V
+	url = https://github.com/tc-mb/llama.cpp-omni.git
+	branch = feat/voxcpm
 	shallow = true
