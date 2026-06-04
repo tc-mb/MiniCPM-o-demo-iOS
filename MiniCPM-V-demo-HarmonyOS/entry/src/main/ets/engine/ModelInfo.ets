@@ -18,19 +18,28 @@ export class ModelInfo {
   readonly descriptionResName: string;
   readonly ggufFileName: string;
   readonly mmprojFileName: string;
+  readonly acousticFileName: string;
   readonly hfRepo: string | null;
   readonly msRepo: string | null;
   readonly hfBranch: string;
   readonly msBranch: string;
   readonly ggufRemoteName: string | null;
   readonly mmprojRemoteName: string | null;
+  readonly acousticRemoteName: string | null;
   readonly directGgufUrl: string | null;
   readonly directMmprojUrl: string | null;
+  readonly directAcousticUrl: string | null;
   readonly ggufMd5: string | null;
   readonly mmprojMd5: string | null;
+  readonly acousticMd5: string | null;
 
   get isTextOnly(): boolean {
-    return !this.mmprojFileName;
+    return !this.mmprojFileName && !this.acousticFileName;
+  }
+
+  /** True for TTS (text-to-speech) models with an acoustic component. */
+  get isTts(): boolean {
+    return !!this.acousticFileName;
   }
 
   constructor(
@@ -39,32 +48,40 @@ export class ModelInfo {
     descriptionResName: string,
     ggufFileName: string,
     mmprojFileName: string = '',
+    acousticFileName: string = '',
     hfRepo: string | null = null,
     msRepo: string | null = null,
     hfBranch: string = 'main',
     msBranch: string = 'master',
     ggufRemoteName: string | null = null,
     mmprojRemoteName: string | null = null,
+    acousticRemoteName: string | null = null,
     directGgufUrl: string | null = null,
     directMmprojUrl: string | null = null,
+    directAcousticUrl: string | null = null,
     ggufMd5: string | null = null,
-    mmprojMd5: string | null = null
+    mmprojMd5: string | null = null,
+    acousticMd5: string | null = null
   ) {
     this.id = id;
     this.displayName = displayName;
     this.descriptionResName = descriptionResName;
     this.ggufFileName = ggufFileName;
     this.mmprojFileName = mmprojFileName;
+    this.acousticFileName = acousticFileName;
     this.hfRepo = hfRepo;
     this.msRepo = msRepo;
     this.hfBranch = hfBranch;
     this.msBranch = msBranch;
     this.ggufRemoteName = ggufRemoteName;
     this.mmprojRemoteName = mmprojRemoteName;
+    this.acousticRemoteName = acousticRemoteName;
     this.directGgufUrl = directGgufUrl;
     this.directMmprojUrl = directMmprojUrl;
+    this.directAcousticUrl = directAcousticUrl;
     this.ggufMd5 = ggufMd5;
     this.mmprojMd5 = mmprojMd5;
+    this.acousticMd5 = acousticMd5;
   }
 
   /** Path segment to request on HF/MS for the gguf, falling back to local name. */
@@ -77,7 +94,13 @@ export class ModelInfo {
     return this.mmprojRemoteName ?? this.mmprojFileName;
   }
 
+  /** Path segment to request on HF/MS for the acoustic GGUF, falling back to local name. */
+  acousticRemotePath(): string {
+    return this.acousticRemoteName ?? this.acousticFileName;
+  }
+
   hasDirectUrls(): boolean {
+    if (this.isTts) return !!this.directGgufUrl && !!this.directAcousticUrl;
     if (this.isTextOnly) return !!this.directGgufUrl;
     return !!this.directGgufUrl && !!this.directMmprojUrl;
   }
@@ -88,32 +111,24 @@ export class ModelInfo {
 }
 
 export const AVAILABLE_MODELS: ModelInfo[] = [
+  /*
   new ModelInfo(
     'minicpm-v-4',
     'MiniCPM-V-4 (Q4_K_M)',
     'model_desc_v4',
     'ggml-model-Q4_K_M.gguf',
     'mmproj-model-f16.gguf',
+    '',                                                          // acousticFileName
     'openbmb/MiniCPM-V-4-gguf',
     'OpenBMB/MiniCPM-V-4-gguf'
-    // No MD5 here on purpose: HF / ModelScope serve via git-LFS which already
-    // provides hash-based integrity checks.
   ),
-  // MiniCPM-V-4.6 (release / instruct): HF (primary) + ModelScope (backup)
-  // racing, aligned with iOS opt-r1's MBV46ModelDownloadManager. Upstream
-  // master mtmd accepts the OpenBMB-published `minicpmv4_6` projector type
-  // natively, so we no longer need the demo-private "merger" re-conversion;
-  // both the local and the remote file names are the upstream-canonical
-  // `mmproj-model-f16.gguf`. The LEGACY_FILE_RENAMES below maps the
-  // historical demo names (including v1.3's `*-merger-*`) onto this canonical
-  // name so an upgrading user's bytes are either accepted (MD5 OK) or cleanly
-  // re-downloaded (MD5 mismatch).
   new ModelInfo(
     'minicpm-v-4_6-instruct',
     'MiniCPM-V-4.6 (Q4_K_M)',
     'model_desc_v46',
     'MiniCPM-V-4_6-Q4_K_M.gguf',
     'mmproj-model-f16.gguf',
+    '',                                                          // acousticFileName
     'openbmb/MiniCPM-V-4.6-gguf',
     'OpenBMB/MiniCPM-V-4.6-gguf',
     'main',
@@ -123,26 +138,15 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     null,
     null,
     'fd778481dd56b6036dd8f9cf7c1519cf',
-    // OpenBMB original (projector_type=minicpmv4_6), as served by both
-    // HuggingFace and ModelScope. Replaces the previous OBS-only
-    // `aad0d36e..` merger-converted variant.
     '54aea6e04d752f47309a48f12795a1a3'
   ),
-  // MiniCPM5-1B: text-only model, no mmproj needed. Switched from the
-  // pre-release OBS direct link to OpenBMB's official HF (primary) +
-  // ModelScope (backup) GGUF repos now that the model is publicly released.
-  // Mirrors Android ModelInfo.kt registration. The on-disk model.id is
-  // intentionally kept as the pre-release `minicpm5-0.9b` so existing
-  // per-model directories from v1.3 are still discoverable; the user-facing
-  // display name and the gguf filename track the post-release `1B` naming.
-  // No MD5 here on purpose: HF / ModelScope serve via git-LFS which already
-  // provides hash-based integrity checks.
   new ModelInfo(
     'minicpm5-0.9b',
     'MiniCPM5-1B (Q4_K_M)',
     'model_desc_minicpm5',
     'MiniCPM5-1B-Q4_K_M.gguf',
     '',
+    '',                                                          // acousticFileName
     'openbmb/MiniCPM5-1B-GGUF',
     'OpenBMB/MiniCPM5-1B-GGUF',
     'main',
@@ -153,6 +157,34 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     null,
     null,
     null
+  ),
+  */
+  // VoxCPM2 — text-to-speech model, ~2B params, 48 kHz output.
+  // Two GGUF files: a BaseLM (MiniCPM-4 based) and an Acoustic bundle
+  // (FSQ + ResidualLM + LocEnc + LocDiT + AudioVAE V2 + stop predictor +
+  // projections). Served from Huawei OBS while HF/MS only have PyTorch
+  // weights; switch to hfRepo/msRepo once pre-converted GGUF repos are
+  // published. Mirrors Android ModelInfo.kt registration.
+  new ModelInfo(
+    'voxcpm2',
+    'VoxCPM2',
+    'model_desc_voxcpm2',
+    'VoxCPM2-BaseLM-Q4_K_M.gguf',
+    '',                                                          // no mmproj
+    'VoxCPM2-Acoustic-F16.gguf',                                 // acousticFileName
+    null,                                                        // hfRepo (pending GGUF release)
+    null,                                                        // msRepo (pending GGUF release)
+    'main',
+    'master',
+    null,                                                        // ggufRemoteName
+    null,                                                        // mmprojRemoteName
+    null,                                                        // acousticRemoteName
+    'https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-BaseLM-Q4_K_M.gguf',
+    null,                                                        // directMmprojUrl
+    'https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-Acoustic-F16.gguf',
+    'd8cd571526464d225187d326caa289be',
+    null,                                                        // mmprojMd5
+    '0f16229cfffe935102d21433f6969f8b'
   ),
 ];
 

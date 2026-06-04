@@ -62,6 +62,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createdWithLocale = LocaleManager.currentLanguage(this).tag
+
+        // If the selected model is a TTS model, redirect to TtsActivity immediately.
+        // The chat interface is only meaningful for LLM/VLM models.
+        if (shouldRedirectToTts()) {
+            startActivity(Intent(this, TtsActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
 
         // Edge-to-edge: pad the root content for status/nav bars and the IME
@@ -316,6 +325,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             btnImage.isEnabled = engine.isVisionSupported
         }
+    }
+
+    private fun shouldRedirectToTts(): Boolean {
+        val model = LlamaEngine.getSelectedModel(applicationContext)
+        return model.isTts
     }
 
     private fun updateUIForModelType() {
@@ -673,6 +687,13 @@ class MainActivity : AppCompatActivity() {
         if (createdWithLocale != null && createdWithLocale != currentTag) {
             isLocaleRestart = true
             LocaleManager.recreateSeamlessly(this)
+            return
+        }
+        // Re-check: if the model was switched to a TTS model while this
+        // activity was in the background, redirect to TtsActivity.
+        if (shouldRedirectToTts()) {
+            startActivity(Intent(this, TtsActivity::class.java))
+            finish()
             return
         }
         if (!::engine.isInitialized) return

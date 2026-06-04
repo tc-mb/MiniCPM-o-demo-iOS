@@ -193,12 +193,10 @@ extension MBSettingsViewController: UITableViewDataSource {
         
         switch section {
         case 0:
-            titleLabel.text = L.Settings.sectionMultimodal.loc
+            titleLabel.text = L.Settings.sectionTts.loc
         case 1:
-            titleLabel.text = L.Settings.sectionLanguageModel.loc
-        case 2:
             titleLabel.text = L.Settings.sectionFeature.loc
-        case 3:
+        case 2:
             titleLabel.text = L.Settings.sectionOther.loc
         default:
             titleLabel.text = ""
@@ -224,11 +222,11 @@ extension MBSettingsViewController: UITableViewDelegate {
         let model = dataArray[indexPath.section][indexPath.row]
         
         switch indexPath.section {
-        case 0, 1: // 多模态模型 / 语言模型
+        case 0: // TTS 模型
             handleModelSelection(model: model, at: indexPath)
-        case 2: // 功能设置
+        case 1: // 功能设置
             handleFeatureSelection(model: model, at: indexPath)
-        case 3: // 其他设置
+        case 2: // 其他设置
             handleOtherSettings(model: model, at: indexPath)
         default:
             break
@@ -273,6 +271,9 @@ extension MBSettingsViewController: UITableViewDelegate {
                 self.navigationController?.pushViewController(detailVC, animated: true)
             } else if title == "MiniCPM5-1B" {
                 let detailVC = MBV5ModelDetailViewController(with: mtmdWrapperExample)
+                self.navigationController?.pushViewController(detailVC, animated: true)
+            } else if title == MiniCPMModelConst.voxcpm2_DisplayedName {
+                let detailVC = MBVoxcpm2ModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
             }
         }
@@ -368,8 +369,9 @@ extension MBSettingsViewController {
     /// 配置列表数据用于展示 cell
     public func loadTableViewData() {
         dataArray.removeAll()
-        setupMultimodalModelSection()
-        setupLanguageModelSection()
+        // setupMultimodalModelSection()   // 暂时隐藏：新子模块适配中
+        // setupLanguageModelSection()     // 暂时隐藏：新子模块适配中
+        setupTtsModelSection()
         setupFeatureSettingsSection()
         setupOtherSettingsSection()
         
@@ -463,8 +465,31 @@ extension MBSettingsViewController {
         
         dataArray.append(section)
     }
-    
-    /// Section 2: 功能设置
+
+    /// Section 2: TTS 模型 (VoxCPM2)
+    private func setupTtsModelSection() {
+        var section = [MBSettingsModel]()
+
+        let currentSelectedModel = UserDefaults.standard.string(forKey: "current_selected_model")
+
+        let model = MBSettingsModel()
+        model.title = MiniCPMModelConst.voxcpm2_DisplayedName
+        model.icon = UIImage(systemName: "waveform.circle")
+        model.accessoryIcon = UIImage(named: "setting_accessory_icon")
+        model.selectedIcon = UIImage(systemName: "checkmark.circle.fill")
+
+        if currentSelectedModel == "Voxcpm2Model" {
+            model.status = "selected"
+            model.statusString = L.Settings.statusInUse.loc
+        } else {
+            model.status = "none"
+        }
+
+        section.append(model)
+        dataArray.append(section)
+    }
+
+    /// Section 3: 功能设置
     private func setupFeatureSettingsSection() {
         var section = [MBSettingsModel]()
         
@@ -522,6 +547,8 @@ extension MBSettingsViewController {
             mtmdWrapperExample?.currentUsingModelType = .V46MultiModel
         } else if currentSelectedModel == "V5TextModel" {
             mtmdWrapperExample?.currentUsingModelType = .V5TextModel
+        } else if currentSelectedModel == "Voxcpm2Model" {
+            mtmdWrapperExample?.currentUsingModelType = .Voxcpm2Model
         }
         
         // 完整重建数据源（loadTableViewData 内部 removeAll + append）

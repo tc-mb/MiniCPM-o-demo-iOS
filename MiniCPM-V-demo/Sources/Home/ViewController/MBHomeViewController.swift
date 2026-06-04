@@ -348,6 +348,18 @@ import llama
     /// 一律 reset + 重置 didStartInitialModelLoad + 立即触发 load。
     @objc private func handleModelSelectionChanged(_ notification: Notification) {
         debugLog("-->> 模型选择已变更，强制 reset + reload wrapper")
+
+        let current = UserDefaults.standard.string(forKey: "current_selected_model") ?? ""
+
+        // VoxCPM2 不需要 MTMD wrapper，直接切换界面模式
+        if current == "Voxcpm2Model" {
+            self.showTtsMode()
+            return
+        }
+
+        // 切回聊天模式
+        self.showChatMode()
+
         Task { @MainActor in
             await self.mtmdWrapperExample?.reset()
             self.didStartInitialModelLoad = false
@@ -361,6 +373,57 @@ import llama
 
         // 更新导航栏标题，确保从设置页返回时能同步最新的模型选择
         updateNavTitle()
+
+        // 根据模型类型切换界面模式
+        switchToCorrectMode()
+    }
+
+    /// TTS 子页面（当 VoxCPM2 被选中时嵌入为主内容）
+    var ttsViewController: TtsViewController?
+
+    /// 根据当前模型类型切换聊天界面 / TTS 界面
+    private func switchToCorrectMode() {
+        let current = UserDefaults.standard.string(forKey: "current_selected_model") ?? ""
+        if current == "Voxcpm2Model" {
+            showTtsMode()
+        } else {
+            showChatMode()
+        }
+    }
+
+    /// 切换到 TTS 模式：隐藏聊天 UI，显示 TTS 界面
+    private func showTtsMode() {
+        guard ttsViewController == nil else { return }
+
+        let ttsVC = TtsViewController()
+        addChild(ttsVC)
+        ttsVC.view.frame = view.bounds
+        ttsVC.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(ttsVC.view)
+        ttsVC.didMove(toParent: self)
+        ttsViewController = ttsVC
+
+        // 隐藏聊天相关视图
+        tableView.isHidden = true
+        inputContainerView.isHidden = true
+
+        updateNavTitle()
+    }
+
+    /// 切换回聊天模式：隐藏 TTS 界面，显示聊天 UI
+    private func showChatMode() {
+        guard let ttsVC = ttsViewController else { return }
+
+        ttsVC.willMove(toParent: nil)
+        ttsVC.view.removeFromSuperview()
+        ttsVC.removeFromParent()
+        ttsViewController = nil
+
+        // 恢复聊天相关视图
+        tableView.isHidden = false
+        inputContainerView.isHidden = false
+
+        updateNavTitle()
     }
 
     public override func viewDidAppear(_ animated: Bool) {
@@ -370,7 +433,11 @@ import llama
         // 都会再次回调 viewDidAppear，但模型加载只跑一次。
         if !didStartInitialModelLoad {
             didStartInitialModelLoad = true
-            checkMultiModelLoadStatusAndLoadIt()
+
+            let current = UserDefaults.standard.string(forKey: "current_selected_model") ?? ""
+            if current != "Voxcpm2Model" {
+                checkMultiModelLoadStatusAndLoadIt()
+            }
         }
     }
 
@@ -462,6 +529,13 @@ import llama
     /// 更新顶导标题
     func updateNavTitle() {
         let lastSelectedModelString = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
+        if lastSelectedModelString == "Voxcpm2Model" {
+            self.title = ""
+            if let label = navTitleLabel { label.text = "VoxCPM2"; label.sizeToFit() }
+            updateUIForModelType()
+            return
+        }
+
         let isTextOnly = (lastSelectedModelString == "V5TextModel")
         let brandName = isTextOnly ? "MiniCPM" : "MiniCPM-V"
 
@@ -505,21 +579,28 @@ import llama
         return key == "V5TextModel"
     }
 
+    /// 是否需要隐藏视觉相关 UI（纯文本 / TTS 模型）
+    var isSelectedModelNonVisual: Bool {
+        let key = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
+        return key == "V5TextModel" || key == "Voxcpm2Model"
+    }
+
     /// 根据当前模型类型（视觉 vs 纯文本）动态显示/隐藏 UI 元素
     func updateUIForModelType() {
         let isTextOnly = isSelectedModelTextOnly
+        let isNonVisual = isSelectedModelNonVisual
         
-        // 纯文本模型：隐藏图片选择按钮和图片切片设置按钮
-        chooseImageButton.isHidden = isTextOnly
+        // 非视觉模型：隐藏图片选择按钮和图片切片设置按钮
+        chooseImageButton.isHidden = isNonVisual
         
         // 更新顶导右侧按钮组（隐藏切图设置按钮）
         if let items = self.navigationItem.rightBarButtonItems {
             for item in items {
                 if item.action == #selector(imageSliceButtonTapped) {
-                    item.isHidden = isTextOnly
+                    item.isHidden = isNonVisual
                     if #unavailable(iOS 16.0) {
-                        item.isEnabled = !isTextOnly
-                        item.tintColor = isTextOnly ? .clear : .black
+                        item.isEnabled = !isNonVisual
+                        item.tintColor = isNonVisual ? .clear : .black
                     }
                 }
             }

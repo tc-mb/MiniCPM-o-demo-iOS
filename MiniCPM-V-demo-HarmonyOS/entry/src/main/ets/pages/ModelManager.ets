@@ -9,6 +9,7 @@ import resourceManager from '@ohos.resourceManager';
 
 import { LlamaEngine } from '../engine/LlamaEngine';
 import { LlamaState, LlamaStateName } from '../engine/LlamaState';
+import { TtsEngine, TtsState } from '../engine/TtsEngine';
 import {
   ModelInfo,
   AVAILABLE_MODELS,
@@ -31,11 +32,14 @@ struct ModelManager {
   @State downloading: boolean = false;
   @State downloadProgress: number = 0;
   @State loading: boolean = false;
+  @State isModelReady: boolean = false;
   @State currentLang: AppLanguage = AppLanguage.ZH;
   private loadingLock: boolean = false;
 
   private engine: LlamaEngine | null = null;
   private engineListener = (s: LlamaState) => this.onEngineState(s);
+  private ttsEngine: TtsEngine | null = null;
+  private ttsEngineListener = (s: TtsState) => this.onTtsEngineState(s);
   private resMgr: resourceManager.ResourceManager | null = null;
 
   private str(name: string): string {
@@ -45,15 +49,18 @@ struct ModelManager {
   aboutToAppear(): void {
     this.resMgr = getContext(this).resourceManager;
     this.engine = LlamaEngine.getInstance(getContext(this));
+    this.ttsEngine = TtsEngine.getInstance(getContext(this));
     const m = LlamaEngine.getSelectedModel(getContext(this));
     this.selectedId = m.id;
     this.modelExists = LlamaEngine.modelsExist(getContext(this));
     this.engine.addListener(this.engineListener);
+    this.ttsEngine.addListener(this.ttsEngineListener);
     this.currentLang = LocaleManager.currentLanguageSync();
   }
 
   aboutToDisappear(): void {
     if (this.engine) this.engine.removeListener(this.engineListener);
+    if (this.ttsEngine) this.ttsEngine.removeListener(this.ttsEngineListener);
   }
 
   // ------------------------------------------------------------------
@@ -63,11 +70,13 @@ struct ModelManager {
   private onEngineState(state: LlamaState): void {
     this.stateName = state.name;
     switch (state.name) {
-      case 'Uninitialized':           this.statusText = this.str('status_uninitialized'); break;
+      case 'Uninitialized':           this.statusText = this.str('status_uninitialized');
+                                       this.isModelReady = false; break;
       case 'Initializing':            this.statusText = this.str('status_initializing'); break;
       case 'Initialized':             this.statusText = this.str('status_initialized'); break;
       case 'LoadingModel':            this.statusText = this.str('status_loading'); break;
-      case 'ModelReady':              this.statusText = this.str('status_ready'); break;
+      case 'ModelReady':              this.statusText = this.str('status_ready');
+                                       this.isModelReady = true; break;
       case 'ProcessingSystemPrompt':
       case 'ProcessingUserPrompt':
       case 'Generating':              this.statusText = this.str('status_generating'); break;
@@ -77,6 +86,19 @@ struct ModelManager {
       default:                        this.statusText = ''; break;
     }
     this.modelExists = LlamaEngine.modelsExist(getContext(this));
+  }
+
+  private onTtsEngineState(state: TtsState): void {
+    switch (state.name) {
+      case 'Uninitialized':  this.statusText = this.str('status_uninitialized');
+                              this.isModelReady = false; break;
+      case 'LoadingModel':   this.statusText = this.str('status_loading'); break;
+      case 'Ready':          this.statusText = this.str('status_ready');
+                              this.isModelReady = true; break;
+      case 'Generating':     this.statusText = this.str('status_generating'); break;
+      case 'Error':          this.statusText = `${this.str('status_error')}: ${state.errorMessage ?? ''}`; break;
+      default:               this.statusText = ''; break;
+    }
   }
 
   // ------------------------------------------------------------------
@@ -105,7 +127,6 @@ struct ModelManager {
     try {
       await LlamaEngine.downloadModels(getContext(this), (msg) => {
         this.statusText = msg;
-        // Parse "XX%" from progress messages like "file.gguf: 42% (123/456 MB) [HuggingFace]"
         const pctMatch = msg.match(/(\d+)%/);
         if (pctMatch) {
           this.downloadProgress = parseInt(pctMatch[1], 10);
@@ -124,10 +145,20 @@ struct ModelManager {
   }
 
   private onClickLoad(): void {
-    if (!this.engine || this.loadingLock) return;
+    if (this.loadingLock) return;
     this.loadingLock = true;
 
     const ctx = getContext(this);
+    const selectedModel = LlamaEngine.getSelectedModel(ctx);
+
+    // TTS models (VoxCPM2): load both GGUF files via TtsEngine.
+    if (selectedModel.isTts) {
+      this.loadTtsModel();
+      return;
+    }
+
+    // Non-TTS: load via LlamaEngine.
+    if (!this.engine) { this.loadingLock = false; return; }
     const modelPath = LlamaEngine.modelPath(ctx);
     const mmprojPath = LlamaEngine.mmprojPath(ctx);
     if (!fs.accessSync(modelPath)) {
@@ -135,13 +166,11 @@ struct ModelManager {
       this.loadingLock = false;
       return;
     }
-    const isReload = this.stateName === 'ModelReady';
 
-    // Set @State immediately so the button greys out this frame.
+    const isReload = this.stateName === 'ModelReady';
     this.loading = true;
     this.statusText = this.str('status_loading');
 
-    // Defer the blocking native call by one frame so the UI re-renders first.
     setTimeout(async () => {
       try {
         if (isReload) {
@@ -160,6 +189,42 @@ struct ModelManager {
         this.loadingLock = false;
       }
     }, 50);
+  }
+
+  private loadTtsModel(): void {
+    if (!this.ttsEngine) { this.loadingLock = false; return; }
+    const ctx = getContext(this);
+    const baseLmPath = LlamaEngine.modelPath(ctx);
+    const acousticPath = LlamaEngine.acousticPath(ctx);
+
+    if (!fs.accessSync(baseLmPath) || !acousticPath || !fs.accessSync(acousticPath)) {
+      promptAction.showToast({ message: this.str('toast_model_not_found'), duration: 4000 });
+      this.loadingLock = false;
+      return;
+    }
+
+    const ttsState = this.ttsEngine.getCurrentState();
+    const isReload = ttsState.name === 'Ready';
+
+    this.loading = true;
+    this.statusText = this.str('status_loading');
+
+    (async () => {
+      try {
+        if (isReload) {
+          hilog.info(DOMAIN, TAG, 'Freeing existing VoxCPM2 runtime before reload');
+          await this.ttsEngine!.free();
+        }
+        await this.ttsEngine!.loadModel(baseLmPath, acousticPath);
+        promptAction.showToast({ message: this.str('toast_model_loaded'), duration: 1500 });
+      } catch (e) {
+        hilog.error(DOMAIN, TAG, 'TTS load failed: %{public}s', `${e}`);
+        this.statusText = this.str('toast_load_failed').replace('%s', `${e}`);
+      } finally {
+        this.loading = false;
+        this.loadingLock = false;
+      }
+    })();
   }
 
   private onClickDelete(): void {
@@ -357,7 +422,7 @@ struct ModelManager {
         .enabled(!this.modelExists && !this.downloading)
         .onClick(() => this.onClickDownload());
 
-      Button(this.loading ? this.str('status_loading') : (this.stateName === 'ModelReady' ? this.str('btn_reload') : this.str('btn_load')))
+      Button(this.loading ? this.str('status_loading') : (this.isModelReady ? this.str('btn_reload') : this.str('btn_load')))
         .layoutWeight(1).height(44)
         .backgroundColor(this.loading ? $r('app.color.surface_variant') : $r('app.color.primary'))
         .fontColor(this.loading ? $r('app.color.on_surface_variant') : $r('app.color.on_primary'))

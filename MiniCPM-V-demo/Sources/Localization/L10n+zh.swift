@@ -36,6 +36,7 @@ extension LocalizationManager {
         L.Settings.title:                "设置",
         L.Settings.sectionMultimodal:    "多模态模型管理",
         L.Settings.sectionLanguageModel: "语言模型管理",
+        L.Settings.sectionTts:           "语音合成模型",
         L.Settings.sectionFeature:       "功能设置",
         L.Settings.sectionOther:         "其他设置",
 
@@ -279,6 +280,51 @@ extension LocalizationManager {
         L.Viewer.saveSuccess:            "已保存",
         L.Viewer.saveFailedNoPermission: "保存失败：无相册访问权限",
         L.Viewer.saveFailedGeneric:      "保存失败",
+
+        // MARK: TTS
+
+        L.Tts.title:              "VoxCPM2 语音合成",
+        L.Tts.navModelManager:    "模型管理",
+
+        L.Tts.textPlaceholder:    "请输入要合成的文本…",
+
+        L.Tts.labelRefAudio:      "参考音频（可选）",
+        L.Tts.btnPresetFemale:    "默认女声",
+        L.Tts.btnPresetMale:      "默认男声",
+        L.Tts.btnRecord:          "录音",
+        L.Tts.btnStopRecord:      "停止录音",
+        L.Tts.btnPlayRef:         "试听",
+        L.Tts.btnClearRef:        "清除",
+        L.Tts.statusRefRecorded:  "录制完成：%.1f 秒 / %d KB",
+        L.Tts.statusRecording:    "正在录音…",
+        L.Tts.statusPresetLoaded: "已加载预设声音",
+        L.Tts.statusNoRef:        "未选择参考音频",
+
+        L.Tts.labelCfg:           "CFG 引导强度",
+        L.Tts.labelTimesteps:     "推理步数",
+        L.Tts.hintTimestepsHigh:  "注意：步数 > 8 时，手机端生成可能较慢",
+
+        L.Tts.btnGenerate:        "生成",
+        L.Tts.btnCancel:          "取消生成",
+        L.Tts.statusLoadingModel: "模型加载中…",
+        L.Tts.statusGenerating:   "正在生成语音…",
+        L.Tts.statusCancelled:    "已取消",
+        L.Tts.statusReady:        "就绪",
+
+        L.Tts.toastGenerateDone:  "语音生成完成",
+        L.Tts.toastGenerateFailed: "语音生成失败",
+        L.Tts.toastPlayFailed:    "播放失败: %@",
+        L.Tts.toastCancelled:     "生成已取消",
+
+        L.Tts.alertTextEmpty:     "请输入要合成的文本",
+        L.Tts.alertModelMissing:  "缺少模型文件，请先下载 VoxCPM2 模型",
+        L.Tts.alertGoDownload:    "前往下载",
+        L.Tts.alertRecordPermissionDenied: "无麦克风权限，请在系统设置中开启",
+        L.Tts.presetFailed:       "加载预设失败: %@",
+
+        L.Tts.playbackTitle:      "生成结果",
+        L.Tts.guide:              "输入文本即可合成语音，支持 30 种语言 + 9 种方言。\nCFG 控制生成质量，推理步数越大音质越佳但速度更慢。",
+        L.Tts.subtitle:           "文本转语音 · 语音设计与克隆",
 
         // MARK: HUD
 

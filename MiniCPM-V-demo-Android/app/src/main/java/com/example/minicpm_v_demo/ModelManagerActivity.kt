@@ -88,7 +88,7 @@ class ModelManagerActivity : AppCompatActivity() {
     private fun setupModelList() {
         val selectedModel = LlamaEngine.getSelectedModel(this)
         modelAdapter = ModelAdapter(
-            models = ModelInfo.AVAILABLE_MODELS,
+            models = ModelInfo.AVAILABLE_MODELS.filter { it.id == "voxcpm2" },
             selectedModelId = selectedModel.id,
             onModelSelected = { model ->
                 val previousModelId = LlamaEngine.getSelectedModel(this).id
@@ -302,6 +302,14 @@ class ModelManagerActivity : AppCompatActivity() {
     }
 
     private fun loadSelectedModel() {
+        val model = LlamaEngine.getSelectedModel(applicationContext)
+        // TTS models are loaded on-demand by TtsActivity, not via LlamaEngine.
+        if (model.isTts) {
+            LlamaEngine.markModelSwitched(applicationContext)
+            finish() // return to parent; MainActivity will redirect
+            return
+        }
+
         val currentState = engine.state.value
         if (currentState is LlamaState.LoadingModel) {
             Toast.makeText(this, R.string.toast_already_loading, Toast.LENGTH_SHORT).show()
@@ -379,6 +387,9 @@ class ModelManagerActivity : AppCompatActivity() {
                 var deleted = false
                 File(modelPath).let { if (it.exists()) { it.delete(); deleted = true } }
                 mmprojPath?.let { File(it) }?.let { if (it.exists()) { it.delete(); deleted = true } }
+                // Also delete the acoustic GGUF for TTS models
+                val acousticPath = LlamaEngine.acousticPath(applicationContext)
+                acousticPath?.let { File(it) }?.let { if (it.exists()) { it.delete(); deleted = true } }
 
                 withContext(Dispatchers.Main) {
                     updateLoadButtonState()

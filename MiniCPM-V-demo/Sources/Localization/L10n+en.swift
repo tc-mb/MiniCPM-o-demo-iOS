@@ -39,6 +39,7 @@ extension LocalizationManager {
         L.Settings.title:                "Settings",
         L.Settings.sectionMultimodal:    "Multimodal Models",
         L.Settings.sectionLanguageModel: "Language Models",
+        L.Settings.sectionTts:           "TTS Model",
         L.Settings.sectionFeature:       "Features",
         L.Settings.sectionOther:         "Other",
 
@@ -282,6 +283,51 @@ extension LocalizationManager {
         L.Viewer.saveSuccess:            "Saved",
         L.Viewer.saveFailedNoPermission: "Save failed: no Photos access",
         L.Viewer.saveFailedGeneric:      "Save failed",
+
+        // MARK: TTS
+
+        L.Tts.title:              "VoxCPM2 TTS",
+        L.Tts.navModelManager:    "Models",
+
+        L.Tts.textPlaceholder:    "Enter text to synthesize…",
+
+        L.Tts.labelRefAudio:      "Reference Audio (optional)",
+        L.Tts.btnPresetFemale:    "Default Female",
+        L.Tts.btnPresetMale:      "Default Male",
+        L.Tts.btnRecord:          "Record",
+        L.Tts.btnStopRecord:      "Stop",
+        L.Tts.btnPlayRef:         "Preview",
+        L.Tts.btnClearRef:        "Clear",
+        L.Tts.statusRefRecorded:  "Recorded: %.1f s / %d KB",
+        L.Tts.statusRecording:    "Recording…",
+        L.Tts.statusPresetLoaded: "Preset loaded",
+        L.Tts.statusNoRef:        "No reference audio",
+
+        L.Tts.labelCfg:           "CFG Scale",
+        L.Tts.labelTimesteps:     "Inference Steps",
+        L.Tts.hintTimestepsHigh:  "Note: steps > 8 may be slow on mobile",
+
+        L.Tts.btnGenerate:        "Generate",
+        L.Tts.btnCancel:          "Cancel",
+        L.Tts.statusLoadingModel: "Loading model…",
+        L.Tts.statusGenerating:   "Generating speech…",
+        L.Tts.statusCancelled:    "Cancelled",
+        L.Tts.statusReady:        "Ready",
+
+        L.Tts.toastGenerateDone:  "Speech generated",
+        L.Tts.toastGenerateFailed: "Generation failed",
+        L.Tts.toastPlayFailed:    "Playback failed: %@",
+        L.Tts.toastCancelled:     "Generation cancelled",
+
+        L.Tts.alertTextEmpty:     "Please enter text to synthesize",
+        L.Tts.alertModelMissing:  "Model files missing. Please download VoxCPM2 first.",
+        L.Tts.alertGoDownload:    "Go to download",
+        L.Tts.alertRecordPermissionDenied: "Microphone access denied. Please enable in Settings.",
+        L.Tts.presetFailed:       "Failed to load preset: %@",
+
+        L.Tts.playbackTitle:      "Result",
+        L.Tts.guide:              "Enter text to synthesize speech in 30 languages + 9 dialects.\nCFG controls quality; more steps = better but slower.",
+        L.Tts.subtitle:           "Text-to-Speech · Voice Design & Cloning",
 
         // MARK: HUD
 

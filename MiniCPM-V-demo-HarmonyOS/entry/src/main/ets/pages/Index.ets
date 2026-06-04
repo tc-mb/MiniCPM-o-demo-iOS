@@ -100,8 +100,6 @@ struct Index {
     this.engine = LlamaEngine.getInstance(getContext(this));
     this.messageList.push(ChatMessage.welcome());
     this.engine.addListener(this.engineListener);
-    // Warm the slice-cap cache so the dialog shows the persisted value
-    // on first open without flickering through the default.
     LlamaEngine.getImageMaxSliceNums(getContext(this)).then((v: number) => {
       this.imageMaxSlice = v;
     });

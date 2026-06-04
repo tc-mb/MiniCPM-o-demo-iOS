@@ -34,20 +34,28 @@ data class ModelInfo(
     val descriptionResName: String,
     val ggufFileName: String,
     val mmprojFileName: String? = null,
+    val acousticFileName: String? = null,
     val hfRepo: String? = null,
     val msRepo: String? = null,
     val hfBranch: String = "main",
     val msBranch: String = "master",
     val ggufRemoteName: String? = null,
     val mmprojRemoteName: String? = null,
+    val acousticRemoteName: String? = null,
     val directGgufUrl: String? = null,
     val directMmprojUrl: String? = null,
+    val directAcousticUrl: String? = null,
     val ggufMd5: String? = null,
-    val mmprojMd5: String? = null
+    val mmprojMd5: String? = null,
+    val acousticMd5: String? = null
 ) {
     /** True for text-only models that have no vision projector. */
     val isTextOnly: Boolean
-        get() = mmprojFileName == null
+        get() = mmprojFileName == null && acousticFileName == null
+
+    /** True for TTS (text-to-speech) models with acoustic component. */
+    val isTts: Boolean
+        get() = acousticFileName != null
 
     fun getDescription(context: Context): String {
         val resId = context.resources.getIdentifier(descriptionResName, "string", context.packageName)
@@ -61,6 +69,10 @@ data class ModelInfo(
     /** Path segment to request on HF/MS for the mmproj, falling back to local name. */
     val mmprojRemotePath: String?
         get() = mmprojFileName?.let { mmprojRemoteName ?: it }
+
+    /** Path segment to request on HF/MS for the acoustic GGUF, falling back to local name. */
+    val acousticRemotePath: String?
+        get() = acousticFileName?.let { acousticRemoteName ?: it }
 
     /** Whether the model registers a direct (non-HF/MS) mirror URL for all required files. */
     val hasDirectUrls: Boolean
@@ -128,6 +140,25 @@ data class ModelInfo(
                 msRepo = "OpenBMB/MiniCPM5-1B-GGUF"
                 // No MD5 here on purpose: HF / ModelScope serve via git-LFS
                 // which already provides hash-based integrity checks.
+            ),
+            // VoxCPM2 — text-to-speech model, ~2B params, 48kHz output.
+            // Two GGUF files: a BaseLM (the MiniCPM-4 based language model)
+            // and an Acoustic bundle (FSQ + ResidualLM + LocEnc + LocDiT +
+            // AudioVAE V2 + stop predictor + projections). Both are loaded
+            // by VoxCPM2Runtime in llama.cpp-omni tools/omni/voxcpm2/.
+            // Temporarily served from Huawei OBS while HF/MS only have
+            // PyTorch weights; switch to hfRepo/msRepo once pre-converted
+            // GGUF repos are published.
+            ModelInfo(
+                id = "voxcpm2",
+                displayName = "VoxCPM2",
+                descriptionResName = "model_desc_voxcpm2",
+                ggufFileName = "VoxCPM2-BaseLM-Q4_K_M.gguf",
+                acousticFileName = "VoxCPM2-Acoustic-F16.gguf",
+                directGgufUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-BaseLM-Q4_K_M.gguf",
+                directAcousticUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-Acoustic-F16.gguf",
+                ggufMd5 = "d8cd571526464d225187d326caa289be",
+                acousticMd5 = "0f16229cfffe935102d21433f6969f8b"
             )
         )
 

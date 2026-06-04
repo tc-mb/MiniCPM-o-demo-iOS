@@ -18,24 +18,25 @@ export default class EntryAbility extends UIAbility {
   async onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): Promise<void> {
     hilog.info(DOMAIN, TAG, 'Ability onCreate (launchReason=%{public}d)',
                launchParam.launchReason);
-    // Apply persisted locale before any UI renders (must complete before
-    // onWindowStageCreate so the first page uses the correct language).
     await LocaleManager.applyOnAppStart(this.context);
     LlamaEngine.migrateLegacyLayoutIfNeeded(this.context);
-    LlamaEngine.warmSelectedId(this.context);
   }
 
   onDestroy(): void {
     hilog.info(DOMAIN, TAG, 'Ability onDestroy');
   }
 
+  // Temporary: lock to TtsPage while debugging VoxCPM2 integration.
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    windowStage.loadContent('pages/Index', (err) => {
+    const page = 'pages/TtsPage';
+    hilog.info(DOMAIN, TAG, 'Loading initial page: %{public}s', page);
+    windowStage.loadContent(page, (err) => {
       if (err.code) {
-        hilog.error(DOMAIN, TAG, 'loadContent failed: %{public}s', JSON.stringify(err));
+        hilog.error(DOMAIN, TAG, 'loadContent failed for %{public}s: %{public}s',
+                   page, JSON.stringify(err));
         return;
       }
-      hilog.info(DOMAIN, TAG, 'Index page loaded');
+      hilog.info(DOMAIN, TAG, '%{public}s loaded', page);
     });
   }
 

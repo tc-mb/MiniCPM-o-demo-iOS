@@ -47,6 +47,7 @@ public enum L {
 
         public static let sectionMultimodal  = "settings.section.multimodal"
         public static let sectionLanguageModel = "settings.section.languageModel"
+        public static let sectionTts         = "settings.section.tts"
         public static let sectionFeature     = "settings.section.feature"
         public static let sectionOther       = "settings.section.other"
 
@@ -383,6 +384,60 @@ public enum L {
         public static let saveSuccess        = "viewer.save.success"
         public static let saveFailedNoPermission = "viewer.save.failedNoPermission"
         public static let saveFailedGeneric  = "viewer.save.failedGeneric"
+    }
+
+    // MARK: - TTS (Text-to-Speech / VoxCPM2)
+
+    public enum Tts {
+        public static let title              = "tts.title"
+        public static let navModelManager    = "tts.nav.modelManager"
+
+        // Input
+        public static let textPlaceholder    = "tts.text.placeholder"
+
+        // Reference audio
+        public static let labelRefAudio      = "tts.label.refAudio"
+        public static let btnPresetFemale    = "tts.btn.presetFemale"
+        public static let btnPresetMale      = "tts.btn.presetMale"
+        public static let btnRecord          = "tts.btn.record"
+        public static let btnStopRecord      = "tts.btn.stopRecord"
+        public static let btnPlayRef         = "tts.btn.playRef"
+        public static let btnClearRef        = "tts.btn.clearRef"
+        public static let statusRefRecorded  = "tts.status.refRecorded"
+        public static let statusRecording    = "tts.status.recording"
+        public static let statusPresetLoaded = "tts.status.presetLoaded"
+        public static let statusNoRef        = "tts.status.noRef"
+
+        // Parameters
+        public static let labelCfg           = "tts.label.cfg"
+        public static let labelTimesteps     = "tts.label.timesteps"
+        public static let hintTimestepsHigh  = "tts.hint.timestepsHigh"
+
+        // Generation
+        public static let btnGenerate        = "tts.btn.generate"
+        public static let btnCancel          = "tts.btn.cancel"
+        public static let statusLoadingModel = "tts.status.loadingModel"
+        public static let statusGenerating   = "tts.status.generating"
+        public static let statusCancelled    = "tts.status.cancelled"
+        public static let statusReady        = "tts.status.ready"
+
+        // Results
+        public static let toastGenerateDone  = "tts.toast.generateDone"
+        public static let toastGenerateFailed = "tts.toast.generateFailed"
+        public static let toastPlayFailed    = "tts.toast.playFailed"
+        public static let toastCancelled     = "tts.toast.cancelled"
+
+        // Errors / alerts
+        public static let alertTextEmpty     = "tts.alert.textEmpty"
+        public static let alertModelMissing  = "tts.alert.modelMissing"
+        public static let alertGoDownload    = "tts.alert.goDownload"
+        public static let alertRecordPermissionDenied = "tts.alert.recordPermissionDenied"
+        public static let presetFailed       = "tts.alert.presetFailed"
+
+        // Playback
+        public static let playbackTitle      = "tts.playback.title"
+        public static let guide              = "tts.guide"
+        public static let subtitle           = "tts.subtitle"
     }
 
     // MARK: - Misc HUD / utility messages

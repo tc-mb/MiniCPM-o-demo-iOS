@@ -213,5 +213,32 @@ struct MiniCPMModelConst {
 
     /// V4.6 ANE zip md5（demo 分支重转：基于 ckpt/MiniCPM-V-4_6 封板权重 + HF 命名映射）
     static let mlmodelcv46_ZipFileMD5 = "4ea0fbdb9b975e411b0faf478beb1d84"
-    
+
+
+    // MARK: - VoxCPM2 语音合成模型
+
+    /// VoxCPM2 BaseLM GGUF 文件名（~953 MB，Q4_K_M 量化）
+    static let voxcpm2_BaseLMFileName = "VoxCPM2-BaseLM-Q4_K_M.gguf"
+
+    /// VoxCPM2 BaseLM 显示名
+    static let voxcpm2_BaseLMDisplayedName = "VoxCPM2 BaseLM Q4_K_M"
+
+    /// VoxCPM2 BaseLM 下载地址（华为云 OBS）
+    static let voxcpm2_BaseLMURLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-BaseLM-Q4_K_M.gguf"
+
+    /// VoxCPM2 BaseLM Q4_K_M gguf 文件 md5 值
+    static let voxcpm2_BaseLMMD5 = "d8cd571526464d225187d326caa289be"
+
+    /// VoxCPM2 Acoustic GGUF 文件名（~1.7 GB）
+    static let voxcpm2_AcousticFileName = "VoxCPM2-Acoustic-F16.gguf"
+
+    /// VoxCPM2 Acoustic 显示名
+    static let voxcpm2_AcousticDisplayedName = "VoxCPM2 Acoustic"
+
+    /// VoxCPM2 Acoustic 下载地址（华为云 OBS）
+    static let voxcpm2_AcousticURLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-Acoustic-F16.gguf"
+
+    /// VoxCPM2 整体显示名
+    static let voxcpm2_DisplayedName = "VoxCPM2 (TTS)"
+
 }

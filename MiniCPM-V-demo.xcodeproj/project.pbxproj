@@ -7,9 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03436843C9704629BE16C117 /* L10n+en.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AC61316661440CAD95AE6F /* L10n+en.swift */; };
 		3366E2325A23FF06A8B96A47 /* MiniCPMVDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F25F021539AC65840465A5F /* MiniCPMVDemoUITests.swift */; };
 		458A103C0E3240538FD649B1 /* MBDeviceMemoryProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */; };
 		49C5B2C8979B45C7A82F9587 /* MBHomeViewController+Warmup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8593FABEABC4C72ABE22E51 /* MBHomeViewController+Warmup.swift */; };
+		5230E9C56E234D60B1609240 /* L10n+zh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E2BDD485E34482BA0BF270A /* L10n+zh.swift */; };
+		775C12B5B2C742D88589D6AB /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FE26B4CBA446DAA06E91E4 /* L10n.swift */; };
+		C966CBF435FB411A8E9880CF /* L10nKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B54051DFB04A71A4236566 /* L10nKeys.swift */; };
 		DDE74EEEC8CC4246A56C7F07 /* MBMtmd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */; };
 		EFDEF5FABE846D201022133E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E0BCC40C9E47CA8BD9C356 /* Foundation.framework */; };
 		FA1ED0A52E2259DD00370614 /* MBImageVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1ED09F2E2259DD00370614 /* MBImageVideoViewController.swift */; };
@@ -50,10 +54,6 @@
 		FA8511352E20DCC000748053 /* MBSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8511322E20DCC000748053 /* MBSettingsViewController.swift */; };
 		FA8511372E20DCC000748053 /* MBSettingsTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8511302E20DCC000748053 /* MBSettingsTableViewCell.swift */; };
 		FA8511382E20DCC000748053 /* MBSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85112F2E20DCC000748053 /* MBSettingsModel.swift */; };
-		775C12B5B2C742D88589D6AB /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FE26B4CBA446DAA06E91E4 /* L10n.swift */; };
-		C966CBF435FB411A8E9880CF /* L10nKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B54051DFB04A71A4236566 /* L10nKeys.swift */; };
-		5230E9C56E234D60B1609240 /* L10n+zh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E2BDD485E34482BA0BF270A /* L10n+zh.swift */; };
-		03436843C9704629BE16C117 /* L10n+en.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AC61316661440CAD95AE6F /* L10n+en.swift */; };
 		FA85113B2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */; };
 		FA9AB0022F03000200E00002 /* MiniCPMV46CoreMLBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0012F03000100E00001 /* MiniCPMV46CoreMLBootstrap.swift */; };
 		FA9AB0112F03000200E00011 /* MarkdownEscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9AB0102F03000200E00010 /* MarkdownEscape.swift */; };
@@ -103,6 +103,16 @@
 		FB100A032E2D000100000003 /* MBTutorialModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB100A022E2D000100000002 /* MBTutorialModel.swift */; };
 		FB100A052E2D000100000005 /* MBTutorialCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB100A042E2D000100000004 /* MBTutorialCell.swift */; };
 		FB100A072E2D000100000007 /* MBTutorialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB100A062E2D000100000006 /* MBTutorialViewController.swift */; };
+		FEF20001AAAAABBBCCCCDDDD01 /* TtsBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = FEF10001AAAAABBBCCCCDDDD01 /* TtsBridge.h */; };
+		FEF20002AAAAABBBCCCCDDDD02 /* TtsBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = FEF10002AAAAABBBCCCCDDDD02 /* TtsBridge.mm */; };
+		FEF20003AAAAABBBCCCCDDDD03 /* TtsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10003AAAAABBBCCCCDDDD03 /* TtsEngine.swift */; };
+		FEF20004AAAAABBBCCCCDDDD04 /* MBAudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10004AAAAABBBCCCCDDDD04 /* MBAudioRecorder.swift */; };
+		FEF20005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift */; };
+		FEF20006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift */; };
+		FEF20007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift */; };
+		FEF20008AAAAABBBCCCCDDDD08 /* TtsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10008AAAAABBBCCCCDDDD08 /* TtsViewController.swift */; };
+		FEF20009AAAAABBBCCCCDDDD09 /* 默认女声.wav in Resources */ = {isa = PBXBuildFile; fileRef = FEF10009AAAAABBBCCCCDDDD09 /* 默认女声.wav */; };
+		FEF2000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav in Resources */ = {isa = PBXBuildFile; fileRef = FEF1000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -130,9 +140,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		28FE26B4CBA446DAA06E91E4 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MBMtmd.mm; sourceTree = "<group>"; };
+		3E2BDD485E34482BA0BF270A /* L10n+zh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "L10n+zh.swift"; sourceTree = "<group>"; };
 		41EAA1C52A18439AB99C85E0 /* MBMtmd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBMtmd.h; sourceTree = "<group>"; };
 		5F25F021539AC65840465A5F /* MiniCPMVDemoUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MiniCPMVDemoUITests.swift; sourceTree = "<group>"; };
+		60AC61316661440CAD95AE6F /* L10n+en.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "L10n+en.swift"; sourceTree = "<group>"; };
+		99B54051DFB04A71A4236566 /* L10nKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10nKeys.swift; sourceTree = "<group>"; };
 		9D8A8C88B527B4A43C321E8F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D8593FABEABC4C72ABE22E51 /* MBHomeViewController+Warmup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MBHomeViewController+Warmup.swift"; sourceTree = "<group>"; };
 		DD9DD7843ABE4A64A84DDE09 /* MBDeviceMemoryProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBDeviceMemoryProbe.swift; sourceTree = "<group>"; };
@@ -177,10 +191,6 @@
 		FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV26ModelDetailViewController.swift; sourceTree = "<group>"; };
 		FA845F2D2C2EC20800695029 /* NSTextAttachment+MBPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSTextAttachment+MBPath.swift"; sourceTree = "<group>"; };
 		FA85112F2E20DCC000748053 /* MBSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsModel.swift; sourceTree = "<group>"; };
-		28FE26B4CBA446DAA06E91E4 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
-		99B54051DFB04A71A4236566 /* L10nKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10nKeys.swift; sourceTree = "<group>"; };
-		3E2BDD485E34482BA0BF270A /* L10n+zh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "L10n+zh.swift"; sourceTree = "<group>"; };
-		60AC61316661440CAD95AE6F /* L10n+en.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "L10n+en.swift"; sourceTree = "<group>"; };
 		FA8511302E20DCC000748053 /* MBSettingsTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsTableViewCell.swift; sourceTree = "<group>"; };
 		FA8511322E20DCC000748053 /* MBSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBSettingsViewController.swift; sourceTree = "<group>"; };
 		FA85113A2E20E52C00748053 /* MBRealtimeUnderstandingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBRealtimeUnderstandingViewController.swift; sourceTree = "<group>"; };
@@ -235,6 +245,16 @@
 		FB100A022E2D000100000002 /* MBTutorialModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBTutorialModel.swift; sourceTree = "<group>"; };
 		FB100A042E2D000100000004 /* MBTutorialCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBTutorialCell.swift; sourceTree = "<group>"; };
 		FB100A062E2D000100000006 /* MBTutorialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBTutorialViewController.swift; sourceTree = "<group>"; };
+		FEF10001AAAAABBBCCCCDDDD01 /* TtsBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TtsBridge.h; sourceTree = "<group>"; };
+		FEF10002AAAAABBBCCCCDDDD02 /* TtsBridge.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TtsBridge.mm; sourceTree = "<group>"; };
+		FEF10003AAAAABBBCCCCDDDD03 /* TtsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TtsEngine.swift; sourceTree = "<group>"; };
+		FEF10004AAAAABBBCCCCDDDD04 /* MBAudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBAudioRecorder.swift; sourceTree = "<group>"; };
+		FEF10005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBAudioPlayer.swift; sourceTree = "<group>"; };
+		FEF10006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBVoxcpm2ModelDownloadManager.swift; sourceTree = "<group>"; };
+		FEF10007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBVoxcpm2ModelDetailViewController.swift; sourceTree = "<group>"; };
+		FEF10008AAAAABBBCCCCDDDD08 /* TtsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TtsViewController.swift; sourceTree = "<group>"; };
+		FEF10009AAAAABBBCCCCDDDD09 /* 默认女声.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "默认女声.wav"; sourceTree = "<group>"; };
+		FEF1000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "默认男声.wav"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -262,6 +282,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0989B383FEFD4414AF588CEA /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				28FE26B4CBA446DAA06E91E4 /* L10n.swift */,
+				99B54051DFB04A71A4236566 /* L10nKeys.swift */,
+				3E2BDD485E34482BA0BF270A /* L10n+zh.swift */,
+				60AC61316661440CAD95AE6F /* L10n+en.swift */,
+			);
+			path = Localization;
+			sourceTree = "<group>";
+		};
 		6109448680CA2A74FD9D8E2A /* iOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -275,6 +306,8 @@
 			children = (
 				41EAA1C52A18439AB99C85E0 /* MBMtmd.h */,
 				383FC58F473E41FB8A3A8D0B /* MBMtmd.mm */,
+				FEF10001AAAAABBBCCCCDDDD01 /* TtsBridge.h */,
+				FEF10002AAAAABBBCCCCDDDD02 /* TtsBridge.mm */,
 			);
 			path = Bridge;
 			sourceTree = "<group>";
@@ -349,6 +382,16 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		FEF3000AAAAAAABBBCCCCDDDD0A /* ref_audios */ = {
+			isa = PBXGroup;
+			children = (
+				FEF10009AAAAABBBCCCCDDDD09 /* 默认女声.wav */,
+				FEF1000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav */,
+			);
+			path = ref_audios;
+			sourceTree = "<group>";
+		};
+
 		FA3FA2652C1176E80077F732 /* MiniCPM-V-demo */ = {
 			isa = PBXGroup;
 			children = (
@@ -362,6 +405,7 @@
 				FA3FA2672C1176E80077F733 /* SceneDelegate.swift */,
 				FA3FA26F2C1176E90077F732 /* Assets.xcassets */,
 				FA3FA2712C1176E90077F732 /* LaunchScreen.storyboard */,
+				FEF3000AAAAAAABBBCCCCDDDD0A /* ref_audios */,
 				FA3FA2932C118A980077F732 /* Sources */,
 			);
 			path = "MiniCPM-V-demo";
@@ -389,17 +433,6 @@
 				0989B383FEFD4414AF588CEA /* Localization */,
 			);
 			path = Sources;
-			sourceTree = "<group>";
-		};
-		0989B383FEFD4414AF588CEA /* Localization */ = {
-			isa = PBXGroup;
-			children = (
-				28FE26B4CBA446DAA06E91E4 /* L10n.swift */,
-				99B54051DFB04A71A4236566 /* L10nKeys.swift */,
-				3E2BDD485E34482BA0BF270A /* L10n+zh.swift */,
-				60AC61316661440CAD95AE6F /* L10n+en.swift */,
-			);
-			path = Localization;
 			sourceTree = "<group>";
 		};
 		FA49BA0D2C32A178005660C4 /* Extensions */ = {
@@ -449,6 +482,7 @@
 				FACAE97B2C410C6100C557D6 /* MBHomeViewController+LoadModel.swift */,
 				FA35EE742C4901D30099EDC0 /* MBHomeViewController+CaptureVideo.swift */,
 				FA9AB0302F03000200E00030 /* MBImageSliceSettingAlert.swift */,
+				FEF10008AAAAABBBCCCCDDDD08 /* TtsViewController.swift */,
 			);
 			path = ViewController;
 			sourceTree = "<group>";
@@ -524,6 +558,7 @@
 				FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */,
 				FA812D2C2E21FC80000CE131 /* MBV46ModelDetailViewController.swift */,
 				FAA610F148B7DE4F44AEBF62 /* MBV5ModelDetailViewController.swift */,
+				FEF10007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift */,
 			);
 			path = ModelDetail;
 			sourceTree = "<group>";
@@ -567,6 +602,7 @@
 				FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */,
 				FAA3C9772E220C30007FAD29 /* MBV46ModelDownloadManager.swift */,
 				FA2CE11E1B73CD40A8A9DF3A /* MBV5ModelDownloadManager.swift */,
+				FEF10006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift */,
 			);
 			path = DownloadManager;
 			sourceTree = "<group>";
@@ -599,6 +635,7 @@
 			isa = PBXGroup;
 			children = (
 				FAC2A1D52C11B32500499465 /* MBChatModel.swift */,
+				FEF10003AAAAABBBCCCCDDDD03 /* TtsEngine.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -646,6 +683,8 @@
 				FA9AB0102F03000200E00010 /* MarkdownEscape.swift */,
 				FA9AB0142F03000200E00014 /* MarkdownRenderer.swift */,
 				FA9AB0202F03000200E00020 /* ImageSliceSetting.swift */,
+				FEF10004AAAAABBBCCCCDDDD04 /* MBAudioRecorder.swift */,
+				FEF10005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -711,6 +750,17 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		FEF30001AAAAABBBCCCCDDDD01 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEF20001AAAAABBBCCCCDDDD01 /* TtsBridge.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		61AA8BF3A14092AEC1EBC31E /* MiniCPM-V-demoUITests */ = {
 			isa = PBXNativeTarget;
@@ -738,6 +788,7 @@
 				FA3FA2602C1176E80077F732 /* Frameworks */,
 				FA3FA2612C1176E80077F732 /* Resources */,
 				FA402A882C92D37C00E49E51 /* Embed Frameworks */,
+				FEF30001AAAAABBBCCCCDDDD01 /* Headers */,
 			);
 			buildRules = (
 			);
@@ -810,6 +861,8 @@
 				FAA1F00E2E2A223800088528 /* PrivacyInfo.xcprivacy in Resources */,
 				FA3FA2702C1176E90077F732 /* Assets.xcassets in Resources */,
 				FA3FA2732C1176E90077F732 /* Base in Resources */,
+				FEF20009AAAAABBBCCCCDDDD09 /* 默认女声.wav in Resources */,
+				FEF2000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -912,6 +965,13 @@
 				FAC2A1DB2C11B3DD00499465 /* MBImageTableViewCell.swift in Sources */,
 				FAEFA8142C48BAD3009C2AEF /* SwiftyCameraRecordButton.swift in Sources */,
 				FAEFA8132C48BAD3009C2AEF /* SwiftyCameraPreviewPhotoViewController.swift in Sources */,
+				FEF20002AAAAABBBCCCCDDDD02 /* TtsBridge.mm in Sources */,
+				FEF20003AAAAABBBCCCCDDDD03 /* TtsEngine.swift in Sources */,
+				FEF20004AAAAABBBCCCCDDDD04 /* MBAudioRecorder.swift in Sources */,
+				FEF20005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift in Sources */,
+				FEF20006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift in Sources */,
+				FEF20007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift in Sources */,
+				FEF20008AAAAABBBCCCCDDDD08 /* TtsViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1124,7 +1184,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2.2;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = VGXUYC2C5K;
+				DEVELOPMENT_TEAM = 9U8AMZR6FN;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -1156,7 +1216,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 				);
 				MARKETING_VERSION = 2.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tianchi.minicpmvdemo;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tianchi.minicpmvdemo-voxcpm";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1179,7 +1239,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2.2;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = VGXUYC2C5K;
+				DEVELOPMENT_TEAM = 9U8AMZR6FN;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -1211,7 +1271,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 				);
 				MARKETING_VERSION = 2.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tianchi.minicpmvdemo;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tianchi.minicpmvdemo-voxcpm";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;

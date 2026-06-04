@@ -117,6 +117,42 @@
     { "name": "download_source_failed_detail", "value": "%s download failed: %s" },
 
     { "name": "settings_language", "value": "Language" },
-    { "name": "language_picker_title", "value": "Choose Language" }
+    { "name": "language_picker_title", "value": "Choose Language" },
+
+    { "name": "permission_microphone_reason", "value": "Record reference audio for voice cloning" },
+    { "name": "page_title_tts", "value": "Voice Synthesis" },
+    { "name": "tts_title_brand", "value": "VoxCPM2" },
+    { "name": "tts_subtitle", "value": "Text-to-Speech · Voice Design & Cloning" },
+    { "name": "model_desc_voxcpm2", "value": "Text-to-speech model with voice design and cloning (~2B)" },
+
+    { "name": "tts_text_label", "value": "Input Text" },
+    { "name": "tts_voice_design_hint", "value": "Voice Design: (A gentle female voice)Hello world\nVoice Cloning: Enter text to synthesize; provide a reference audio" },
+    { "name": "tts_cfg_label", "value": "CFG Strength" },
+    { "name": "tts_steps_label", "value": "Inference Steps" },
+    { "name": "tts_steps_warning", "value": "Steps > 8 may be very slow" },
+
+    { "name": "tts_ref_audio_label", "value": "Reference Audio (Voice Cloning)" },
+    { "name": "tts_recording_item", "value": "Record" },
+    { "name": "tts_stop_recording_item", "value": "Stop Recording" },
+    { "name": "tts_recording", "value": "Recorded audio" },
+    { "name": "tts_preset_female", "value": "Default Female" },
+    { "name": "tts_preset_male", "value": "Default Male" },
+    { "name": "tts_ref_selected", "value": "Reference audio selected: %s" },
+    { "name": "tts_clear_ref", "value": "Clear" },
+
+    { "name": "tts_generate", "value": "Generate Voice" },
+    { "name": "tts_generating", "value": "Generating" },
+    { "name": "tts_generation_done", "value": "Voice generated" },
+    { "name": "tts_output_label", "value": "Output" },
+    { "name": "tts_play", "value": "Play" },
+    { "name": "tts_stop", "value": "Stop" },
+
+    { "name": "tts_empty_text", "value": "Please enter text to synthesize" },
+    { "name": "tts_no_output", "value": "No generated output" },
+
+    { "name": "toast_acoustic_file_missing", "value": "Acoustic model file not found. Please download first." },
+    { "name": "toast_record_failed", "value": "Recording failed. Check microphone permission." },
+    { "name": "toast_mic_permission_denied", "value": "Microphone permission is required to record" },
+    { "name": "toast_preset_load_failed", "value": "Failed to load preset audio" }
   ]
 }

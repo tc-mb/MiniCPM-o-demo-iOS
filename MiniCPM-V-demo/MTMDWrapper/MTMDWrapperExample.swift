@@ -29,11 +29,21 @@ enum CurrentUsingModelTypeV2 {
     case V46MultiModel
     /// MiniCPM 5 纯文本模型
     case V5TextModel
+    /// VoxCPM2 语音合成模型
+    case Voxcpm2Model
     
     /// 是否为纯文本模型（无 mmproj / 视觉模块）
     var isTextOnly: Bool {
         switch self {
         case .V5TextModel: return true
+        default: return false
+        }
+    }
+    
+    /// 是否为 TTS 模型（需要加载声学组件）
+    var isTts: Bool {
+        switch self {
+        case .Voxcpm2Model: return true
         default: return false
         }
     }
@@ -349,6 +359,7 @@ public class MTMDWrapperExample: ObservableObject {
         case .V4MultiModel:   version = 40
         case .V46MultiModel:  version = 46
         case .V5TextModel:    version = 5
+        case .Voxcpm2Model:  version = 0  // VoxCPM2 handled by TtsEngine, not MTMD
         case .Unknown:        version = 46
         }
         mtmdWrapper.setModelVersion(version)

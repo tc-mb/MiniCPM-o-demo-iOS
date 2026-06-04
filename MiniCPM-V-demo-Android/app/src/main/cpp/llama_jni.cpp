@@ -79,7 +79,6 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_minicpm_1v_1demo_LlamaEngine_init(JNIEnv *env, jobject /*unused*/, jstring nativeLibDir) {
     llama_log_set(minicpm_android_log_callback, nullptr);
-    mtmd_helper_log_set(minicpm_android_log_callback, nullptr);
 
     const auto *path_to_backend = env->GetStringUTFChars(nativeLibDir, 0);
     LOGi("Loading backends from %s", path_to_backend);
@@ -151,7 +150,6 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_loadMmproj(JNIEnv *env, jobject,
     // encode (before the user touches the slider) already respects it.
     // -1 = "use model default" (currently 9 for MiniCPM-V).
     g_image_max_slice_nums          = (jint) jimage_max_slice_nums;
-    mparams.image_max_slice_nums    = (jint) jimage_max_slice_nums;
 
     mparams.n_threads = N_THREADS;
 
@@ -212,11 +210,11 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_setImageMaxSliceNumsNative(JNIEnv 
                                                                         jobject,
                                                                         jint jn) {
     g_image_max_slice_nums = (int) jn;
-    if (g_ctx_vision) {
-        mtmd_set_image_max_slice_nums(g_ctx_vision, (int) jn);
-    }
-    LOGi("%s: image_max_slice_nums set to %d (live-applied to mtmd ctx=%p)",
-         __func__, g_image_max_slice_nums, (void*) g_ctx_vision);
+    // mtmd_set_image_max_slice_nums not available in this llama.cpp-omni
+    // branch; slice cap is configured at mmproj load time or via model
+    // defaults. The persisted value is still tracked for future use.
+    LOGi("%s: image_max_slice_nums set to %d (stored, mtmd live-update unavailable)",
+         __func__, g_image_max_slice_nums);
 }
 
 static llama_context *init_context(llama_model *model, const int n_ctx = DEFAULT_CONTEXT_SIZE) {

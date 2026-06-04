@@ -57,3 +57,14 @@ export const fullReset: () => void;
 export const cancelGeneration: () => void;
 export const unload: () => void;
 export const shutdown: () => void;
+
+// VoxCPM2 TTS (omni_napi.cpp)
+//   initOmni    — loads BaseLM + Acoustic GGUF files. Resolves to "OK" on success,
+//                 rejects with error message on failure.
+//   ttsGenerate — runs TTS inference. Resolves to "OK" on success,
+//                 rejects with error message on failure.
+//   ttsFree     — releases the VoxCPM2Runtime singleton.
+export const initOmni: (baseLmPath: string, acousticPath: string) => Promise<string>;
+export const ttsGenerate: (text: string, cfgValue: number, timesteps: number,
+                           refWavPath: string, outputPath: string) => Promise<string>;
+export const ttsFree: () => void;

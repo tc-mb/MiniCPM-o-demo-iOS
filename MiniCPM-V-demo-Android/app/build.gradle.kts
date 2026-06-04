@@ -34,11 +34,12 @@ android {
                 arguments += "-DCMAKE_BUILD_TYPE=Release"
                 arguments += "-DBUILD_SHARED_LIBS=ON"
                 arguments += "-DLLAMA_BUILD_COMMON=ON"
+                arguments += "-DLLAMA_BUILD_TOOLS=ON"
                 arguments += "-DLLAMA_OPENSSL=OFF"
 
                 arguments += "-DGGML_NATIVE=OFF"
                 arguments += "-DGGML_LLAMAFILE=ON"
-                arguments += "-DGGML_CPU_ARM_ARCH=armv8.2-a+dotprod+fp16"
+                arguments += "-DLLAMA_CURL=OFF"
             }
         }
     }
@@ -86,7 +87,7 @@ android {
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
+            version = "4.1.2"
         }
     }
     buildFeatures {
@@ -143,7 +144,7 @@ tasks.register("buildGgmlCpu_v86") {
     outputs.file(destSo)
 
     doLast {
-        val cmake = "$sdkRoot/cmake/3.22.1/bin/cmake"
+        val cmake = "$sdkRoot/cmake/4.1.2/bin/cmake"
         val toolchain = "$sdkRoot/ndk/27.0.12077973/build/cmake/android.toolchain.cmake"
         val bd = File(project.layout.buildDirectory.asFile.get(), "v86-cmake/arm64-v8a")
         bd.mkdirs()
@@ -157,6 +158,8 @@ tasks.register("buildGgmlCpu_v86") {
             "-DBUILD_SHARED_LIBS=ON",
             "-DLLAMA_BUILD_COMMON=ON",
             "-DLLAMA_OPENSSL=OFF",
+            "-DLLAMA_CURL=OFF",
+            "-DLLAMA_BUILD_TOOLS=ON",
             "-DGGML_NATIVE=OFF",
             "-DGGML_LLAMAFILE=ON",
             "-DGGML_CPU_ARM_ARCH=armv8.6-a+dotprod+i8mm+fp16+bf16",

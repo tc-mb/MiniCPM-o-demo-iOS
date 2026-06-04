@@ -63,14 +63,19 @@ if(NOT DEFINED LLAMA_INSTALL_VERSION)
     set(LLAMA_INSTALL_VERSION "0.0.0")
 endif()
 
-add_subdirectory(${LLAMA_SRC}/tools/mtmd ${CMAKE_BINARY_DIR}/build-mtmd)
+# NOTE: With LLAMA_BUILD_TOOLS=ON, llama.cpp's tools/CMakeLists.txt already
+# adds mtmd and omni as subdirectories (lines 30-31).  We do NOT call
+# add_subdirectory() for them again — that would create duplicate targets
+# and trigger CMP0002 errors.  The targets mtmd, omni, voxcpm2_* are all
+# available for linking because they are defined within the llama.cpp tree.
 
 # The .so name MUST match the dependency declared in oh-package.json5
 # ("libentry.so") with the leading "lib" stripped, otherwise
 # `import nativeModule from 'libentry.so'` will fail at runtime.
 add_library(entry SHARED
         napi_init.cpp
-        llama_napi.cpp)
+        llama_napi.cpp
+        omni_napi.cpp)
 
 target_compile_definitions(entry PRIVATE
         GGML_SYSTEM_ARCH=${GGML_SYSTEM_ARCH}
@@ -84,17 +89,23 @@ target_include_directories(entry PRIVATE
         ${LLAMA_SRC}/ggml/include
         ${LLAMA_SRC}/ggml/src
         ${LLAMA_SRC}/tools/mtmd
+        ${LLAMA_SRC}/tools/omni
+        ${LLAMA_SRC}/tools/omni/voxcpm2
         # llama-common/peg-parser pulls in <nlohmann/json_fwd.hpp> via chat.h.
         # The vendored nlohmann headers live under llama.cpp/vendor.
         ${LLAMA_SRC}/vendor)
 
 target_link_libraries(entry PRIVATE
         llama
-        # Upstream master renamed the common target from `common` to
-        # `llama-common` to avoid colliding with downstream projects that
-        # already export a `common` target. Stay in sync.
-        llama-common
+        # This fork uses `common` (not `llama-common`) as the CMake target
+        # for llama-common.  The omni CMakeLists.txt links against `common`
+        # as well; keep in sync.
+        common
         mtmd
+        # VoxCPM2 TTS runtime (STATIC lib). Transitive deps (voxcpm2_llm,
+        # voxcpm2_fsq, voxcpm2_acoustic, llama, ggml, common) are pulled in
+        # automatically. Mirrors Android demo's CMakeLists.txt.
+        voxcpm2_runtime
         libace_napi.z.so
         libhilog_ndk.z.so)
 
@@ -109,4 +120,4 @@ set_target_properties(llama         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_
 set_target_properties(ggml          PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 set_target_properties(ggml-base     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 set_target_properties(ggml-cpu      PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-set_target_properties(llama-common  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set_target_properties(common        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

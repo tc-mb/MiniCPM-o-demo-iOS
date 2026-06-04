@@ -59,6 +59,12 @@ extension MBHomeViewController {
     /// delete nav item clicked
     @objc func deleteButtonTapped() {
 
+        let current = UserDefaults.standard.string(forKey: "current_selected_model") ?? ""
+        if current == "Voxcpm2Model" {
+            resetTtsMode()
+            return
+        }
+
         if thinking {
             self.showErrorTips(L.Home.tipProcessingWait.loc)
             return
@@ -104,5 +110,34 @@ extension MBHomeViewController {
         
         present(alertController, animated: true, completion: nil)
     }
-    
+
+    /// Reset TTS mode: clear UI, destroy + reload engine
+    private func resetTtsMode() {
+        let alert = UIAlertController(
+            title: "清空内容",
+            message: "将清除当前文本和参考音频，并重新加载模型，是否继续？",
+            preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L.Common.delete.loc, style: .destructive) { [weak self] _ in
+            // Destroy TTS engine
+            let engine = TtsEngine.shared
+            engine.destroy()
+
+            // Clear TTS UI via the child VC
+            if let ttsVC = self?.ttsViewController {
+                ttsVC.resetAllContent()
+            }
+
+            // Reload model
+            let hud = MBHUD.showAdded(to: self?.view ?? UIView(), animated: true)
+            hud.label.text = "重新加载中…"
+            Task {
+                let ok = await engine.loadModel()
+                DispatchQueue.main.async {
+                    hud.hide(animated: true)
+                }
+            }
+        })
+        alert.addAction(UIAlertAction(title: L.Common.cancel.loc, style: .cancel))
+        present(alert, animated: true)
+    }
 }

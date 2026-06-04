@@ -52,10 +52,9 @@ if(NOT DEFINED LLAMA_INSTALL_VERSION)
     set(LLAMA_INSTALL_VERSION "0.0.0")
 endif()
 
-add_subdirectory(${LLAMA_SRC}/tools/mtmd ${CMAKE_BINARY_DIR}/build-mtmd)
-
 add_library(${CMAKE_PROJECT_NAME} SHARED
-        llama_jni.cpp)
+        llama_jni.cpp
+        omni_jni.cpp)
 
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
         GGML_SYSTEM_ARCH=${GGML_SYSTEM_ARCH}
@@ -70,16 +69,17 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ${LLAMA_SRC}/ggml/include
         ${LLAMA_SRC}/ggml/src
         ${LLAMA_SRC}/tools/mtmd
+        ${LLAMA_SRC}/tools/omni
+        ${LLAMA_SRC}/tools/omni/voxcpm2
         # llama-common/peg-parser pulls in <nlohmann/json_fwd.hpp> via chat.h.
         # The vendored nlohmann headers live under llama.cpp/vendor.
         ${LLAMA_SRC}/vendor)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
         llama
-        # Upstream master renamed the common target from `common` to
-        # `llama-common` to avoid colliding with downstream projects that
-        # already export a `common` target. Stay in sync.
-        llama-common
+        common
         mtmd
+        omni
+        voxcpm2_runtime
         android
         log)

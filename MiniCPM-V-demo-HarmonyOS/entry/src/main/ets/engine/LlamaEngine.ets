@@ -572,13 +572,23 @@ export class LlamaEngine {
 
   static mmprojPath(context: common.Context): string {
     const m = LlamaEngine.getSelectedModel(context);
-    if (m.isTextOnly) return '';
+    if (m.isTextOnly || m.isTts) return '';
     return `${LlamaEngine.modelDirFor(context, m)}/${m.mmprojFileName}`;
+  }
+
+  static acousticPath(context: common.Context): string {
+    const m = LlamaEngine.getSelectedModel(context);
+    if (!m.isTts) return '';
+    return `${LlamaEngine.modelDirFor(context, m)}/${m.acousticFileName}`;
   }
 
   static modelsExist(context: common.Context): boolean {
     if (!fs.accessSync(LlamaEngine.modelPath(context))) return false;
     const m = LlamaEngine.getSelectedModel(context);
+    if (m.isTts) {
+      const acoustic = LlamaEngine.acousticPath(context);
+      return !!acoustic && fs.accessSync(acoustic);
+    }
     if (m.isTextOnly) return true;
     return fs.accessSync(LlamaEngine.mmprojPath(context));
   }
@@ -636,6 +646,13 @@ export class LlamaEngine {
       hilog.warn(DOMAIN, TAG, 'warmSelectedId failed: %{public}s', `${e}`);
       LlamaEngine.cachedSelectedId = DEFAULT_MODEL.id;
     }
+  }
+
+  // Synchronous cache warmup.  Called by EntryAbility after reading the
+  // persisted model ID with getPreferencesSync (zero async work), so that
+  // getSelectedModel() can return the correct model immediately.
+  static warmCache(id: string): void {
+    LlamaEngine.cachedSelectedId = id;
   }
 
   static async setSelectedModel(context: common.Context, modelId: string): Promise<void> {
@@ -789,7 +806,7 @@ export class LlamaEngine {
   // Internal helpers
   // ------------------------------------------------------------------
 
-  private static requireRegularFile(path: string, label: string): void {
+  static requireRegularFile(path: string, label: string): void {
     if (!fs.accessSync(path)) {
       throw new Error(`${label} file not found: ${path}`);
     }

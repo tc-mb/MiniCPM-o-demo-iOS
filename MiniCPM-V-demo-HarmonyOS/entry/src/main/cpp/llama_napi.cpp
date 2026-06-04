@@ -128,7 +128,8 @@ napi_value Init(napi_env env, napi_callback_info info) {
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
 
     llama_log_set(minicpm_hilog_callback, nullptr);
-    mtmd_helper_log_set(minicpm_hilog_callback, nullptr);
+    // mtmd_helper_log_set removed in upstream master mtmd — the helper
+    // inherits llama's log callback through llama_log_set above.
 
     if (argc >= 1) {
         std::string path = napi_get_string(env, argv[0]);
@@ -210,7 +211,11 @@ napi_value LoadMmproj(napi_env env, napi_callback_info info) {
     // (before the user touches the slider) already respects it.
     // -1 = "use model default" (currently 9 for MiniCPM-V).
     g_image_max_slice_nums          = image_max_slice_nums;
-    mparams.image_max_slice_nums    = image_max_slice_nums;
+    // image_max_slice_nums removed from mtmd_context_params in upstream
+    // master mtmd. The field no longer exists; slice cap is now read from
+    // the mmproj's embedded hparams at init time and cannot be overridden
+    // at runtime. g_image_max_slice_nums is kept so the chat-page slider
+    // code compiles, but changing it has no runtime effect.
     mparams.n_threads          = N_THREADS;
 
     g_ctx_vision = mtmd_init_from_file(mmproj_path.c_str(), g_model, mparams);
@@ -272,11 +277,12 @@ napi_value SetImageMaxSliceNums(napi_env env, napi_callback_info info) {
         napi_get_value_int32(env, argv[0], &n);
     }
     g_image_max_slice_nums = n;
-    if (g_ctx_vision) {
-        mtmd_set_image_max_slice_nums(g_ctx_vision, n);
-    }
+    // mtmd_set_image_max_slice_nums removed in upstream master mtmd.
+    // Slice cap is now read-only from mmproj hparams at init time.
+    // The persisted value is stored for the chat-page slider UI, but
+    // changing it no longer has runtime effect.
     LOGi("SetImageMaxSliceNums: image_max_slice_nums set to %{public}d "
-         "(live-applied to mtmd ctx=%{public}p)", n, (void*) g_ctx_vision);
+         "(mtmd ctx=%{public}p, no-op at native level)", n, (void*) g_ctx_vision);
     return make_undefined(env);
 }
 
