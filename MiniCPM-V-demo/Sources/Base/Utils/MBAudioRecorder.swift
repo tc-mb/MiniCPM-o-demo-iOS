@@ -82,11 +82,17 @@ class MBAudioRecorder: NSObject {
 
     /// Stop recording. Returns the file size in bytes.
     func stopRecording() -> Int64 {
+        let fileSize: Int64
+        if let url = recorder?.url {
+            fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int64 ?? 0
+        } else {
+            fileSize = 0
+        }
         recorder?.stop()
         recorder = nil
 
         try? AVAudioSession.sharedInstance().setActive(false)
-        return 0
+        return fileSize
     }
 
     /// Get duration of a WAV file in milliseconds.
@@ -99,6 +105,7 @@ class MBAudioRecorder: NSObject {
             let sampleRate = file.fileFormat.sampleRate
             return Int(Double(sampleCount) / sampleRate * 1000.0)
         } catch {
+            // Fallback: estimate duration from file size assuming 16kHz mono 16-bit PCM (32 KByte/sec)
             if let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
                let size = attrs[.size] as? Int64 {
                 return Int(size * 1000 / 32000)

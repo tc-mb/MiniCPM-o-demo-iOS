@@ -5,10 +5,10 @@
 # the compiled framework — this script is the one-shot way to put it back
 # wherever a fresh checkout / fresh submodule bump needs it.
 #
-# This script drives cmake directly against the llama.cpp submodule.
+# This script drives cmake directly against the llama.cpp-omni submodule.
 # It builds only the targets the iOS app needs (voxcpm2_runtime + mtmd
 # and their transitive deps) without touching omni / server / tests / CLI
-# targets, and without modifying *any* file inside the llama.cpp submodule.
+# targets, and without modifying *any* file inside the llama.cpp-omni submodule.
 #
 # Default MINIMAL_MODE=ios builds both device + simulator slices.
 #
@@ -19,15 +19,15 @@
 #   MINIMAL_MODE=macos ./scripts/build_xcframework.sh
 #
 # Re-run when:
-#   - The llama.cpp submodule pointer has been bumped in the parent repo
+#   - The llama.cpp-omni submodule pointer has been bumped in the parent repo
 #     (`git submodule status` shows a different commit than your last build).
-#   - You edited any source under llama.cpp/ that affects the framework.
+#   - You edited any source under llama.cpp-omni/ that affects the framework.
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
-SUBMODULE_DIR="${REPO_ROOT}/llama.cpp"
+SUBMODULE_DIR="${REPO_ROOT}/llama.cpp-omni"
 DEST_DIR="${REPO_ROOT}/MiniCPM-V-demo/thirdparty"
 
 : "${MINIMAL_MODE:=ios}"
@@ -50,7 +50,7 @@ GGML_OPENMP=OFF
 
 # voxcpm2 needs <log.h> from common/ and GGML_KQ_MASK_PAD (defined in
 # feat/voxcpm_app's ggml.h but not on master). Inject both via cflags to avoid
-# touching any file inside the llama.cpp submodule.
+# touching any file inside the llama.cpp-omni submodule.
 COMMON_C_FLAGS="-Wno-macro-redefined -Wno-shorten-64-to-32 -Wno-unused-command-line-argument -g -I${SUBMODULE_DIR}/common -DGGML_KQ_MASK_PAD=64"
 COMMON_CXX_FLAGS="-Wno-macro-redefined -Wno-shorten-64-to-32 -Wno-unused-command-line-argument -g -I${SUBMODULE_DIR}/common -DGGML_KQ_MASK_PAD=64"
 
@@ -81,7 +81,7 @@ COMMON_CMAKE_ARGS=(
 
 if [[ ! -f "${SUBMODULE_DIR}/CMakeLists.txt" ]]; then
     cat >&2 <<EOF
-Error: llama.cpp submodule is not initialised at:
+Error: llama.cpp-omni submodule is not initialised at:
        ${SUBMODULE_DIR}
        Run this first (shallow + single-branch, see README):
            git submodule update --init --recursive --depth 1 --single-branch
@@ -231,14 +231,12 @@ combine_ios_libs() {
         "${build_dir}/ggml/src/${release_dir}/libggml-cpu.a"
         "${build_dir}/ggml/src/ggml-metal/${release_dir}/libggml-metal.a"
         "${build_dir}/ggml/src/ggml-blas/${release_dir}/libggml-blas.a"
-        "${build_dir}/common/${release_dir}/libllama-common.a"
-        "${build_dir}/common/${release_dir}/libllama-common-base.a"
+        "${build_dir}/common/${release_dir}/libcommon.a"
         "${build_dir}/tools/mtmd/${release_dir}/libmtmd.a"
         "${build_dir}/tools/omni/${release_dir}/libvoxcpm2_runtime.a"
         "${build_dir}/tools/omni/${release_dir}/libvoxcpm2_llm.a"
         "${build_dir}/tools/omni/${release_dir}/libvoxcpm2_fsq.a"
         "${build_dir}/tools/omni/${release_dir}/libvoxcpm2_acoustic.a"
-        "${build_dir}/vendor/cpp-httplib/${release_dir}/libcpp-httplib.a"
     )
 
     local temp_dir="${build_dir}/temp"
@@ -332,6 +330,7 @@ build_ios_slice() {
         -DCMAKE_C_FLAGS="${COMMON_C_FLAGS}" \
         -DCMAKE_CXX_FLAGS="${COMMON_CXX_FLAGS}" \
         -DLLAMA_OPENSSL=OFF \
+        -DLLAMA_CURL=OFF \
         -S "${SUBMODULE_DIR}"
 
     # Build only the targets we need (+ transitive deps: ggml, llama, common,
@@ -363,6 +362,7 @@ build_macos_slice() {
         -DCMAKE_C_FLAGS="${COMMON_C_FLAGS}" \
         -DCMAKE_CXX_FLAGS="${COMMON_CXX_FLAGS}" \
         -DLLAMA_OPENSSL=OFF \
+        -DLLAMA_CURL=OFF \
         -S "${SUBMODULE_DIR}"
 
     cmake --build "${build_path}" --config Release -j "$(sysctl -n hw.logicalcpu)" -- -quiet

@@ -112,7 +112,7 @@ class TtsEngine private constructor(
     suspend fun generate(
         text: String,
         cfgValue: Float = 2.0f,
-        timesteps: Int = 10,
+        timesteps: Int = 5,
         referenceWavPath: String? = null,
         outputPath: String
     ): Boolean = withContext(ttsDispatcher) {
@@ -144,7 +144,7 @@ class TtsEngine private constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Error during TTS generation", e)
             _state.value = TtsState.Error(e)
-            throw e
+            return@withContext false
         }
     }
 
@@ -155,7 +155,8 @@ class TtsEngine private constructor(
                 isLoaded = false
                 Log.i(TAG, "TTS engine destroyed")
             }
+        }.invokeOnCompletion {
+            ttsScope.cancel()
         }
-        ttsScope.cancel()
     }
 }

@@ -2,7 +2,7 @@
 
 [English (TODO)](README.md) | **中文**
 
-本目录是 MiniCPM-V 端侧多模态 demo 的 **HarmonyOS NEXT 原生版本**，与 `MiniCPM-V-demo/`（iOS）和 `MiniCPM-V-demo-Android/`（Android）三端共享仓库根目录的 `llama.cpp` 子模块。
+本目录是 MiniCPM-V 端侧多模态 demo 的 **HarmonyOS NEXT 原生版本**，与 `MiniCPM-V-demo/`（iOS）和 `MiniCPM-V-demo-Android/`（Android）三端共享仓库根目录的 `llama.cpp-omni` 子模块。
 
 ---
 
@@ -111,7 +111,7 @@ MiniCPM-V-demo-HarmonyOS/
 │       │       ├── DownloadManager.ets          # HF/MS 探测 + OBS 直链 + MD5 校验
 │       │       └── ImageCodec.ets               # 系统相册 + PNG 编码 → ArrayBuffer
 │       ├── cpp/
-│       │   ├── CMakeLists.txt                   # 复用仓库根 llama.cpp
+│       │   ├── CMakeLists.txt                   # 复用仓库根 llama.cpp-omni
 │       │   ├── napi_init.cpp                    # NAPI 模块注册
 │       │   ├── llama_napi.cpp                   # 翻译自 llama_jni.cpp
 │       │   ├── hilog_log.h                      # 替换 Android 的 logging.h
@@ -147,7 +147,7 @@ MiniCPM-V-demo-HarmonyOS/
 
 ## 7. 故障排查
 
-* **报 `llama.cpp not found at ...`**：
+* **报 `llama.cpp-omni not found at ...`**：
   仓库根没有初始化子模块，回到根目录跑 `git submodule update --init --recursive`。
 * **`libentry.so` 加载失败**：
   确认 `entry/oh-package.json5` 里的 `dependencies."libentry.so"` 路径与 `cpp/types/libentry/oh-package.json5` 的 `name` 字段一致。

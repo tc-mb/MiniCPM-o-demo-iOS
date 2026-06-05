@@ -290,6 +290,7 @@ extension LocalizationManager {
         L.Tts.navModelManager:    "Models",
 
         L.Tts.textPlaceholder:    "Enter text to synthesize…",
+        L.Tts.defaultPrompt:       "Welcome to VoxCPM2 speech synthesis! This is a sample text. Tap Generate to hear the result.",
 
         L.Tts.labelRefAudio:      "Reference Audio (optional)",
         L.Tts.btnPresetFemale:    "Default Female",

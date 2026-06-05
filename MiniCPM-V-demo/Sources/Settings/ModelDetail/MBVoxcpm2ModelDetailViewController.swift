@@ -233,15 +233,14 @@ import SnapKit
             }
         }
         downloadManager.detailedProgressHandler = { [weak self] progressInfo in
-            DispatchQueue.main.async {
-                self?.updateCellDetailedProgress(progressInfo: progressInfo)
-            }
+            self?.updateCellDetailedProgress(progressInfo: progressInfo)
         }
     }
 
     // MARK: - Cell 状态更新
 
     private func updateCellProgress(modelName: String, progress: CGFloat) {
+        guard self.isViewLoaded, self.view.window != nil else { return }
         for (index, model) in dataArray.enumerated() where model.title == modelName {
             if progress >= 1.0 {
                 model.statusString = L.Download.statusDownloaded.loc

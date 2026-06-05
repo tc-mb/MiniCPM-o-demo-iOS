@@ -287,6 +287,7 @@ extension LocalizationManager {
         L.Tts.navModelManager:    "模型管理",
 
         L.Tts.textPlaceholder:    "请输入要合成的文本…",
+        L.Tts.defaultPrompt:       "欢迎使用 VoxCPM2 语音合成！这是一段示例文本，点击「生成」按钮即可试听合成效果。",
 
         L.Tts.labelRefAudio:      "参考音频（可选）",
         L.Tts.btnPresetFemale:    "默认女声",

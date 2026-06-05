@@ -1,5 +1,5 @@
-[submodule "llama.cpp"]
-	path = llama.cpp
+[submodule "llama.cpp-omni"]
+	path = llama.cpp-omni
 	url = https://github.com/tc-mb/llama.cpp-omni.git
 	branch = master
 	shallow = true

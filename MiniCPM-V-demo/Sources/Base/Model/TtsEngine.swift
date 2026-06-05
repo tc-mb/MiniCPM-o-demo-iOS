@@ -43,9 +43,6 @@ public class TtsEngine: ObservableObject {
     /// Flag to track if native runtime is initialized.
     private var isInitialized = false
 
-    /// Current generation task — for cancellation.
-    private var generateTask: Task<Void, Never>?
-
     // MARK: - Model paths
 
     private func documentsDirectory() -> URL {
@@ -142,7 +139,12 @@ public class TtsEngine: ObservableObject {
                     return
                 }
 
-                let refPtr = (refWavPath?.isEmpty == false) ? (refWavPath! as NSString).utf8String : nil
+                let refPtr: UnsafePointer<CChar>? = {
+                    if let path = refWavPath, !path.isEmpty {
+                        return (path as NSString).utf8String
+                    }
+                    return nil
+                }()
                 let textPtr = (text as NSString).utf8String
                 let outPtr  = (outputPath as NSString).utf8String
 
@@ -157,16 +159,15 @@ public class TtsEngine: ObservableObject {
     }
 
     /// Cancel an ongoing generation.
+    /// Note: the native tts_generate has no cancellation mechanism, so the
+    /// ongoing generation will continue in the background. The state is
+    /// reset so the UI reflects the user's intent immediately.
     public func cancelGeneration() {
-        generateTask?.cancel()
-        generateTask = nil
         state = .ready
     }
 
     /// Free all native resources.
     public func destroy() {
-        generateTask?.cancel()
-        generateTask = nil
         serialQueue.async {
             tts_free()
         }

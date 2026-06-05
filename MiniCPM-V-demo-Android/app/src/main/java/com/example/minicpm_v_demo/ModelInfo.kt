@@ -146,17 +146,16 @@ data class ModelInfo(
             // and an Acoustic bundle (FSQ + ResidualLM + LocEnc + LocDiT +
             // AudioVAE V2 + stop predictor + projections). Both are loaded
             // by VoxCPM2Runtime in llama.cpp-omni tools/omni/voxcpm2/.
-            // Temporarily served from Huawei OBS while HF/MS only have
-            // PyTorch weights; switch to hfRepo/msRepo once pre-converted
-            // GGUF repos are published.
+            // HF GGUF repo: tc-mb/MiniCPM-V-Apps-gguf
             ModelInfo(
                 id = "voxcpm2",
                 displayName = "VoxCPM2",
                 descriptionResName = "model_desc_voxcpm2",
                 ggufFileName = "VoxCPM2-BaseLM-Q4_K_M.gguf",
                 acousticFileName = "VoxCPM2-Acoustic-F16.gguf",
-                directGgufUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-BaseLM-Q4_K_M.gguf",
-                directAcousticUrl = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-Acoustic-F16.gguf",
+                hfRepo = "tc-mb/MiniCPM-V-Apps-gguf",
+                directGgufUrl = "https://huggingface.co/tc-mb/MiniCPM-V-Apps-gguf/resolve/main/VoxCPM2-BaseLM-Q4_K_M.gguf",
+                directAcousticUrl = "https://huggingface.co/tc-mb/MiniCPM-V-Apps-gguf/resolve/main/VoxCPM2-Acoustic-F16.gguf",
                 ggufMd5 = "d8cd571526464d225187d326caa289be",
                 acousticMd5 = "0f16229cfffe935102d21433f6969f8b"
             )

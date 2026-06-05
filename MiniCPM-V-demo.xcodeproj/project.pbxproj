@@ -1184,7 +1184,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2.2;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 9U8AMZR6FN;
+				DEVELOPMENT_TEAM = VGXUYC2C5K;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -1216,7 +1216,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 				);
 				MARKETING_VERSION = 2.2;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.tianchi.minicpmvdemo-voxcpm";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tianchi.minicpmvdemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1239,7 +1239,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2.2;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 9U8AMZR6FN;
+				DEVELOPMENT_TEAM = VGXUYC2C5K;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -1271,7 +1271,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 				);
 				MARKETING_VERSION = 2.2;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.tianchi.minicpmvdemo-voxcpm";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tianchi.minicpmvdemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;

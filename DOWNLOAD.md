@@ -7,7 +7,7 @@
 
 </div>
 
-Pre-built apps for **iOS**, **Android**, and **HarmonyOS** are listed below. All three apps run the MiniCPM-V multimodal model fully **on-device** via `llama.cpp` — no remote server, no data leaves your phone.
+Pre-built apps for **iOS**, **Android**, and **HarmonyOS** are listed below. All three apps run the MiniCPM-V multimodal model fully **on-device** via `llama.cpp-omni` — no remote server, no data leaves your phone.
 
 > Looking to build from source instead? See the main [README](./README.md).
 

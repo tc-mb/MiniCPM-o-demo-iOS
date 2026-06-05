@@ -394,6 +394,7 @@ public enum L {
 
         // Input
         public static let textPlaceholder    = "tts.text.placeholder"
+        public static let defaultPrompt       = "tts.text.defaultPrompt"
 
         // Reference audio
         public static let labelRefAudio      = "tts.label.refAudio"

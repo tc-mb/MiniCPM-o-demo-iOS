@@ -25,7 +25,6 @@ class TtsViewController: UIViewController {
     private var isGenerating = false
     private var generatedWavURL: URL?
     private var generatedDurationMs: Int = 0
-    private var playbackTimer: Timer?
 
     // MARK: - UI components
 
@@ -216,6 +215,11 @@ class TtsViewController: UIViewController {
         observeEngine()
         checkModelAndLoad()
 
+        // Set default prompt if textView is empty
+        if textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            textView.text = L.Tts.defaultPrompt.loc
+        }
+
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(applyLanguage),
                                                name: .languageDidChange,
@@ -227,13 +231,8 @@ class TtsViewController: UIViewController {
     }
 
     @objc private func applyLanguage() {
-        // Refresh all UI strings
-        for subview in contentView.subviews {
-            if let label = subview as? UILabel, label.tag == 0 {
-                // Only refresh known labels
-            }
-        }
-        // Rebuild layout to refresh all text
+        // Rebuild layout to refresh all text (full rebuild since labels are
+        // created inline in setupLayout without retained references).
         contentView.subviews.forEach { $0.removeFromSuperview() }
         setupLayout()
         setupListeners()
@@ -331,9 +330,10 @@ class TtsViewController: UIViewController {
     }
 
     @objc private func openModelManager() {
-        // Push settings so user can switch back to a chat model
         guard let homeVC = parent as? MBHomeViewController,
-              let wrapper = homeVC.mtmdWrapperExample else { return }
+              let wrapper = homeVC.mtmdWrapperExample else {
+            return
+        }
         let settingsVC = MBSettingsViewController(with: wrapper)
         homeVC.navigationController?.pushViewController(settingsVC, animated: true)
     }
@@ -746,6 +746,7 @@ class TtsViewController: UIViewController {
     }
 
     @objc private func clearRefTapped() {
+        audioPlayer.stop()
         referenceWavURL = nil
         refInfoLabel.isHidden = true
         clearRefBtn.isHidden = true
@@ -838,7 +839,6 @@ class TtsViewController: UIViewController {
         } else {
             audioPlayer.play(url: url)
             playPauseBtn.setImage(UIImage(systemName: "pause.fill"), for: .normal)
-            startPlaybackTimer()
             audioPlayer.onProgress = { [weak self] progress in
                 self?.playbackSlider.value = progress
                 self?.updatePlaybackTime(progress: progress)
@@ -852,10 +852,6 @@ class TtsViewController: UIViewController {
     @objc private func playbackSliderChanged() {
         audioPlayer.seek(to: playbackSlider.value / 100.0)
         updatePlaybackTime(progress: playbackSlider.value)
-    }
-
-    private func startPlaybackTimer() {
-        playbackTimer?.invalidate()
     }
 
     private func onPlaybackComplete() {

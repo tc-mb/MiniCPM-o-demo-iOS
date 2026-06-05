@@ -80,7 +80,7 @@ CLAUDE.md
 .claude/
 .cursor/
 
-# Prebuilt llama.xcframework: 必须从 ./llama.cpp 子模块构建出来再放到这里，
+# Prebuilt llama.xcframework: 必须从 ./llama.cpp-omni 子模块构建出来再放到这里，
 # 仓库不再追踪二进制本身 (~189 MB)，详见 README "构建 llama.xcframework" 一节
 MiniCPM-V-demo/thirdparty/llama.xcframework/
 MiniCPM-V-demo/thirdparty/llama.xcframework.bak/

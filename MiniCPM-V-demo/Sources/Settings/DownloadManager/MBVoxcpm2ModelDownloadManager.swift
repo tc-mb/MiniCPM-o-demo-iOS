@@ -54,16 +54,17 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
     }
 
     private func updateDownloadProgress(_ progress: CGFloat, for modelKey: String, modelName: String, downloadedBytes: Int64 = 0, totalBytes: Int64 = 0) {
-        downloadQueue.sync {
+        downloadQueue.async { [weak self] in
+            guard let self = self else { return }
             let currentTime = Date()
-            let startTime = downloadStartTimes[modelKey] ?? currentTime
+            let startTime = self.downloadStartTimes[modelKey] ?? currentTime
             let timeElapsed = currentTime.timeIntervalSince(startTime)
 
             var speed: Double = 0
-            if let lastBytes = lastDownloadedBytes[modelKey], timeElapsed > 0 {
+            if let lastBytes = self.lastDownloadedBytes[modelKey], timeElapsed > 0 {
                 speed = Double(downloadedBytes - lastBytes) / timeElapsed
             }
-            lastDownloadedBytes[modelKey] = downloadedBytes
+            self.lastDownloadedBytes[modelKey] = downloadedBytes
 
             var estimatedTimeRemaining: TimeInterval = 0
             if speed > 0 && totalBytes > downloadedBytes {
@@ -72,7 +73,7 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
 
             let progressInfo = DownloadProgressInfo(
                 modelName: modelName,
-                status: downloadStates[modelKey] ?? .notStarted,
+                status: self.downloadStates[modelKey] ?? .notStarted,
                 progress: progress,
                 downloadedBytes: downloadedBytes,
                 totalBytes: totalBytes,
@@ -80,8 +81,10 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
                 estimatedTimeRemaining: estimatedTimeRemaining
             )
 
-            downloadProgressCache[modelKey] = progressInfo
-            detailedProgressHandler?(progressInfo)
+            self.downloadProgressCache[modelKey] = progressInfo
+            DispatchQueue.main.async {
+                self.detailedProgressHandler?(progressInfo)
+            }
         }
     }
 
@@ -100,7 +103,7 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
             modelName: MiniCPMModelConst.voxcpm2_BaseLMFileName,
             modelUrl: MiniCPMModelConst.voxcpm2_BaseLMURLString,
             filename: MiniCPMModelConst.voxcpm2_BaseLMFileName,
-            backupModelUrl: nil
+            backupModelUrl: MiniCPMModelConst.voxcpm2_BaseLMBackupURLString
         )
 
         acousticManager = MBModelDownloadHelperV2(
@@ -108,7 +111,7 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
             modelName: MiniCPMModelConst.voxcpm2_AcousticFileName,
             modelUrl: MiniCPMModelConst.voxcpm2_AcousticURLString,
             filename: MiniCPMModelConst.voxcpm2_AcousticFileName,
-            backupModelUrl: nil
+            backupModelUrl: MiniCPMModelConst.voxcpm2_AcousticBackupURLString
         )
 
         reconcileStatusFromDisk()
@@ -156,7 +159,7 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
 
     // MARK: - 下载方法
 
-    func downloadBaseLM() {
+    func downloadBaseLM(onComplete: (() -> Void)? = nil) {
         let modelKey = "voxcpm2_baselm"
 
         guard !isDownloading(modelKey) else {
@@ -165,26 +168,37 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
         }
         if getBaseLMStatus() == "downloaded" {
             debugLog("-->> VoxCPM2 BaseLM 已下载完成")
+            onComplete?()
             return
         }
 
         setDownloadStatus(.downloading, for: modelKey)
+        debugLog("-->> VoxCPM2 BaseLM 开始下载")
+        var lastLoggedPct = -1
 
         baseLMManager?.downloadV2(completionBlock: { [weak self] status, progress in
             guard let self = self else { return }
 
             DispatchQueue.main.async {
                 if progress >= 1 {
+                    debugLog("-->> VoxCPM2 BaseLM 下载完成")
                     self.setDownloadStatus(.completed, for: modelKey)
                     self.progressHandler?(MiniCPMModelConst.voxcpm2_BaseLMDisplayedName, 1.0)
                     self.completionHandler?(MiniCPMModelConst.voxcpm2_BaseLMDisplayedName, true)
                     self.updateDownloadProgress(1.0, for: modelKey, modelName: MiniCPMModelConst.voxcpm2_BaseLMDisplayedName)
+                    onComplete?()
                 } else {
                     if status == "failed" {
+                        debugLog("-->> VoxCPM2 BaseLM 下载失败")
                         self.setDownloadStatus(.failed, for: modelKey)
                         self.progressHandler?(MiniCPMModelConst.voxcpm2_BaseLMDisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.voxcpm2_BaseLMDisplayedName, false)
                     } else {
+                        let pct = Int(progress * 100)
+                        if pct != lastLoggedPct && pct % 5 == 0 {
+                            debugLog("-->> VoxCPM2 BaseLM 下载进度: \(pct)%")
+                            lastLoggedPct = pct
+                        }
                         self.progressHandler?(MiniCPMModelConst.voxcpm2_BaseLMDisplayedName, progress)
                         self.updateDownloadProgress(progress, for: modelKey, modelName: MiniCPMModelConst.voxcpm2_BaseLMDisplayedName)
                     }
@@ -193,7 +207,7 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
         })
     }
 
-    func downloadAcoustic() {
+    func downloadAcoustic(onComplete: (() -> Void)? = nil) {
         let modelKey = "voxcpm2_acoustic"
 
         guard !isDownloading(modelKey) else {
@@ -202,26 +216,37 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
         }
         if getAcousticStatus() == "downloaded" {
             debugLog("-->> VoxCPM2 Acoustic 已下载完成")
+            onComplete?()
             return
         }
 
         setDownloadStatus(.downloading, for: modelKey)
+        debugLog("-->> VoxCPM2 Acoustic 开始下载")
+        var lastLoggedPct = -1
 
         acousticManager?.downloadV2(completionBlock: { [weak self] status, progress in
             guard let self = self else { return }
 
             DispatchQueue.main.async {
                 if progress >= 1 {
+                    debugLog("-->> VoxCPM2 Acoustic 下载完成")
                     self.setDownloadStatus(.completed, for: modelKey)
                     self.progressHandler?(MiniCPMModelConst.voxcpm2_AcousticDisplayedName, 1.0)
                     self.completionHandler?(MiniCPMModelConst.voxcpm2_AcousticDisplayedName, true)
                     self.updateDownloadProgress(1.0, for: modelKey, modelName: MiniCPMModelConst.voxcpm2_AcousticDisplayedName)
+                    onComplete?()
                 } else {
                     if status == "failed" {
+                        debugLog("-->> VoxCPM2 Acoustic 下载失败")
                         self.setDownloadStatus(.failed, for: modelKey)
                         self.progressHandler?(MiniCPMModelConst.voxcpm2_AcousticDisplayedName + L.Download.progressFailedSuffix.loc, -1)
                         self.completionHandler?(MiniCPMModelConst.voxcpm2_AcousticDisplayedName, false)
                     } else {
+                        let pct = Int(progress * 100)
+                        if pct != lastLoggedPct && pct % 5 == 0 {
+                            debugLog("-->> VoxCPM2 Acoustic 下载进度: \(pct)%")
+                            lastLoggedPct = pct
+                        }
                         self.progressHandler?(MiniCPMModelConst.voxcpm2_AcousticDisplayedName, progress)
                         self.updateDownloadProgress(progress, for: modelKey, modelName: MiniCPMModelConst.voxcpm2_AcousticDisplayedName)
                     }
@@ -234,14 +259,17 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
 
     func downloadAll() {
         reconcileStatusFromDisk()
-        debugLog("-->> VoxCPM2 一键下载：同时拉起 BaseLM + Acoustic")
-        downloadBaseLM()
-        downloadAcoustic()
+        debugLog("-->> VoxCPM2 一键下载：串行 BaseLM → Acoustic（避免带宽竞争）")
+        downloadBaseLM { [weak self] in
+            guard let self = self else { return }
+            debugLog("-->> VoxCPM2 BaseLM 完成，开始下载 Acoustic")
+            self.downloadAcoustic()
+        }
     }
 
     func overallProgress() -> CGFloat {
-        let baseLMBytes: Int64  = 858_993_459   // ~820 MB (Q4_K_M)
-        let acousticBytes: Int64 = 1_796_756_480  // ~1.7 GB
+        let baseLMBytes: Int64  = 1_002_374_880  // ~956 MB (from OBS Content-Length)
+        let acousticBytes: Int64 = 1_825_096_352  // ~1.74 GB (from OBS Content-Length)
         let total = baseLMBytes + acousticBytes
 
         let baseLMProg    = progress(for: "voxcpm2_baselm",     downloadedWhenDone: baseLMBytes)
