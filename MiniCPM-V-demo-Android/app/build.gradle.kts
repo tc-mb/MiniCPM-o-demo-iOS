@@ -20,8 +20,8 @@ android {
         // to the WebP icons in mipmap-{m,h,xh,xxh,xxxh}dpi/.
         minSdk = 24
         targetSdk = 36
-        versionCode = 14
-        versionName = "2.2"
+        versionCode = 15
+        versionName = "2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
