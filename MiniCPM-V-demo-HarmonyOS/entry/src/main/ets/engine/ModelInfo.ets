@@ -111,14 +111,13 @@ export class ModelInfo {
 }
 
 export const AVAILABLE_MODELS: ModelInfo[] = [
-  /*
   new ModelInfo(
     'minicpm-v-4',
     'MiniCPM-V-4 (Q4_K_M)',
     'model_desc_v4',
     'ggml-model-Q4_K_M.gguf',
     'mmproj-model-f16.gguf',
-    '',                                                          // acousticFileName
+    '',
     'openbmb/MiniCPM-V-4-gguf',
     'OpenBMB/MiniCPM-V-4-gguf'
   ),
@@ -128,11 +127,13 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     'model_desc_v46',
     'MiniCPM-V-4_6-Q4_K_M.gguf',
     'mmproj-model-f16.gguf',
-    '',                                                          // acousticFileName
+    '',
     'openbmb/MiniCPM-V-4.6-gguf',
     'OpenBMB/MiniCPM-V-4.6-gguf',
     'main',
     'master',
+    null,
+    null,
     null,
     null,
     null,
@@ -146,7 +147,7 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     'model_desc_minicpm5',
     'MiniCPM5-1B-Q4_K_M.gguf',
     '',
-    '',                                                          // acousticFileName
+    '',
     'openbmb/MiniCPM5-1B-GGUF',
     'OpenBMB/MiniCPM5-1B-GGUF',
     'main',
@@ -158,13 +159,6 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     null,
     null
   ),
-  */
-  // VoxCPM2 — text-to-speech model, ~2B params, 48 kHz output.
-  // Two GGUF files: a BaseLM (MiniCPM-4 based) and an Acoustic bundle
-  // (FSQ + ResidualLM + LocEnc + LocDiT + AudioVAE V2 + stop predictor +
-  // projections). Served from Huawei OBS while HF/MS only have PyTorch
-  // weights; switch to hfRepo/msRepo once pre-converted GGUF repos are
-  // published. Mirrors Android ModelInfo.kt registration.
   new ModelInfo(
     'voxcpm2',
     'VoxCPM2',

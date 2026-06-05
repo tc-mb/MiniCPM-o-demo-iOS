@@ -217,6 +217,19 @@ export class LlamaEngine {
 
   loadModel(modelPath: string, mmprojPath: string | null = null): Promise<void> {
     return this.serial(async () => {
+      // Auto-unload if a model is already loaded (mirrors TtsEngine.loadModel).
+      // This is more robust than requiring the caller to unloadModel() first,
+      // because the serial chain guarantees the unload happens right before
+      // the load inside the same atomic queue entry.
+      if (this.state.name === 'ModelReady') {
+        hilog.info(DOMAIN, TAG, 'Auto-unloading before loading new model');
+        this.readyForSystemPrompt = false;
+        this.mmprojLoaded = false;
+        this.setState(LlamaState.UnloadingModel);
+        nativeEngine.unload();
+        this.setState(LlamaState.Initialized);
+        hilog.info(DOMAIN, TAG, 'Auto-unload complete');
+      }
       if (this.state.name !== 'Initialized') {
         throw new Error(`Cannot load model in state ${this.state.name}`);
       }

@@ -238,6 +238,9 @@ struct MiniCPMModelConst {
     /// VoxCPM2 Acoustic 下载地址（华为云 OBS）
     static let voxcpm2_AcousticURLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-Acoustic-F16.gguf"
 
+    /// VoxCPM2 Acoustic F16 gguf 文件 md5 值
+    static let voxcpm2_AcousticMD5 = "0f16229cfffe935102d21433f6969f8b"
+
     /// VoxCPM2 整体显示名
     static let voxcpm2_DisplayedName = "VoxCPM2 (TTS)"
 

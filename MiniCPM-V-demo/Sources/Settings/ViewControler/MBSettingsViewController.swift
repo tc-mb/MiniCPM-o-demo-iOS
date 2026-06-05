@@ -193,10 +193,14 @@ extension MBSettingsViewController: UITableViewDataSource {
         
         switch section {
         case 0:
-            titleLabel.text = L.Settings.sectionTts.loc
+            titleLabel.text = L.Settings.sectionMultimodal.loc
         case 1:
-            titleLabel.text = L.Settings.sectionFeature.loc
+            titleLabel.text = L.Settings.sectionLanguageModel.loc
         case 2:
+            titleLabel.text = L.Settings.sectionTts.loc
+        case 3:
+            titleLabel.text = L.Settings.sectionFeature.loc
+        case 4:
             titleLabel.text = L.Settings.sectionOther.loc
         default:
             titleLabel.text = ""
@@ -222,11 +226,11 @@ extension MBSettingsViewController: UITableViewDelegate {
         let model = dataArray[indexPath.section][indexPath.row]
         
         switch indexPath.section {
-        case 0: // TTS 模型
+        case 0, 1, 2: // 多模态 / 语言 / TTS 模型
             handleModelSelection(model: model, at: indexPath)
-        case 1: // 功能设置
+        case 3: // 功能设置
             handleFeatureSelection(model: model, at: indexPath)
-        case 2: // 其他设置
+        case 4: // 其他设置
             handleOtherSettings(model: model, at: indexPath)
         default:
             break
@@ -369,8 +373,8 @@ extension MBSettingsViewController {
     /// 配置列表数据用于展示 cell
     public func loadTableViewData() {
         dataArray.removeAll()
-        // setupMultimodalModelSection()   // 暂时隐藏：新子模块适配中
-        // setupLanguageModelSection()     // 暂时隐藏：新子模块适配中
+        setupMultimodalModelSection()
+        setupLanguageModelSection()
         setupTtsModelSection()
         setupFeatureSettingsSection()
         setupOtherSettingsSection()

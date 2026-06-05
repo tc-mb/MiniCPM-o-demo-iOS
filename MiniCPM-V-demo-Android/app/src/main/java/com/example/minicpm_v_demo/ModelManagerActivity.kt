@@ -88,7 +88,7 @@ class ModelManagerActivity : AppCompatActivity() {
     private fun setupModelList() {
         val selectedModel = LlamaEngine.getSelectedModel(this)
         modelAdapter = ModelAdapter(
-            models = ModelInfo.AVAILABLE_MODELS.filter { it.id == "voxcpm2" },
+            models = ModelInfo.AVAILABLE_MODELS,
             selectedModelId = selectedModel.id,
             onModelSelected = { model ->
                 val previousModelId = LlamaEngine.getSelectedModel(this).id

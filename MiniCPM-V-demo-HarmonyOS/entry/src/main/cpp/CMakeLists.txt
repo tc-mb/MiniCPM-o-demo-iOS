@@ -97,14 +97,11 @@ target_include_directories(entry PRIVATE
 
 target_link_libraries(entry PRIVATE
         llama
-        # This fork uses `common` (not `llama-common`) as the CMake target
-        # for llama-common.  The omni CMakeLists.txt links against `common`
-        # as well; keep in sync.
-        common
+        llama-common
         mtmd
         # VoxCPM2 TTS runtime (STATIC lib). Transitive deps (voxcpm2_llm,
-        # voxcpm2_fsq, voxcpm2_acoustic, llama, ggml, common) are pulled in
-        # automatically. Mirrors Android demo's CMakeLists.txt.
+        # voxcpm2_fsq, voxcpm2_acoustic, llama, ggml, llama-common) are pulled
+        # in automatically. Mirrors Android demo's CMakeLists.txt.
         voxcpm2_runtime
         libace_napi.z.so
         libhilog_ndk.z.so)
@@ -120,4 +117,4 @@ set_target_properties(llama         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_
 set_target_properties(ggml          PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 set_target_properties(ggml-base     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 set_target_properties(ggml-cpu      PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-set_target_properties(common        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set_target_properties(llama-common PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

@@ -85,7 +85,10 @@ struct ModelManager {
       case 'Error':                   this.statusText = `${this.str('status_error')}: ${state.errorMessage ?? ''}`; break;
       default:                        this.statusText = ''; break;
     }
-    this.modelExists = LlamaEngine.modelsExist(getContext(this));
+    // modelExists is managed by onSelectModel / download / delete —
+    // do NOT update it here because the engine state callback may fire
+    // for a stale model while getSelectedModel() already points to
+    // the newly selected one.
   }
 
   private onTtsEngineState(state: TtsState): void {
@@ -107,10 +110,12 @@ struct ModelManager {
 
   private onSelectModel(modelId: string): void {
     this.selectedId = modelId;
+    // setSelectedModel syncs cachedSelectedId immediately so the
+    // following modelsExist() reads the *new* model, not the old one.
+    LlamaEngine.setSelectedModel(getContext(this), modelId);
     this.modelExists = LlamaEngine.modelsExist(getContext(this));
     const m = findModelById(modelId);
     promptAction.showToast({ message: this.str('toast_model_selected').replace('%s', m.displayName), duration: 1500 });
-    LlamaEngine.setSelectedModel(getContext(this), modelId);
     if (this.modelExists) {
       setTimeout(() => { this.onClickLoad(); }, 100);
     }
@@ -167,24 +172,24 @@ struct ModelManager {
       return;
     }
 
-    const isReload = this.stateName === 'ModelReady';
     this.loading = true;
     this.statusText = this.str('status_loading');
 
     setTimeout(async () => {
       try {
-        if (isReload) {
-          hilog.info(DOMAIN, TAG, 'Unloading model for reload...');
-          await this.engine!.unloadModel();
-        }
+        // loadModel auto-unloads if a model is already loaded,
+        // so we don't need to call unloadModel() explicitly.
         const mm = (mmprojPath && fs.accessSync(mmprojPath)) ? mmprojPath : null;
         await this.engine!.loadModel(modelPath, mm);
+        this.loading = false;
+        this.loadingLock = false;
         promptAction.showToast({ message: this.str('toast_model_loaded'), duration: 1500 });
+        router.replaceUrl({ url: 'pages/Index' });
+        return;
       } catch (e) {
         hilog.error(DOMAIN, TAG, 'load failed: %{public}s', `${e}`);
         this.engine!.resetToInitialized();
         this.statusText = this.str('toast_load_failed').replace('%s', `${e}`);
-      } finally {
         this.loading = false;
         this.loadingLock = false;
       }
@@ -203,24 +208,22 @@ struct ModelManager {
       return;
     }
 
-    const ttsState = this.ttsEngine.getCurrentState();
-    const isReload = ttsState.name === 'Ready';
-
+    // TtsEngine.loadModel handles reload internally (free + re-init).
+    // No need to call free() separately here.
     this.loading = true;
     this.statusText = this.str('status_loading');
 
     (async () => {
       try {
-        if (isReload) {
-          hilog.info(DOMAIN, TAG, 'Freeing existing VoxCPM2 runtime before reload');
-          await this.ttsEngine!.free();
-        }
         await this.ttsEngine!.loadModel(baseLmPath, acousticPath);
+        this.loading = false;
+        this.loadingLock = false;
         promptAction.showToast({ message: this.str('toast_model_loaded'), duration: 1500 });
+        router.replaceUrl({ url: 'pages/TtsPage' });
+        return;
       } catch (e) {
         hilog.error(DOMAIN, TAG, 'TTS load failed: %{public}s', `${e}`);
         this.statusText = this.str('toast_load_failed').replace('%s', `${e}`);
-      } finally {
         this.loading = false;
         this.loadingLock = false;
       }

@@ -351,13 +351,18 @@ import llama
 
         let current = UserDefaults.standard.string(forKey: "current_selected_model") ?? ""
 
-        // VoxCPM2 不需要 MTMD wrapper，直接切换界面模式
+        // VoxCPM2 不需要 MTMD wrapper，但必须先释放旧模型再切换 UI
         if current == "Voxcpm2Model" {
-            self.showTtsMode()
+            Task { @MainActor in
+                await self.mtmdWrapperExample?.reset()
+                self.didStartInitialModelLoad = false
+                self.showTtsMode()
+            }
             return
         }
 
-        // 切回聊天模式
+        // 切回聊天模式：先销毁 TTS 引擎释放内存，再切换 UI
+        TtsEngine.shared.destroy()
         self.showChatMode()
 
         Task { @MainActor in
@@ -393,7 +398,13 @@ import llama
 
     /// 切换到 TTS 模式：隐藏聊天 UI，显示 TTS 界面
     private func showTtsMode() {
-        guard ttsViewController == nil else { return }
+        // 先清理旧实例（如果存在），确保每次都从头初始化
+        if let old = ttsViewController {
+            old.willMove(toParent: nil)
+            old.view.removeFromSuperview()
+            old.removeFromParent()
+            ttsViewController = nil
+        }
 
         let ttsVC = TtsViewController()
         addChild(ttsVC)
