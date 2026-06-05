@@ -14,9 +14,9 @@
 * `MiniCPM-V-demo-Android/` — Android demo（Gradle / Kotlin）
 * `MiniCPM-V-demo-HarmonyOS/` — HarmonyOS NEXT demo（DevEco Studio / ArkTS）
 
-三端共享仓库根目录的同一份 `llama.cpp` 子模块（分支 `MiniCPM-V`）。
+三端共享仓库根目录的同一份 `llama.cpp-omni` 子模块。
 
-> **提示**：本项目通过 git submodule 引入 `llama.cpp`。子模块上游 `tc-mb/llama.cpp` 还有十几个无关分支，全量 clone 要拉 ~350 MB，所以 `.gitmodules` 里默认 `shallow = true`。推荐用如下 **shallow + single-branch** 方式 clone：
+> **提示**：本项目通过 git submodule 引入 `llama.cpp`。子模块上游 `tc-mb/llama.cpp-omni` 还有十几个无关分支，全量 clone 要拉 ~350 MB，所以 `.gitmodules` 里默认 `shallow = true`。推荐用如下 **shallow + single-branch** 方式 clone：
 >
 > ```bash
 > # 一步到位（父仓库 + 子模块都浅 clone）
@@ -31,7 +31,7 @@
 > git submodule update --init --recursive --depth 1 --single-branch
 > ```
 >
-> 这样只会拉 `MiniCPM-V` 分支的单 commit（约几十 MB），不会拉整个 llama.cpp fork 的全 history。需要 push 到 `tc-mb/llama.cpp:MiniCPM-V` 的开发者可在 submodule 里执行 `git fetch --unshallow` 取消浅 clone。
+> 这样只会拉 `master` 分支的单 commit（约几十 MB），不会拉整个 llama.cpp-omni fork 的全 history。需要 push 到 `tc-mb/llama.cpp-omni:master` 的开发者可在 submodule 里执行 `git fetch --unshallow` 取消浅 clone。
 
 README 分为两大部分：
 
@@ -71,7 +71,7 @@ README 分为两大部分：
 
 #### 1.1.2 首次构建 llama.xcframework（必做）
 
-仓库**不追踪**任何编译产物，预编译的 `llama.xcframework`（~189 MB）需要你在本地从 `llama.cpp` 子模块编译一份，放到 `MiniCPM-V-demo/thirdparty/` 让 Xcode 链接。我们提供了一键脚本，默认只 build demo 真正用到的两个 slice（真机 + 模拟器），M 系 Mac 上 ~2-3 分钟：
+仓库**不追踪**任何编译产物，预编译的 `llama.xcframework`（~189 MB）需要你在本地从 `llama.cpp-omni` 子模块编译一份，放到 `MiniCPM-V-demo/thirdparty/` 让 Xcode 链接。我们提供了一键脚本，默认只 build demo 真正用到的两个 slice（真机 + 模拟器），M 系 Mac 上 ~2-3 分钟：
 
 ```bash
 ./scripts/build_xcframework.sh
@@ -91,7 +91,7 @@ MINIMAL_MODE=all        ./scripts/build_xcframework.sh   # iOS + macOS + tvOS + 
 等价的手工命令（不走脚本时）：
 
 ```bash
-cd llama.cpp
+cd llama.cpp-omni
 MINIMAL_MODE=ios ./build-xcframework.sh
 cp -r ./build-apple/llama.xcframework ../MiniCPM-V-demo/thirdparty/
 ```
@@ -99,8 +99,8 @@ cp -r ./build-apple/llama.xcframework ../MiniCPM-V-demo/thirdparty/
 Build 过程中会出现 `ignoring duplicate libraries` 和 `skipping debug map object with duplicate name and timestamp` 的 warning —— 这是 llama.cpp 上游 mtmd 模块在不同 model arch 下同名 `.o` 的去重提示，**无害**，产物正常。
 
 > **什么时候要重 build？**
-> - 父仓库 bump 了 llama.cpp submodule 指针（`git submodule status` 显示与本地构建时不同的 commit）
-> - 你自己改动了 `llama.cpp/` 下任意源码
+> - 父仓库 bump 了 llama.cpp-omni submodule 指针（`git submodule status` 显示与本地构建时不同的 commit）
+> - 你自己改动了 `llama.cpp-omni/` 下任意源码
 
 #### 1.1.3 用 Xcode 打开并运行
 
@@ -145,7 +145,7 @@ cd MiniCPM-V-demo-Android
 
 首次启动后，进入应用内的 **模型管理** 页面点击 **下载模型**。也可以使用 `hdc file send` 旁路侧载模型文件，详见 `MiniCPM-V-demo-HarmonyOS/README_zh.md`。
 
-> 鸿蒙端 C++ 推理层与 Android、iOS 共用仓库根目录的 `llama.cpp` 子模块，模型清单 / OBS 直链 / MD5 哈希严格同源。
+> 鸿蒙端 C++ 推理层与 Android、iOS 共用仓库根目录的 `llama.cpp-omni` 子模块，模型清单 / OBS 直链 / MD5 哈希严格同源。
 
 ---
 

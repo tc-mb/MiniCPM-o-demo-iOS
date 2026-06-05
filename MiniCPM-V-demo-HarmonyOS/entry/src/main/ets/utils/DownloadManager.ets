@@ -83,6 +83,7 @@ export async function downloadModelsForSelected(
 
   const ggufSources:   RaceSource[] = [];
   const mmprojSources: RaceSource[] = [];
+  const acousticSources: RaceSource[] = [];
 
   if (model.hasHfMsSources()) {
     const hfBase = `https://huggingface.co/${model.hfRepo}/resolve/${model.hfBranch}`;
@@ -93,6 +94,10 @@ export async function downloadModelsForSelected(
       mmprojSources.push({ label: 'HuggingFace', url: `${hfBase}/${model.mmprojRemotePath()}` });
       mmprojSources.push({ label: 'ModelScope',  url: `${msBase}/${model.mmprojRemotePath()}` });
     }
+    if (model.isTts) {
+      acousticSources.push({ label: 'HuggingFace', url: `${hfBase}/${model.acousticRemotePath()}` });
+      acousticSources.push({ label: 'ModelScope',  url: `${msBase}/${model.acousticRemotePath()}` });
+    }
   }
   if (model.directGgufUrl) {
     ggufSources.push({ label: str(rm, 'source_direct'), url: model.directGgufUrl });
@@ -100,11 +105,17 @@ export async function downloadModelsForSelected(
   if (!model.isTextOnly && model.directMmprojUrl) {
     mmprojSources.push({ label: str(rm, 'source_direct'), url: model.directMmprojUrl });
   }
+  if (model.isTts && model.directAcousticUrl) {
+    acousticSources.push({ label: str(rm, 'source_direct'), url: model.directAcousticUrl });
+  }
   if (ggufSources.length === 0) {
     throw new Error(`Model ${model.id} has no GGUF download source configured`);
   }
-  if (!model.isTextOnly && mmprojSources.length === 0) {
+  if (!model.isTextOnly && mmprojSources.length === 0 && !model.isTts) {
     throw new Error(`Model ${model.id} has no mmproj download source configured`);
+  }
+  if (model.isTts && acousticSources.length === 0 && !model.hasHfMsSources()) {
+    throw new Error(`Model ${model.id} has no acoustic download source configured`);
   }
 
   const labelSummary = ggufSources.map(s => s.label).join('+');
@@ -113,8 +124,11 @@ export async function downloadModelsForSelected(
   const jobs: MultiSourceJob[] = [
     { name: model.ggufFileName,   sources: ggufSources,   md5: model.ggufMd5 },
   ];
-  if (!model.isTextOnly) {
+  if (!model.isTextOnly && !model.isTts) {
     jobs.push({ name: model.mmprojFileName, sources: mmprojSources, md5: model.mmprojMd5 });
+  }
+  if (model.isTts && acousticSources.length > 0) {
+    jobs.push({ name: model.acousticFileName, sources: acousticSources, md5: model.acousticMd5 });
   }
   for (const job of jobs) {
     await downloadFileWithSources(context, dir, job, onProgress);
@@ -472,6 +486,9 @@ export async function deleteSelectedModelFiles(context: common.Context): Promise
   const filesToDelete: string[] = [model.ggufFileName];
   if (model.mmprojFileName) {
     filesToDelete.push(model.mmprojFileName);
+  }
+  if (model.acousticFileName) {
+    filesToDelete.push(model.acousticFileName);
   }
   for (const name of filesToDelete) {
     const p = `${dir}/${name}`;

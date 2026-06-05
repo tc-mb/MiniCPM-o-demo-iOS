@@ -143,10 +143,20 @@ class LlamaEngine private constructor(
             return File(modelDirFor(context, model), mmproj).absolutePath
         }
 
+        fun acousticPath(context: Context): String? {
+            val model = getSelectedModel(context)
+            val acoustic = model.acousticFileName ?: return null
+            return File(modelDirFor(context, model), acoustic).absolutePath
+        }
+
         fun modelsExist(context: Context): Boolean {
             val model = getSelectedModel(context)
             if (!File(modelPath(context)).exists()) return false
             if (model.isTextOnly) return true
+            if (model.isTts) {
+                val ap = acousticPath(context) ?: return true
+                return File(ap).exists()
+            }
             val mp = mmprojPath(context) ?: return true
             return File(mp).exists()
         }
@@ -183,6 +193,10 @@ class LlamaEngine private constructor(
                 // or quietly trigger a re-download, so renaming is always
                 // safe.
                 "MiniCPM5-0.9B-Q4_K_M.gguf" to "MiniCPM5-1B-Q4_K_M.gguf"
+            ),
+            "voxcpm2" to listOf(
+                // BaseLM was quantized from F16 to Q4_K_M (~3.1 GB → ~1.0 GB).
+                "VoxCPM2-BaseLM-F16.gguf" to "VoxCPM2-BaseLM-Q4_K_M.gguf"
             )
         )
 
@@ -328,13 +342,19 @@ class LlamaEngine private constructor(
 
             val ggufSources = mutableListOf<FileSource>()
             val mmprojSources = mutableListOf<FileSource>()
+            val acousticSources = mutableListOf<FileSource>()
 
             if (model.hasHfMsSources) {
                 val hfBase = "https://huggingface.co/${model.hfRepo}/resolve/${model.hfBranch}"
                 val msBase = "https://www.modelscope.cn/models/${model.msRepo}/resolve/${model.msBranch}"
                 ggufSources.add(FileSource("HuggingFace", URL("$hfBase/${model.ggufRemotePath}")))
                 ggufSources.add(FileSource("ModelScope", URL("$msBase/${model.ggufRemotePath}")))
-                if (!model.isTextOnly) {
+                if (model.isTts) {
+                    model.acousticRemotePath?.let { rp ->
+                        acousticSources.add(FileSource("HuggingFace", URL("$hfBase/$rp")))
+                        acousticSources.add(FileSource("ModelScope", URL("$msBase/$rp")))
+                    }
+                } else if (!model.isTextOnly) {
                     mmprojSources.add(FileSource("HuggingFace", URL("$hfBase/${model.mmprojRemotePath}")))
                     mmprojSources.add(FileSource("ModelScope", URL("$msBase/${model.mmprojRemotePath}")))
                 }
@@ -342,21 +362,30 @@ class LlamaEngine private constructor(
             if (!model.directGgufUrl.isNullOrBlank()) {
                 ggufSources.add(FileSource(context.getString(R.string.source_direct), URL(model.directGgufUrl)))
             }
-            if (!model.isTextOnly && !model.directMmprojUrl.isNullOrBlank()) {
+            if (model.isTts && !model.directAcousticUrl.isNullOrBlank()) {
+                acousticSources.add(FileSource(context.getString(R.string.source_direct), URL(model.directAcousticUrl)))
+            }
+            if (!model.isTextOnly && !model.isTts && !model.directMmprojUrl.isNullOrBlank()) {
                 mmprojSources.add(FileSource(context.getString(R.string.source_direct), URL(model.directMmprojUrl)))
             }
 
             if (ggufSources.isEmpty()) {
                 throw RuntimeException("Model ${model.id} has no GGUF download source configured")
             }
-            if (!model.isTextOnly && mmprojSources.isEmpty()) {
+            if (model.isTts && acousticSources.isEmpty()) {
+                throw RuntimeException("Model ${model.id} has no acoustic GGUF download source configured")
+            }
+            if (!model.isTextOnly && !model.isTts && mmprojSources.isEmpty()) {
                 throw RuntimeException("Model ${model.id} has no mmproj download source configured")
             }
 
             val files = mutableListOf(
                 FileSpec(model.ggufFileName, ggufSources, model.ggufMd5),
             )
-            if (!model.isTextOnly && model.mmprojFileName != null) {
+            if (model.isTts && model.acousticFileName != null) {
+                files.add(FileSpec(model.acousticFileName, acousticSources, model.acousticMd5))
+            }
+            if (!model.isTextOnly && !model.isTts && model.mmprojFileName != null) {
                 files.add(FileSpec(model.mmprojFileName, mmprojSources, model.mmprojMd5))
             }
 

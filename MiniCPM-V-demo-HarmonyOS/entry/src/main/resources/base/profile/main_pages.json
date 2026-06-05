@@ -1,6 +1,7 @@
 {
   "src": [
     "pages/Index",
-    "pages/ModelManager"
+    "pages/ModelManager",
+    "pages/TtsPage"
   ]
 }

@@ -1,5 +1,5 @@
 # Mirrors MiniCPM-V-demo-Android/app/src/main/cpp/CMakeLists.txt so that the
-# HarmonyOS port can share the exact same llama.cpp + mtmd source tree as the
+# HarmonyOS port can share the exact same llama.cpp-omni + mtmd source tree as the
 # iOS and Android demos. Differences vs Android:
 #  * uses HarmonyOS hilog instead of Android's <android/log.h>
 #  * does not link the "android" or "log" system libraries; links libhilog_ndk.z
@@ -36,10 +36,10 @@ if(DEFINED OHOS_ARCH)
     endif()
 endif()
 
-# llama.cpp source lives at the repository root so it is shared with the
+# llama.cpp-omni source lives at the repository root so it is shared with the
 # iOS and Android demos. Layout:
 #   MiniCPM-V-Apps/
-#     ├── llama.cpp/
+#     ├── llama.cpp-omni/
 #     ├── MiniCPM-V-demo-Android/
 #     ├── MiniCPM-V-demo/                         (iOS)
 #     └── MiniCPM-V-demo-HarmonyOS/
@@ -47,15 +47,15 @@ endif()
 #
 # Going up five levels from this file lands us at the repository root.
 if(NOT DEFINED LLAMA_SRC)
-    set(LLAMA_SRC ${CMAKE_CURRENT_LIST_DIR}/../../../../../llama.cpp)
+    set(LLAMA_SRC ${CMAKE_CURRENT_LIST_DIR}/../../../../../llama.cpp-omni)
 endif()
 get_filename_component(LLAMA_SRC ${LLAMA_SRC} ABSOLUTE)
 if(NOT EXISTS ${LLAMA_SRC}/CMakeLists.txt)
     message(FATAL_ERROR
-        "llama.cpp not found at ${LLAMA_SRC}. "
+        "llama.cpp-omni not found at ${LLAMA_SRC}. "
         "Run `git submodule update --init` from the repository root.")
 endif()
-message(STATUS "Using llama.cpp source at: ${LLAMA_SRC}")
+message(STATUS "Using llama.cpp-omni source at: ${LLAMA_SRC}")
 
 add_subdirectory(${LLAMA_SRC} ${CMAKE_BINARY_DIR}/build-llama)
 
@@ -63,14 +63,19 @@ if(NOT DEFINED LLAMA_INSTALL_VERSION)
     set(LLAMA_INSTALL_VERSION "0.0.0")
 endif()
 
-add_subdirectory(${LLAMA_SRC}/tools/mtmd ${CMAKE_BINARY_DIR}/build-mtmd)
+# NOTE: With LLAMA_BUILD_TOOLS=ON, llama.cpp-omni's tools/CMakeLists.txt already
+# adds mtmd and omni as subdirectories (lines 30-31).  We do NOT call
+# add_subdirectory() for them again — that would create duplicate targets
+# and trigger CMP0002 errors.  The targets mtmd, omni, voxcpm2_* are all
+# available for linking because they are defined within the llama.cpp-omni tree.
 
 # The .so name MUST match the dependency declared in oh-package.json5
 # ("libentry.so") with the leading "lib" stripped, otherwise
 # `import nativeModule from 'libentry.so'` will fail at runtime.
 add_library(entry SHARED
         napi_init.cpp
-        llama_napi.cpp)
+        llama_napi.cpp
+        omni_napi.cpp)
 
 target_compile_definitions(entry PRIVATE
         GGML_SYSTEM_ARCH=${GGML_SYSTEM_ARCH}
@@ -84,17 +89,20 @@ target_include_directories(entry PRIVATE
         ${LLAMA_SRC}/ggml/include
         ${LLAMA_SRC}/ggml/src
         ${LLAMA_SRC}/tools/mtmd
+        ${LLAMA_SRC}/tools/omni
+        ${LLAMA_SRC}/tools/omni/voxcpm2
         # llama-common/peg-parser pulls in <nlohmann/json_fwd.hpp> via chat.h.
-        # The vendored nlohmann headers live under llama.cpp/vendor.
+        # The vendored nlohmann headers live under llama.cpp-omni/vendor.
         ${LLAMA_SRC}/vendor)
 
 target_link_libraries(entry PRIVATE
         llama
-        # Upstream master renamed the common target from `common` to
-        # `llama-common` to avoid colliding with downstream projects that
-        # already export a `common` target. Stay in sync.
         llama-common
         mtmd
+        # VoxCPM2 TTS runtime (STATIC lib). Transitive deps (voxcpm2_llm,
+        # voxcpm2_fsq, voxcpm2_acoustic, llama, ggml, llama-common) are pulled
+        # in automatically. Mirrors Android demo's CMakeLists.txt.
+        voxcpm2_runtime
         libace_napi.z.so
         libhilog_ndk.z.so)
 

@@ -103,6 +103,7 @@
     <string name="model_desc_v4">Lightweight multimodal model with image understanding (4.1B)</string>
     <string name="model_desc_v46">Next-gen multimodal model with image understanding (1.2B)</string>
     <string name="model_desc_minicpm5">Lightweight text-only model (1B)</string>
+    <string name="model_desc_voxcpm2">Multilingual TTS with voice design and cloning (2B)</string>
 
     <!-- VideoFrameExtractor -->
     <string name="video_label">Video</string>
@@ -135,4 +136,44 @@
     <!-- Language picker -->
     <string name="settings_language">Language</string>
     <string name="language_picker_title">Choose Language</string>
+
+    <!-- TTS Activity -->
+    <string name="tts_title">TTS (VoxCPM2)</string>
+    <string name="tts_header_subtitle">Text-to-Speech · Voice Design &amp; Cloning</string>
+    <string name="tts_header_guide">Enter text to synthesize speech in 30 languages + 9 dialects.\nCFG controls quality; more steps = better but slower.</string>
+    <string name="tts_text_label">Input Text</string>
+    <string name="tts_text_hint">Enter text to synthesize</string>
+    <string name="tts_voice_design_hint">Voice design: \'(description) text\' format, e.g. \'(young female, gentle) Hello!\'</string>
+    <string name="tts_ref_audio_label">Reference Audio (Voice Cloning)</string>
+    <string name="tts_preset_ref_label">Preset Voices</string>
+    <string name="tts_preset_female">Female</string>
+    <string name="tts_preset_male">Male</string>
+    <string name="tts_record">Record</string>
+    <string name="tts_stop_record">Stop</string>
+    <string name="tts_play_ref">Play</string>
+    <string name="tts_clear_ref">Clear</string>
+    <string name="tts_recording">Recording…</string>
+    <string name="tts_ref_recorded">Recorded %.1fs, %d KB</string>
+    <string name="tts_params_label">Inference Parameters</string>
+    <string name="tts_cfg_label">CFG Scale</string>
+    <string name="tts_timesteps_label">Timesteps</string>
+    <string name="tts_timesteps_hint">≤8 steps recommended for mobile, higher may take long</string>
+    <string name="tts_generate">Generate Speech</string>
+    <string name="tts_cancel">Cancel</string>
+    <string name="tts_generating">Generating speech…</string>
+    <string name="tts_cancelled">Cancelled</string>
+    <string name="tts_loading_model">Loading model…</string>
+    <string name="tts_generate_done">Speech generated!</string>
+    <string name="tts_generate_failed">Speech generation failed</string>
+    <string name="tts_error">Error: %1$s</string>
+    <string name="tts_playback_label">Playback</string>
+    <string name="tts_text_empty">Please enter text to synthesize</string>
+    <string name="tts_play_failed">Playback failed: %1$s</string>
+    <string name="tts_record_permission_denied">Microphone permission needed for reference audio</string>
+    <string name="tts_download_prompt_title">Missing Model Files</string>
+    <string name="tts_download_prompt_message">Please download the VoxCPM2 model first</string>
+    <string name="tts_model_load_failed">Model loading failed</string>
+    <string name="tts_preset_load_failed">Failed to load preset: %1$s</string>
+    <string name="tts_baselm_missing">BaseLM GGUF file missing, please download</string>
+    <string name="tts_acoustic_missing">Acoustic GGUF file missing, please download</string>
 </resources>

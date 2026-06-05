@@ -124,6 +124,42 @@
     { "name": "settings_language", "value": "语言" },
     { "name": "language_picker_title", "value": "选择语言" },
 
-    { "name": "system_prompt", "value": "你是一个有用且诚实的AI助手。当用户发送图片时，请仔细观察图片内容并准确回答用户的问题。" }
+    { "name": "system_prompt", "value": "你是一个有用且诚实的AI助手。当用户发送图片时，请仔细观察图片内容并准确回答用户的问题。" },
+
+    { "name": "permission_microphone_reason", "value": "录制参考音频用于语音克隆" },
+    { "name": "page_title_tts", "value": "语音合成" },
+    { "name": "tts_title_brand", "value": "VoxCPM2" },
+    { "name": "tts_subtitle", "value": "文本转语音 · 语音设计与克隆" },
+    { "name": "model_desc_voxcpm2", "value": "文本转语音模型，支持语音设计与克隆 (~2B)" },
+
+    { "name": "tts_text_label", "value": "输入文本" },
+    { "name": "tts_voice_design_hint", "value": "Voice Design: (一个温柔的女声用中文说)你好世界\nVoice Cloning: 直接输入要合成的文本，需提供参考音频" },
+    { "name": "tts_cfg_label", "value": "引导强度 (CFG)" },
+    { "name": "tts_steps_label", "value": "推理步数" },
+    { "name": "tts_steps_warning", "value": "步数 > 8 可能很慢" },
+
+    { "name": "tts_ref_audio_label", "value": "参考音频 (Voice Cloning)" },
+    { "name": "tts_recording_item", "value": "录制" },
+    { "name": "tts_stop_recording_item", "value": "停止录制" },
+    { "name": "tts_recording", "value": "录制的音频" },
+    { "name": "tts_preset_female", "value": "默认女声" },
+    { "name": "tts_preset_male", "value": "默认男声" },
+    { "name": "tts_ref_selected", "value": "已选择参考音频: %s" },
+    { "name": "tts_clear_ref", "value": "清除" },
+
+    { "name": "tts_generate", "value": "生成语音" },
+    { "name": "tts_generating", "value": "生成中" },
+    { "name": "tts_generation_done", "value": "语音生成完成" },
+    { "name": "tts_output_label", "value": "生成结果" },
+    { "name": "tts_play", "value": "播放" },
+    { "name": "tts_stop", "value": "停止" },
+
+    { "name": "tts_empty_text", "value": "请输入要合成的文本" },
+    { "name": "tts_no_output", "value": "没有生成的结果" },
+
+    { "name": "toast_acoustic_file_missing", "value": "声学模型文件未找到，请先下载" },
+    { "name": "toast_record_failed", "value": "录音失败，请检查麦克风权限" },
+    { "name": "toast_mic_permission_denied", "value": "需要麦克风权限才能录音" },
+    { "name": "toast_preset_load_failed", "value": "加载预设音频失败" }
   ]
 }

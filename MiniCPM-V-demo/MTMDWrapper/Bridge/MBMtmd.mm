@@ -317,9 +317,8 @@ mb_mtmd_context * mb_mtmd_init(const char * model_path,
         vparams.use_gpu              = params.mmproj_use_gpu;
         vparams.print_timings        = false;
         vparams.n_threads            = params.n_threads;
-        vparams.warmup               = params.warmup;
-        vparams.image_max_tokens     = params.image_max_tokens;
-        vparams.image_max_slice_nums = params.image_max_slice_nums;
+        // warmup / image_max_tokens / image_max_slice_nums removed from
+        // upstream mtmd_context_params; defaults are fine for mobile.
         // image_min_tokens / flash_attn_type / cb_eval are intentionally left
         // at their defaults; the demo never tuned them.
 
@@ -438,8 +437,11 @@ void mb_mtmd_set_model_version(mb_mtmd_context * ctx, int version) {
 }
 
 void mb_mtmd_set_image_max_slice_nums(mb_mtmd_context * ctx, int n) {
-    if (!ctx || !ctx->vision) return;
-    mtmd_set_image_max_slice_nums(ctx->vision.get(), n);
+    // Upstream mtmd no longer exposes per-image slice control;
+    // slicing logic lives inside clip.cpp and auto-calculates from
+    // image dimensions.  Keep the bridge entry-point as a no-op so
+    // existing callers don't break.
+    (void)ctx; (void)n;
 }
 
 // ---------------------------------------------------------------------------

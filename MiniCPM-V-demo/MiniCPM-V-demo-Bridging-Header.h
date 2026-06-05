@@ -22,4 +22,7 @@
 /// 与 master 同步后已不再可用。
 #import "MBMtmd.h"
 
+/// VoxCPM2 TTS bridge — 调用 llama.cpp-omni 的 VoxCPM2Runtime
+#import "TtsBridge.h"
+
 #endif /* MiniCPM_V_demo_Bridging_Header_h */

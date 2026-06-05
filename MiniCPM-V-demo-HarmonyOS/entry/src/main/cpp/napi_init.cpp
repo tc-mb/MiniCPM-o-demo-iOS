@@ -24,6 +24,11 @@ extern napi_value CancelGeneration(napi_env env, napi_callback_info info);
 extern napi_value Unload(napi_env env, napi_callback_info info);
 extern napi_value Shutdown(napi_env env, napi_callback_info info);
 
+// VoxCPM2 TTS (omni_napi.cpp)
+extern napi_value InitOmni(napi_env env, napi_callback_info info);
+extern napi_value TtsGenerate(napi_env env, napi_callback_info info);
+extern napi_value TtsFree(napi_env env, napi_callback_info info);
+
 EXTERN_C_START
 static napi_value RegisterModule(napi_env env, napi_value exports) {
     napi_property_descriptor desc[] = {
@@ -42,6 +47,10 @@ static napi_value RegisterModule(napi_env env, napi_value exports) {
         { "cancelGeneration",    nullptr, CancelGeneration,    nullptr, nullptr, nullptr, napi_default, nullptr },
         { "unload",              nullptr, Unload,              nullptr, nullptr, nullptr, napi_default, nullptr },
         { "shutdown",            nullptr, Shutdown,            nullptr, nullptr, nullptr, napi_default, nullptr },
+        // VoxCPM2 TTS
+        { "initOmni",            nullptr, InitOmni,            nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "ttsGenerate",         nullptr, TtsGenerate,         nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "ttsFree",             nullptr, TtsFree,             nullptr, nullptr, nullptr, napi_default, nullptr },
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

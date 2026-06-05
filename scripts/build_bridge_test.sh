@@ -16,7 +16,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-LLAMA_DIR="${REPO_ROOT}/llama.cpp"
+LLAMA_DIR="${REPO_ROOT}/llama.cpp-omni"
 BUILD_DIR="${LLAMA_DIR}/build-cli-test"
 BIN_DIR="${BUILD_DIR}/bin"
 BRIDGE_DIR="${REPO_ROOT}/MiniCPM-V-demo/MTMDWrapper/Bridge"

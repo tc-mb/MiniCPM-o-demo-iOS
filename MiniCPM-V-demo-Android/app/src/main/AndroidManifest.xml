@@ -18,6 +18,8 @@
     <!-- Android 13+: notification posting now requires runtime consent;
          we ask for it the first time the user taps "下载". -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- TTS: recording reference audio for voice cloning. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:name=".MiniCPMApplication"
@@ -46,6 +48,13 @@
             android:exported="false"
             android:configChanges="locale|layoutDirection"
             android:label="@string/model_management"
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".TtsActivity"
+            android:exported="false"
+            android:configChanges="locale|layoutDirection"
+            android:label="@string/tts_title"
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="adjustResize" />
 

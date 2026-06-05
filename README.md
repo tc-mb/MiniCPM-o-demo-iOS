@@ -14,9 +14,9 @@ This repository contains three on-device demos for MiniCPM-V (multimodal LLM) ru
 * `MiniCPM-V-demo-Android/` — Android demo (Gradle / Kotlin)
 * `MiniCPM-V-demo-HarmonyOS/` — HarmonyOS NEXT demo (DevEco Studio / ArkTS)
 
-All three demos share the same `llama.cpp` submodule (branch `MiniCPM-V`) at the repo root.
+All three demos share the same `llama.cpp-omni` submodule (branch `master`) at the repo root.
 
-> **NOTE**: This project bundles `llama.cpp` as a git submodule. The upstream fork `tc-mb/llama.cpp` carries a dozen unrelated branches and a full clone weighs ~350 MB, so `shallow = true` is set in `.gitmodules` by default. The recommended **shallow + single-branch** clone is:
+> **NOTE**: This project bundles `llama.cpp` as a git submodule. The upstream fork `tc-mb/llama.cpp-omni` carries a dozen unrelated branches and a full clone weighs ~350 MB, so `shallow = true` is set in `.gitmodules` by default. The recommended **shallow + single-branch** clone is:
 >
 > ```bash
 > # one-shot (parent repo + submodules, all shallow)
@@ -31,7 +31,7 @@ All three demos share the same `llama.cpp` submodule (branch `MiniCPM-V`) at the
 > git submodule update --init --recursive --depth 1 --single-branch
 > ```
 >
-> This only pulls a single commit of the `MiniCPM-V` branch (~tens of MB) instead of the full llama.cpp fork history. Developers who need to push to `tc-mb/llama.cpp:MiniCPM-V` can run `git fetch --unshallow` inside the submodule to lift the shallow restriction.
+> This only pulls a single commit of the `MiniCPM-V` branch (~tens of MB) instead of the full llama.cpp-omni fork history. Developers who need to push to `tc-mb/llama.cpp-omni:master` can run `git fetch --unshallow` inside the submodule to lift the shallow restriction.
 
 The README is organised in two parts:
 
@@ -71,7 +71,7 @@ The README is organised in two parts:
 
 #### 1.1.2 Build llama.xcframework (required on first build)
 
-This repo **does not track** any compiled artefacts, so the prebuilt `llama.xcframework` (~189 MB) needs to be produced locally from the `llama.cpp` submodule and dropped into `MiniCPM-V-demo/thirdparty/` for Xcode to link against. A one-shot script is provided — by default it only builds the two slices the demo actually links (real device + simulator), which takes ~2-3 min on a modern M-series Mac:
+This repo **does not track** any compiled artefacts, so the prebuilt `llama.xcframework` (~189 MB) needs to be produced locally from the `llama.cpp-omni` submodule and dropped into `MiniCPM-V-demo/thirdparty/` for Xcode to link against. A one-shot script is provided — by default it only builds the two slices the demo actually links (real device + simulator), which takes ~2-3 min on a modern M-series Mac:
 
 ```bash
 ./scripts/build_xcframework.sh
@@ -91,7 +91,7 @@ MINIMAL_MODE=all        ./scripts/build_xcframework.sh   # iOS + macOS + tvOS + 
 The equivalent manual commands, if you'd rather not use the script:
 
 ```bash
-cd llama.cpp
+cd llama.cpp-omni
 MINIMAL_MODE=ios ./build-xcframework.sh
 cp -r ./build-apple/llama.xcframework ../MiniCPM-V-demo/thirdparty/
 ```
@@ -99,8 +99,8 @@ cp -r ./build-apple/llama.xcframework ../MiniCPM-V-demo/thirdparty/
 During the build you will see warnings like `ignoring duplicate libraries` and `skipping debug map object with duplicate name and timestamp` — these come from llama.cpp's mtmd module having identically-named `.o` files across different model architectures. They are **harmless** and the resulting framework works correctly.
 
 > **When do I need to rebuild?**
-> - The parent repo bumped the llama.cpp submodule pointer (`git submodule status` shows a commit different from your last local build).
-> - You edited any source under `llama.cpp/` that affects the framework.
+> - The parent repo bumped the llama.cpp-omni submodule pointer (`git submodule status` shows a commit different from your last local build).
+> - You edited any source under `llama.cpp-omni/` that affects the framework.
 
 #### 1.1.3 Open in Xcode and run
 
@@ -145,7 +145,7 @@ Build & run:
 
 After the first launch, open the in-app **Model Manager** and tap **Download**. You can also sideload model files via `hdc file send`; see `MiniCPM-V-demo-HarmonyOS/README_zh.md` for the expected directory layout.
 
-> The HarmonyOS port shares the exact same `llama.cpp` submodule, model catalogue, OBS direct-link URLs and MD5 hashes with the iOS / Android demos.
+> The HarmonyOS port shares the exact same `llama.cpp-omni` submodule, model catalogue, OBS direct-link URLs and MD5 hashes with the iOS / Android demos.
 
 ---
 

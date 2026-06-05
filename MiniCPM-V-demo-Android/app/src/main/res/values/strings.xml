@@ -106,6 +106,7 @@
     <string name="model_desc_v4">轻量级多模态模型，支持图文理解 (4.1B)</string>
     <string name="model_desc_v46">新一代多模态模型，支持图文理解 (1.2B)</string>
     <string name="model_desc_minicpm5">轻量级纯文本模型 (1B)</string>
+    <string name="model_desc_voxcpm2">多语言语音合成模型, 支持音色设计与声音克隆 (2B)</string>
 
     <!-- VideoFrameExtractor -->
     <string name="video_label">视频</string>
@@ -138,4 +139,44 @@
     <!-- Language picker -->
     <string name="settings_language">语言</string>
     <string name="language_picker_title">选择语言</string>
+
+    <!-- TTS Activity -->
+    <string name="tts_title">语音合成 (VoxCPM2)</string>
+    <string name="tts_header_subtitle">文本转语音 · 语音设计与克隆</string>
+    <string name="tts_header_guide">输入文本即可合成语音，支持 30 种语言 + 9 种方言。\nCFG 控制生成质量，推理步数越大音质越佳但速度更慢。</string>
+    <string name="tts_text_label">合成文本</string>
+    <string name="tts_text_hint">请输入要合成的文本</string>
+    <string name="tts_voice_design_hint">音色设计: 以 "(描述)文本" 格式输入, 如 "(年轻女性, 温柔)你好！"</string>
+    <string name="tts_ref_audio_label">参考音频 (声音克隆)</string>
+    <string name="tts_preset_ref_label">预设参考音频</string>
+    <string name="tts_preset_female">默认女声</string>
+    <string name="tts_preset_male">默认男声</string>
+    <string name="tts_record">录制</string>
+    <string name="tts_stop_record">停止录制</string>
+    <string name="tts_play_ref">试听</string>
+    <string name="tts_clear_ref">清除</string>
+    <string name="tts_recording">正在录制…</string>
+    <string name="tts_ref_recorded">已录制 %.1f秒, %d KB</string>
+    <string name="tts_params_label">推理参数</string>
+    <string name="tts_cfg_label">CFG 引导强度</string>
+    <string name="tts_timesteps_label">推理步数</string>
+    <string name="tts_timesteps_hint">手机端建议 ≤8 步, 过高可能等待很久</string>
+    <string name="tts_generate">生成语音</string>
+    <string name="tts_cancel">取消生成</string>
+    <string name="tts_generating">正在生成语音…</string>
+    <string name="tts_cancelled">生成已取消</string>
+    <string name="tts_loading_model">正在加载模型…</string>
+    <string name="tts_generate_done">语音生成完成!</string>
+    <string name="tts_generate_failed">语音生成失败</string>
+    <string name="tts_error">错误: %1$s</string>
+    <string name="tts_playback_label">播放</string>
+    <string name="tts_text_empty">请输入合成文本</string>
+    <string name="tts_play_failed">播放失败: %1$s</string>
+    <string name="tts_record_permission_denied">需要麦克风权限才能录制参考音频</string>
+    <string name="tts_download_prompt_title">缺少模型文件</string>
+    <string name="tts_download_prompt_message">请先下载 VoxCPM2 模型</string>
+    <string name="tts_model_load_failed">模型加载失败</string>
+    <string name="tts_preset_load_failed">加载预设失败: %1$s</string>
+    <string name="tts_baselm_missing">BaseLM GGUF 文件不存在，请下载模型</string>
+    <string name="tts_acoustic_missing">Acoustic GGUF 文件不存在，请下载模型</string>
 </resources>

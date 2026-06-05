@@ -9,7 +9,7 @@
 ## 0. What this repo is
 
 A cross-platform **iOS / Android / HarmonyOS** demo for the MiniCPM-V family of multimodal
-LLMs. All three clients run fully on-device via a shared `llama.cpp` submodule.
+LLMs. All three clients run fully on-device via a shared `llama.cpp-omni` submodule.
 
 This repository holds **demo source code + docs only**. Model weights are distributed via
 HuggingFace / ModelScope / OBS and are **not** stored here. Compiled artefacts
@@ -26,7 +26,7 @@ MiniCPM-V-Apps/
 ├── MiniCPM-V-demo.xcodeproj/    Xcode project
 ├── MiniCPM-V-demo-Android/      Android Kotlin + NDK sources
 ├── MiniCPM-V-demo-HarmonyOS/    HarmonyOS ArkTS + NDK sources
-├── llama.cpp/                   git submodule (inference backend, shared by all 3 clients)
+├── llama.cpp-omni/              git submodule (inference backend, shared by all 3 clients)
 ├── scripts/                     build / test helpers
 └── README{,_zh}.md              per-platform setup walkthroughs (read these first)
 ```
@@ -37,10 +37,10 @@ open & run" walkthrough for each platform.
 
 ---
 
-## 2. The `llama.cpp` submodule
+## 2. The `llama.cpp-omni` submodule
 
-- URL: `https://github.com/tc-mb/llama.cpp.git`
-- Branch: `MiniCPM-V`
+- URL: `https://github.com/tc-mb/llama.cpp-omni.git`
+- Branch: `master`
 - `.gitmodules` is marked `shallow = true`
 
 Recommended clone (one-shot, parent + submodule both shallow):
@@ -58,11 +58,11 @@ git submodule update --init --recursive --depth 1 --single-branch
 
 **Agent notes**
 
-- ❌ Do **not** switch the submodule branch (it is pinned to `MiniCPM-V`).
+- ❌ Do **not** switch the submodule branch (it is pinned to `master`).
 - ❌ Do **not** commit upstream-only changes (e.g. random edits to `convert_hf_to_gguf.py`)
   inside the submodule without explicit user confirmation.
 - ✅ If you do edit the submodule on purpose: `git commit` + `git push` to
-  `tc-mb/llama.cpp:MiniCPM-V` first, then in the parent repo `git add llama.cpp && git
+  `tc-mb/llama.cpp-omni:master` first, then in the parent repo `git add llama.cpp-omni && git
   commit` to bump the pointer.
 
 ---
@@ -105,7 +105,7 @@ modern M-series Mac). Override with `MINIMAL_MODE={ios-sim,ios-device,all}` for 
 build scopes. See README §1.1.2 for full details.
 
 Re-run the script whenever the submodule pointer is bumped, or whenever you edit any
-source under `llama.cpp/` that affects the framework binary.
+source under `llama.cpp-omni/` that affects the framework binary.
 
 ### 4.2 Android
 
@@ -174,7 +174,7 @@ When rotating a model or re-converting the mmproj, **edit both sides in the same
 - Android: `MiniCPM-V-demo-Android/app/src/main/java/com/example/minicpm_v_demo/ModelInfo.kt`
   (`ggufMd5` / `mmprojMd5`).
 
-> **mmproj migration caveat**: this demo's branch of llama.cpp expects
+> **mmproj migration caveat**: this demo's branch of llama.cpp-omni expects
 > `clip.projector_type=merger`, which differs from the upstream `minicpmv4_6` type
 > currently exported by the standard conversion path. When swapping mmproj layouts,
 > rename the file on disk (so legacy on-device copies are not blindly reused) and add
@@ -236,7 +236,7 @@ When rotating a model or re-converting the mmproj, **edit both sides in the same
 - ❌ Commit any file containing a local absolute path or credential: `local.properties`,
   `gradle.properties` with `signing.*`, keystore files, `*.p12`, `*.mobileprovision`.
 - ❌ Commit message with AI / tool attribution trailers.
-- ❌ Switch the `llama.cpp` submodule branch.
+- ❌ Switch the `llama.cpp-omni` submodule branch.
 - ❌ Decorate release artefact filenames with three-segment versions, commit hashes,
   `-release`, `-signed`, dates, etc.
 
