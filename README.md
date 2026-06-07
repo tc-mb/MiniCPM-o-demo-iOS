@@ -40,6 +40,17 @@ The README is organised in two parts:
 * **Part 1 — Platform setup**: how to build and run the demo on iOS, Android and HarmonyOS.
 * **Part 2 — GGUF model files**: where to get the model weights for each MiniCPM-V version, and the minimum on-device hardware needed to run them.
 
+## Related Projects (Community)
+
+* **[mobile-model-SDK](https://github.com/Shiyao-Huang/mobile-model-SDK)** — a
+  reusable Swift Package (iOS & macOS) that wraps this on-device `llama.cpp`/`mtmd`
+  stack behind a clean API with **OpenAI- and Anthropic-compatible** request
+  formats. It is model-agnostic (supports **MiniCPM-V 4.6** and **Gemma 4**),
+  auto-detects each model's vision/audio capabilities, and supports streaming,
+  multi-image, video frames, and **native on-device speech input**. A companion
+  SwiftUI app lives at
+  **[mobile-model-demo](https://github.com/Shiyao-Huang/mobile-model-demo)**.
+
 ---
 
 > **Just want to install the app?** Pre-built TestFlight (iOS) / APK (Android) / HAP (HarmonyOS) packages and step-by-step install instructions are in **[DOWNLOAD.md](DOWNLOAD.md)**. The rest of this README is only needed if you want to build from source.
