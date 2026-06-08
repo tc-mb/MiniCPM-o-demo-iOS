@@ -35,6 +35,68 @@ All three demos share the same `llama.cpp-omni` submodule (branch `master`) at t
 >
 > This only pulls a single commit of the `MiniCPM-V` branch (~tens of MB) instead of the full llama.cpp-omni fork history. Developers who need to push to `tc-mb/llama.cpp-omni:master` can run `git fetch --unshallow` inside the submodule to lift the shallow restriction.
 
+## Optional HTTP server
+
+The `llama.cpp-omni` submodule includes a standalone HTTP server called `llama-server`. It exposes OpenAI-compatible and Anthropic-compatible inference APIs, including a combined chat endpoint:
+
+- `POST /v1/compat`
+- `POST /compat`
+
+This endpoint accepts either OpenAI-style chat payloads or Anthropic-style messages payloads and returns responses in the same style.
+
+Example OpenAI-style `curl`:
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/compat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer no-key" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Translate this to Chinese: Hello, world."}
+    ]
+  }'
+```
+
+Example Anthropic-style `curl`:
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/compat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer no-key" \
+  -d '{
+    "model": "claude-3.5",
+    "messages": [
+      {"type": "system", "content": "You are a helpful assistant."},
+      {"type": "user", "content": "Translate this to Chinese: Hello, world."}
+    ],
+    "stop_sequences": ["\n\nHuman:"]
+  }'
+```
+
+Example Python raw request:
+
+```python
+import requests
+
+url = "http://127.0.0.1:8080/v1/compat"
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer no-key"
+}
+payload = {
+    "model": "gpt-4o-mini",
+    "messages": [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Translate this to Chinese: Hello, world."}
+    ]
+}
+
+resp = requests.post(url, json=payload, headers=headers)
+print(resp.json())
+```
+
 The README is organised in two parts:
 
 * **Part 1 — Platform setup**: how to build and run the demo on iOS, Android and HarmonyOS.
