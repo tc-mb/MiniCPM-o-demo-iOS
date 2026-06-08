@@ -35,8 +35,15 @@ class ModelManagerActivity : AppCompatActivity() {
     private lateinit var recyclerModels: RecyclerView
     private lateinit var tvLanguageValue: TextView
 
+    private lateinit var etServerPort: com.google.android.material.textfield.TextInputEditText
+    private lateinit var btnSetPort: MaterialButton
+    private lateinit var tvServerStatus: TextView
+    private lateinit var btnStartServer: MaterialButton
+    private lateinit var btnStopServer: MaterialButton
+
     private lateinit var engine: LlamaEngine
     private lateinit var modelAdapter: ModelAdapter
+    private lateinit var serverManager: HttpServerManager
 
     // Android 13+: POST_NOTIFICATIONS is a runtime permission. We need it
     // for the foreground download service's progress notification (without
@@ -71,18 +78,34 @@ class ModelManagerActivity : AppCompatActivity() {
         recyclerModels = findViewById(R.id.recycler_models)
         tvLanguageValue = findViewById(R.id.tv_language_value)
 
+        etServerPort = findViewById(R.id.et_server_port)
+        btnSetPort = findViewById(R.id.btn_set_port)
+        tvServerStatus = findViewById(R.id.tv_server_status)
+        btnStartServer = findViewById(R.id.btn_start_server)
+        btnStopServer = findViewById(R.id.btn_stop_server)
+
         engine = LlamaEngine.getInstance(applicationContext)
+        serverManager = HttpServerManager.getInstance(applicationContext)
 
         setupModelList()
         updateLoadButtonState()
         observeEngineState()
         observeDownloadStatus()
         updateLanguageDisplay()
+        setupServerControls()
 
         btnDownload.setOnClickListener { onDownloadClicked() }
         btnLoadModel.setOnClickListener { loadSelectedModel() }
         btnDeleteModel.setOnClickListener { confirmDeleteModel() }
         findViewById<View>(R.id.btn_language).setOnClickListener { showLanguagePicker() }
+
+        // Server controls
+        btnSetPort.setOnClickListener { onSetPortClicked() }
+        btnStartServer.setOnClickListener { onStartServerClicked() }
+        btnStopServer.setOnClickListener { onStopServerClicked() }
+
+        // Initialize port display
+        etServerPort.setText(serverManager.getPort().toString())
     }
 
     private fun setupModelList() {
@@ -430,6 +453,108 @@ class ModelManagerActivity : AppCompatActivity() {
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    private fun setupServerControls() {
+        lifecycleScope.launch {
+            serverManager.serverState.collect { state ->
+                when (state) {
+                    is HttpServerManager.ServerState.Stopped -> {
+                        tvServerStatus.text = getString(R.string.server_stopped)
+                        btnStartServer.isEnabled = true
+                        btnStopServer.isEnabled = false
+                        btnSetPort.isEnabled = true
+                        etServerPort.isEnabled = true
+                    }
+                    is HttpServerManager.ServerState.Starting -> {
+                        tvServerStatus.text = getString(R.string.server_starting)
+                        btnStartServer.isEnabled = false
+                        btnStopServer.isEnabled = false
+                        btnSetPort.isEnabled = false
+                        etServerPort.isEnabled = false
+                    }
+                    is HttpServerManager.ServerState.Running -> {
+                        tvServerStatus.text = getString(R.string.server_running, state.port)
+                        btnStartServer.isEnabled = false
+                        btnStopServer.isEnabled = true
+                        btnSetPort.isEnabled = false
+                        etServerPort.isEnabled = false
+                    }
+                    is HttpServerManager.ServerState.Stopping -> {
+                        tvServerStatus.text = getString(R.string.server_stopping)
+                        btnStartServer.isEnabled = false
+                        btnStopServer.isEnabled = false
+                    }
+                    is HttpServerManager.ServerState.Error -> {
+                        tvServerStatus.text = getString(R.string.server_error, state.message)
+                        btnStartServer.isEnabled = true
+                        btnStopServer.isEnabled = false
+                        btnSetPort.isEnabled = true
+                        etServerPort.isEnabled = true
+                    }
+                }
+            }
+        }
+    }
+
+    private fun onSetPortClicked() {
+        val portText = etServerPort.text.toString().trim()
+        if (portText.isEmpty()) {
+            Toast.makeText(this, R.string.error_port_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val port = portText.toIntOrNull()
+        if (port == null || !serverManager.setPort(port)) {
+            Toast.makeText(this, R.string.error_invalid_port, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, getString(R.string.port_set_success, port), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onStartServerClicked() {
+        // Check if port is set
+        val port = serverManager.getPort()
+        if (port == 0) {
+            Toast.makeText(this, R.string.error_port_not_set, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Check if model is loaded
+        val currentState = engine.state.value
+        if (currentState !is LlamaState.ModelReady) {
+            Toast.makeText(this, R.string.error_model_not_loaded, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Get model paths
+        val modelPath = LlamaEngine.modelPath(applicationContext)
+        val mmprojPath = LlamaEngine.mmprojPath(applicationContext)
+
+        if (!File(modelPath).exists()) {
+            Toast.makeText(this, R.string.error_model_file_not_found, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        serverManager.start(
+            modelPath = modelPath,
+            mmprojPath = mmprojPath,
+            onSuccess = {
+                Toast.makeText(this, getString(R.string.server_started_success, port), Toast.LENGTH_SHORT).show()
+            },
+            onError = { error ->
+                Toast.makeText(this, getString(R.string.server_start_failed, error), Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    private fun onStopServerClicked() {
+        serverManager.stop(
+            onSuccess = {
+                Toast.makeText(this, R.string.server_stopped_success, Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 
     companion object {

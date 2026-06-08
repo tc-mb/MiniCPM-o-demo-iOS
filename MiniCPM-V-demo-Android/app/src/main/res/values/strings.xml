@@ -179,4 +179,26 @@
     <string name="tts_preset_load_failed">加载预设失败: %1$s</string>
     <string name="tts_baselm_missing">BaseLM GGUF 文件不存在，请下载模型</string>
     <string name="tts_acoustic_missing">Acoustic GGUF 文件不存在，请下载模型</string>
+
+    <!-- HTTP Server Settings -->
+    <string name="http_server_settings">HTTP API 服务器</string>
+    <string name="http_server_port">服务器端口</string>
+    <string name="port_hint">8080</string>
+    <string name="set">设置</string>
+    <string name="start_server">启动服务</string>
+    <string name="stop_server">停止服务</string>
+    <string name="server_stopped">已停止</string>
+    <string name="server_starting">正在启动...</string>
+    <string name="server_running">运行中 (端口: %1$d)</string>
+    <string name="server_stopping">正在停止...</string>
+    <string name="server_error">错误: %1$s</string>
+    <string name="error_port_empty">请输入端口号</string>
+    <string name="error_invalid_port">端口号无效，请输入 1024-65535 之间的数字</string>
+    <string name="error_port_not_set">请先设置端口号</string>
+    <string name="error_model_not_loaded">请先加载模型</string>
+    <string name="error_model_file_not_found">模型文件不存在</string>
+    <string name="port_set_success">端口已设置为 %1$d</string>
+    <string name="server_started_success">服务器已启动 (端口: %1$d)</string>
+    <string name="server_start_failed">启动失败: %1$s</string>
+    <string name="server_stopped_success">服务器已停止</string>
 </resources>
