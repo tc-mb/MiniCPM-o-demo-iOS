@@ -64,47 +64,23 @@ class HttpServerManager private constructor(private val context: Context) {
 
         Thread {
             try {
-                // Build llama-server command (adjust this based on your setup)
-                val llamaServerBinary = "llama-server" // Should be in system PATH or provide full path
-                val command = mutableListOf(
-                    llamaServerBinary,
-                    "-m", modelPath,
-                    "-p", port.toString(),
-                    "-n", "512",
-                    "--host", "0.0.0.0"
+                // Note: HTTP server with llama-server binary is not available on Android.
+                // The llama-server executable must be run on a PC/Server with the compiled
+                // llama.cpp-omni binaries.
+                //
+                // For Android deployment, use the llama.cpp inference directly via the
+                // LlamaEngine JNI wrapper instead.
+                
+                throw Exception(
+                    "HTTP server (llama-server) is not available on Android. " +
+                    "Please deploy llama-server on a PC or server, or use the native " +
+                    "LlamaEngine API for inference on this device."
                 )
-
-                if (mmprojPath != null) {
-                    command.addAll(listOf("--mmproj", mmprojPath))
-                }
-
-                serverProcess = Runtime.getRuntime().exec(command.toTypedArray())
-
-                // Start a thread to read server output
-                Thread {
-                    val reader = serverProcess!!.inputStream.bufferedReader()
-                    reader.forEachLine { line ->
-                        android.util.Log.i("HttpServer", line)
-                    }
-                }.start()
-
-                // Monitor error stream
-                Thread {
-                    val reader = serverProcess!!.errorStream.bufferedReader()
-                    reader.forEachLine { line ->
-                        android.util.Log.e("HttpServer", line)
-                    }
-                }.start()
-
-                handler.post {
-                    _serverState.value = ServerState.Running(port)
-                    onSuccess()
-                }
             } catch (e: Exception) {
                 serverProcess = null
                 handler.post {
-                    _serverState.value = ServerState.Stopped
-                    onError("Failed to start server: ${e.message}")
+                    _serverState.value = ServerState.Error(e.message ?: "Unknown error")
+                    onError(e.message ?: "Unknown error")
                 }
             }
         }.start()

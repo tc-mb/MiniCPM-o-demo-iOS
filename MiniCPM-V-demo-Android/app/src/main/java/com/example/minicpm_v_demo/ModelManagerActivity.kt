@@ -456,15 +456,26 @@ class ModelManagerActivity : AppCompatActivity() {
     }
 
     private fun setupServerControls() {
+        // Display notice that HTTP server is not available on Android
+        tvServerStatus.text = getString(R.string.http_server_not_supported_android)
+        btnStartServer.isEnabled = false
+        btnStopServer.isEnabled = false
+        btnSetPort.isEnabled = false
+        etServerPort.isEnabled = false
+
+        btnSetPort.setOnClickListener { onSetPortClicked() }
+        btnStartServer.setOnClickListener { onStartServerClicked() }
+        btnStopServer.setOnClickListener { onStopServerClicked() }
+
         lifecycleScope.launch {
             serverManager.serverState.collect { state ->
                 when (state) {
                     is HttpServerManager.ServerState.Stopped -> {
-                        tvServerStatus.text = getString(R.string.server_stopped)
-                        btnStartServer.isEnabled = true
+                        tvServerStatus.text = getString(R.string.http_server_not_supported_android)
+                        btnStartServer.isEnabled = false
                         btnStopServer.isEnabled = false
-                        btnSetPort.isEnabled = true
-                        etServerPort.isEnabled = true
+                        btnSetPort.isEnabled = false
+                        etServerPort.isEnabled = false
                     }
                     is HttpServerManager.ServerState.Starting -> {
                         tvServerStatus.text = getString(R.string.server_starting)
@@ -487,10 +498,10 @@ class ModelManagerActivity : AppCompatActivity() {
                     }
                     is HttpServerManager.ServerState.Error -> {
                         tvServerStatus.text = getString(R.string.server_error, state.message)
-                        btnStartServer.isEnabled = true
+                        btnStartServer.isEnabled = false
                         btnStopServer.isEnabled = false
-                        btnSetPort.isEnabled = true
-                        etServerPort.isEnabled = true
+                        btnSetPort.isEnabled = false
+                        etServerPort.isEnabled = false
                     }
                 }
             }

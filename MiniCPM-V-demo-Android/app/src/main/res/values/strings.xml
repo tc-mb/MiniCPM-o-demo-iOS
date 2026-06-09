@@ -201,4 +201,5 @@
     <string name="server_started_success">服务器已启动 (端口: %1$d)</string>
     <string name="server_start_failed">启动失败: %1$s</string>
     <string name="server_stopped_success">服务器已停止</string>
+    <string name="http_server_not_supported_android">HTTP 服务器 (llama-server) 在 Android 上不可用。请在 PC 或服务器上部署 llama-server，或使用本地推理。</string>
 </resources>
