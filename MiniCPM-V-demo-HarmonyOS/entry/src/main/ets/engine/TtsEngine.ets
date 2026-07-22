@@ -64,9 +64,15 @@ export class TtsEngine {
   private state: TtsState = TtsState.Uninitialized;
   private listeners: TtsStateListener[] = [];
   private chain: Promise<void> = Promise.resolve();
+  /** id of the TTS model currently loaded, or null. See LlamaEngine.loadedModelId. */
+  private loadedModelId: string | null = null;
 
   getCurrentState(): TtsState {
     return this.state;
+  }
+
+  getLoadedModelId(): string | null {
+    return this.loadedModelId;
   }
 
   private constructor(context: common.Context) {
@@ -129,6 +135,7 @@ export class TtsEngine {
       if (this.state.name === 'Ready' || this.state.name === 'Generating') {
         hilog.info(DOMAIN, TAG, 'Freeing existing VoxCPM2 runtime before reload');
         nativeEngine.ttsFree();
+        this.loadedModelId = null;
         this.setState(TtsState.Uninitialized);
       }
       if (this.state.name !== 'Uninitialized') {
@@ -148,6 +155,7 @@ export class TtsEngine {
       hilog.info(DOMAIN, TAG, 'initOmni success: %{public}s', result);
 
       hilog.info(DOMAIN, TAG, 'VoxCPM2 loaded successfully');
+      this.loadedModelId = LlamaEngine.getSelectedModel(this.context).id;
       this.setState(TtsState.Ready);
     });
   }
@@ -195,6 +203,7 @@ export class TtsEngine {
       if (this.state.name !== 'Uninitialized') {
         hilog.info(DOMAIN, TAG, 'Freeing TTS engine...');
         nativeEngine.ttsFree();
+        this.loadedModelId = null;
         this.setState(TtsState.Uninitialized);
       }
     });

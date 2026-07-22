@@ -40,6 +40,393 @@ const PREFS_NAME = 'model_prefs';
 
 export type ProgressListener = (msg: string) => void;
 
+/**
+ * Active task registry, keyed by file name (e.g. "model.gguf").
+ * Populated by downloadFileWithSources / downloadSingleSource; consumed
+ * by pauseDownloadForFile / resumeDownloadForFile / cancelDownloadForFile.
+ *
+ * The race downloader stores up to N tasks per file (one per source); the
+ * single-source path stores 1. After race settlement only the winner
+ * remains in the array (losers are removed via stopLoser).
+ */
+const activeTasks: Map<string, request.agent.Task[]> = new Map();
+
+/** Pause every active task for the given file. No-op if none registered. */
+export async function pauseDownloadForFile(fileName: string): Promise<void> {
+  const arr = activeTasks.get(fileName);
+  if (!arr || arr.length === 0) return;
+  hilog.info(DOMAIN, TAG, 'pause %{public}s (%{public}d task(s))', fileName, arr.length);
+  await Promise.all(arr.map((t) => t.pause().catch((e: object) => {
+    hilog.warn(DOMAIN, TAG, 'pause task %{public}s failed: %{public}s', `${t.tid}`, `${e}`);
+  })));
+}
+
+/** Resume every active (paused) task for the given file. */
+export async function resumeDownloadForFile(fileName: string): Promise<void> {
+  const arr = activeTasks.get(fileName);
+  if (!arr || arr.length === 0) return;
+  hilog.info(DOMAIN, TAG, 'resume %{public}s (%{public}d task(s))', fileName, arr.length);
+  await Promise.all(arr.map((t) => t.resume().catch((e: object) => {
+    hilog.warn(DOMAIN, TAG, 'resume task %{public}s failed: %{public}s', `${t.tid}`, `${e}`);
+  })));
+}
+
+/**
+ * Stop + remove every active task for the given file. Does NOT delete
+ * the .tmp file — that's preserved for future resume.
+ */
+export async function cancelDownloadForFile(fileName: string): Promise<void> {
+  const arr = activeTasks.get(fileName);
+  if (!arr || arr.length === 0) return;
+  hilog.info(DOMAIN, TAG, 'cancel %{public}s (%{public}d task(s))', fileName, arr.length);
+  await Promise.all(arr.map(async (t) => {
+    try {
+      await t.stop();
+    } catch (_) { /* ignore */ }
+    try {
+      await request.agent.remove(t.tid);
+    } catch (_) { /* ignore */ }
+  }));
+  activeTasks.delete(fileName);
+}
+
+/**
+ * Result of reattach: how many alive system tasks we picked up, and which
+ * of our expected file names they correspond to (so the service can mark
+ * the right "current file").
+ */
+export interface ReattachResult {
+  matchedFileNames: string[];
+  /**
+   * True iff at least one matched task is actively transferring bytes
+   * (state RUNNING or RETRYING). False when every matched task is held —
+   * notably PAUSED, the typical cold-start case after the user paused,
+   * killed, and relaunched the app — in which case the service must
+   * publish 'paused' so the UI offers Resume + Cancel directly, instead
+   * of wrongly publishing 'running' and forcing a bogus Pause -> Resume
+   * round-trip.
+   */
+  anyRunning: boolean;
+  cleanedUpStrayTids: number;
+}
+
+/**
+ * On app launch (or any time we suspect system-managed tasks might be
+ * lingering from a previous app session), call this to enumerate every
+ * request.agent task owned by this app and reattach callbacks
+ * to any whose saveas path matches one of `expectedFiles`.
+ *
+ * Why this exists: request.agent tasks live in the system service, NOT in
+ * the app process. Killing the app does NOT kill the task — it keeps
+ * downloading. On next app launch we MUST either reattach (this function)
+ * or explicitly stop the task; otherwise we'd create a new task that
+ * writes to the same .tmp file as the surviving system task, corrupting
+ * the download.
+ *
+ * Strategy:
+ *   - For tasks matching our expected files (state RUNNING/WAITING/RETRYING):
+ *     getTask + registerTask + on('progress'/'completed'/'failed')
+ *   - For tasks in terminal states (COMPLETED/FAILED/REMOVED): remove() to free
+ *     system resources
+ *   - For tasks in PAUSED/STOPPED: reattach so user can resume via service.resume
+ *
+ * `dir` is the model directory (${context.filesDir}/models/<id>) so we can
+ * resolve relative saveas paths and rename .tmp → final on completion.
+ */
+export async function reattachSystemTasks(
+  context: common.Context,
+  dir: string,
+  expectedFiles: string[],
+  md5Map: Map<string, string | null>,
+  onProgress: ProgressListener,
+): Promise<ReattachResult> {
+  const matchedFileNames: string[] = [];
+  let cleanedUpStrayTids = 0;
+  let anyRunning = false;
+
+  let tids: string[];
+  try {
+    const filter: request.agent.Filter = {
+      action: request.agent.Action.DOWNLOAD,
+    };
+    tids = await request.agent.search(filter);
+  } catch (e) {
+    hilog.warn(DOMAIN, TAG, 'reattach: search failed: %{public}s', `${e}`);
+    return { matchedFileNames, anyRunning, cleanedUpStrayTids };
+  }
+
+  hilog.info(DOMAIN, TAG, 'reattach: search returned %{public}d task(s)', tids.length);
+
+  for (const tid of tids) {
+    let info: request.agent.TaskInfo;
+    try {
+      info = await request.agent.show(tid);
+    } catch (e) {
+      hilog.warn(DOMAIN, TAG, 'reattach: show(%{public}s) failed: %{public}s', tid, `${e}`);
+      continue;
+    }
+
+    const saveas = info.saveas ?? '';
+    if (saveas.length === 0) {
+      hilog.warn(DOMAIN, TAG, 'reattach: tid %{public}s has empty saveas, skipping', tid);
+      continue;
+    }
+
+    // Match saveas to one of our expected file names. The basename is
+    // either `<fname>.tmp` (single-source) or `<fname>.r<N>.tmp` (race).
+    const basename = saveas.indexOf('/') >= 0
+      ? saveas.substring(saveas.lastIndexOf('/') + 1)
+      : saveas;
+    let matchedFname: string | null = null;
+    for (const fname of expectedFiles) {
+      if (basename === `${fname}.tmp`) { matchedFname = fname; break; }
+      const prefix = `${fname}.r`;
+      const suffix = '.tmp';
+      if (basename.startsWith(prefix) && basename.endsWith(suffix)) {
+        const mid = basename.substring(prefix.length, basename.length - suffix.length);
+        if (mid.length > 0 && /^\d+$/.test(mid)) { matchedFname = fname; break; }
+      }
+    }
+
+    if (matchedFname === null) {
+      // Not our task (different URL / leftover from deleted model).
+      // Clean it up so it doesn't linger forever.
+      hilog.info(DOMAIN, TAG, 'reattach: tid %{public}s (saveas=%{public}s) does not match any expected file — removing',
+        tid, basename);
+      try {
+        await request.agent.remove(tid);
+        cleanedUpStrayTids++;
+      } catch (e) {
+        hilog.warn(DOMAIN, TAG, 'reattach: remove(%{public}s) failed: %{public}s', tid, `${e}`);
+      }
+      continue;
+    }
+
+    // Reattach to the matched task
+    let task: request.agent.Task;
+    try {
+      task = await request.agent.getTask(context, tid);
+    } catch (e) {
+      hilog.warn(DOMAIN, TAG, 'reattach: getTask(%{public}s) failed: %{public}s', tid, `${e}`);
+      continue;
+    }
+
+    const fileName = matchedFname;
+    const targetPath = `${dir}/${fileName}`;
+    const tmpPath = `${targetPath}.tmp`;
+    const md5 = md5Map.get(fileName) ?? null;
+    const state = info.progress.state;
+
+    hilog.info(DOMAIN, TAG, 'reattach: picked up %{public}s (state=0x%{public}x, tid=%{public}s)',
+      fileName, state, tid);
+
+    // If task is already terminal, run cleanup path inline — no point
+    // subscribing to events that will never fire.
+    if (state === request.agent.State.COMPLETED
+      || state === request.agent.State.FAILED
+      || state === request.agent.State.REMOVED) {
+      hilog.info(DOMAIN, TAG, 'reattach: %{public}s already terminal (0x%{public}x) — cleaning up',
+        fileName, state);
+      try { await request.agent.remove(tid); cleanedUpStrayTids++; } catch (_) { /* ignore */ }
+      continue;
+    }
+
+    // A matched task counts as "running" only while it is actively
+    // transferring bytes (RUNNING) or retrying after a transient failure
+    // (RETRYING). Every other non-terminal state — notably PAUSED, the
+    // typical cold-start case after the user paused then killed and
+    // relaunched the app, but also WAITING / INITIALIZED / STOPPED —
+    // means the task is held and needs an explicit resume, so the service
+    // publishes 'paused' and the UI offers Resume + Cancel rather than
+    // Pause + Cancel. See ReattachResult.anyRunning.
+    if (state === request.agent.State.RUNNING
+      || state === request.agent.State.RETRYING) {
+      anyRunning = true;
+    }
+
+    registerTask(fileName, task);
+
+    // Wire up callbacks. Mirror the single-source progress/completed/
+    // failed semantics — reattached tasks are observationally equivalent
+    // to fresh ones from the service's perspective.
+    let lastProgressTime = 0;
+    task.on('progress', (p: request.agent.Progress) => {
+      const now = Date.now();
+      if (now - lastProgressTime > 500) {
+        lastProgressTime = now;
+        const got = p.processed;
+        const totalArr = p.sizes;
+        const total = totalArr && totalArr.length > 0 ? totalArr[0] : -1;
+        if (total > 0) {
+          const pct = Math.floor(got * 100 / total);
+          const mb = Math.floor(got / (1024 * 1024));
+          const totalMb = Math.floor(total / (1024 * 1024));
+          onProgress(`${fileName}: ${pct}% (${mb}/${totalMb} MB)`);
+        } else {
+          const mb = Math.floor(got / (1024 * 1024));
+          onProgress(`${fileName}: ${mb} MB`);
+        }
+      }
+    });
+
+    task.on('completed', async () => {
+      try {
+        if (fs.accessSync(targetPath)) fs.unlinkSync(targetPath);
+        fs.renameSync(tmpPath, targetPath);
+        if (md5) {
+          onProgress(`verifying md5 ${fileName}`);
+          const actual = await computeMd5(targetPath);
+          if (actual.toLowerCase() !== md5.toLowerCase()) {
+            hilog.error(DOMAIN, TAG, 'reattach %{public}s MD5 mismatch: expected %{public}s, got %{public}s',
+              fileName, md5, actual);
+            try { fs.unlinkSync(targetPath); } catch (_) { /* ignore */ }
+            onProgress(`md5 mismatch ${fileName}`);
+            return;
+          }
+          hilog.info(DOMAIN, TAG, 'reattach %{public}s MD5 OK', fileName);
+        }
+        onProgress(`${fileName} complete`);
+      } catch (e) {
+        hilog.error(DOMAIN, TAG, 'reattach %{public}s completed handler threw: %{public}s',
+          fileName, `${e}`);
+      } finally {
+        unregisterTask(fileName, task);
+        request.agent.remove(task.tid).catch(() => undefined);
+      }
+    });
+
+    task.on('failed', () => {
+      unregisterTask(fileName, task);
+      request.agent.show(task.tid).then((failedInfo: request.agent.TaskInfo) => {
+        onProgress(`${fileName} failed: ${JSON.stringify(failedInfo.faults)}`);
+      }).catch(() => {
+        onProgress(`${fileName} failed`);
+      }).finally(() => {
+        request.agent.remove(task.tid).catch(() => undefined);
+      });
+    });
+
+    matchedFileNames.push(fileName);
+  }
+
+  hilog.info(DOMAIN, TAG, 'reattach: matched %{public}d task(s) (anyRunning=%{public}s), cleaned up %{public}d stray',
+    matchedFileNames.length, `${anyRunning}`, cleanedUpStrayTids);
+  return { matchedFileNames, anyRunning, cleanedUpStrayTids };
+}
+
+/** Stop everything across all files. Used on app destruction. */
+export async function cancelAllDownloads(): Promise<void> {
+  const fileNames = Array.from(activeTasks.keys());
+  for (const f of fileNames) {
+    await cancelDownloadForFile(f);
+  }
+}
+
+/** Internal: register a task under its file name. */
+function registerTask(fileName: string, task: request.agent.Task): void {
+  const arr = activeTasks.get(fileName);
+  if (arr) {
+    arr.push(task);
+  } else {
+    activeTasks.set(fileName, [task]);
+  }
+}
+
+/** Internal: unregister a task. Safe to call multiple times. */
+function unregisterTask(fileName: string, task: request.agent.Task): void {
+  const arr = activeTasks.get(fileName);
+  if (!arr) return;
+  const i = arr.indexOf(task);
+  if (i >= 0) arr.splice(i, 1);
+  if (arr.length === 0) activeTasks.delete(fileName);
+}
+
+/** Internal: a race-leftover .tmp file candidate for consolidation. */
+interface RaceTmpCandidate {
+  path: string;
+  size: number;
+}
+
+/**
+ * Returns the byte size of `${dir}/${fileName}.tmp` if it exists, else 0.
+ * Used by the single-source path to decide whether to issue an HTTP Range
+ * request (Config.begins) for resumption.
+ */
+function detectExistingTmpBytes(dir: string, fileName: string): number {
+  const tmpPath = `${dir}/${fileName}.tmp`;
+  try {
+    if (!fs.accessSync(tmpPath)) return 0;
+    return fs.statSync(tmpPath).size;
+  } catch (_) {
+    return 0;
+  }
+}
+
+/**
+ * Inspect `${dir}` for race-leftover tmp files matching `${fileName}.r<N>.tmp`.
+ * If any are found:
+ *   - Pick the one with the largest size
+ *   - Rename it to `${fileName}.tmp` (replacing any existing single .tmp)
+ *   - Delete all other race tmps
+ *   - Return the (now single-.tmp) byte count
+ * If none found, returns 0 — caller proceeds with a fresh race.
+ *
+ * Why: race + HTTP Range begin are incompatible (multiple sources writing
+ * to different files at the same offset → incoherent). When resuming, we
+ * must collapse to a single source. Picking the largest race tmp
+ * preserves the most progress; discarding the others avoids confusion.
+ */
+function consolidateRaceTmps(dir: string, fileName: string, targetPath: string): number {
+  const singleTmpPath = `${targetPath}.tmp`;
+  let entries: string[];
+  try {
+    entries = fs.listFileSync(dir);
+  } catch (_) {
+    return 0;
+  }
+
+  const prefix = `${fileName}.r`;
+  const suffix = '.tmp';
+  const raceTmps: RaceTmpCandidate[] = [];
+
+  for (const entry of entries) {
+    if (!entry.startsWith(prefix) || !entry.endsWith(suffix)) continue;
+    const mid = entry.substring(prefix.length, entry.length - suffix.length);
+    if (mid.length === 0 || !/^\d+$/.test(mid)) continue;
+    const p = `${dir}/${entry}`;
+    try {
+      const s = fs.statSync(p);
+      const candidate: RaceTmpCandidate = { path: p, size: s.size };
+      raceTmps.push(candidate);
+    } catch (_) { /* skip */ }
+  }
+
+  if (raceTmps.length === 0) return 0;
+
+  // Pick largest
+  raceTmps.sort((a, b) => b.size - a.size);
+  const winner = raceTmps[0];
+
+  // Replace single .tmp with the winner
+  try {
+    if (fs.accessSync(singleTmpPath)) fs.unlinkSync(singleTmpPath);
+    fs.renameSync(winner.path, singleTmpPath);
+  } catch (e) {
+    hilog.warn(DOMAIN, TAG, 'consolidate rename failed: %{public}s', `${e}`);
+    return 0;
+  }
+
+  // Delete losers
+  for (const t of raceTmps) {
+    if (t.path === winner.path) continue;
+    try { fs.unlinkSync(t.path); } catch (_) { /* ignore */ }
+  }
+
+  hilog.info(DOMAIN, TAG, 'consolidated %{public}d race tmp(s) → single .tmp (%{public}d bytes)',
+             raceTmps.length, winner.size);
+  return winner.size;
+}
+
 /** One physical source for a given file. */
 interface RaceSource {
   label: string;
@@ -164,7 +551,24 @@ async function downloadFileWithSources(
   // Single-source -> bypass race machinery for clarity / lower overhead.
   if (job.sources.length === 1) {
     const src = job.sources[0];
-    await downloadSingleSource(context, dir, job.name, src, job.md5, onProgress);
+    // Detect existing .tmp for resume via HTTP Range (Config.begins).
+    const begins = detectExistingTmpBytes(dir, job.name);
+    await downloadSingleSource(context, dir, job.name, src, job.md5, onProgress, begins);
+    return;
+  }
+
+  // Multi-source: check for leftover .tmp from a previous run. If found,
+  // the race-tmp files are consolidated into a single .tmp (largest wins,
+  // others discarded) and we resume via single-source + begins instead of
+  // starting a fresh race. Race + begins would have multiple sources
+  // writing to the same offset of different files — incoherent.
+  const consolidatedBegins = consolidateRaceTmps(dir, job.name, targetPath);
+  if (consolidatedBegins > 0) {
+    hilog.info(DOMAIN, TAG, 'Resume %{public}s from %{public}d bytes (consolidated from race tmps)',
+               job.name, consolidatedBegins);
+    // Use the first source for resume. If it fails, MD5 verification at
+    // the end will catch corruption and the user can retry.
+    await downloadSingleSource(context, dir, job.name, job.sources[0], job.md5, onProgress, consolidatedBegins);
     return;
   }
 
@@ -211,9 +615,6 @@ async function downloadFileWithSources(
     for (let i = 0; i < job.sources.length; i++) {
       const idx = i;
       const src = job.sources[idx];
-      try {
-        if (fs.accessSync(tmpPaths[idx])) fs.unlinkSync(tmpPaths[idx]);
-      } catch (_) { /* ignore */ }
 
       hilog.info(DOMAIN, TAG, 'race[%{public}d] %{public}s start: %{public}s', idx, src.label, src.url);
 
@@ -226,11 +627,11 @@ async function downloadFileWithSources(
         method: 'GET',
         mode: request.agent.Mode.FOREGROUND,
         network: request.agent.Network.ANY,
-        retry: false,
       };
 
       request.agent.create(context, config).then((task: request.agent.Task) => {
         tasks[idx] = task;
+        registerTask(job.name, task);
 
         task.on('progress', (p: request.agent.Progress) => {
           // Race gate: first task to report non-empty bytes wins.
@@ -265,6 +666,7 @@ async function downloadFileWithSources(
           if (settled) return;
           if (winnerIdx !== idx) {
             stopLoser(idx);
+            unregisterTask(job.name, task);
             return;
           }
           settled = true;
@@ -294,6 +696,7 @@ async function downloadFileWithSources(
           } catch (e) {
             reject(e as object);
           } finally {
+            unregisterTask(job.name, task);
             request.agent.remove(task.tid).catch(() => undefined);
             cleanupLosers(idx);
           }
@@ -303,6 +706,7 @@ async function downloadFileWithSources(
           if (settled) return;
           if (winnerIdx === idx) {
             settled = true;
+            unregisterTask(job.name, task);
             request.agent.show(task.tid).then(info => {
               reject(new Error(
                 str(rm, 'download_source_failed_detail').replace('%s', src.label).replace('%s', JSON.stringify(info.faults))
@@ -311,17 +715,16 @@ async function downloadFileWithSources(
               reject(new Error(str(rm, 'download_source_failed').replace('%s', src.label)));
             }).finally(() => {
               request.agent.remove(task.tid).catch(() => undefined);
-              try {
-                if (fs.accessSync(tmpPaths[idx])) fs.unlinkSync(tmpPaths[idx]);
-              } catch (_) { /* ignore */ }
             });
             return;
           }
           taskFailures.push(idx);
           hilog.warn(DOMAIN, TAG, '%{public}s race source %{public}s failed (%{public}d/%{public}d)',
                      job.name, src.label, taskFailures.length + createFailures.length, job.sources.length);
+          unregisterTask(job.name, task);
           request.agent.remove(task.tid).catch(() => undefined);
           try {
+            // Loser tmp is safe to clean — only winner bytes are useful.
             if (fs.accessSync(tmpPaths[idx])) fs.unlinkSync(tmpPaths[idx]);
           } catch (_) { /* ignore */ }
           if (taskFailures.length + createFailures.length >= job.sources.length) {
@@ -333,6 +736,7 @@ async function downloadFileWithSources(
           if (settled) return;
           hilog.warn(DOMAIN, TAG, '%{public}s race source %{public}s task.start() failed: %{public}s',
                      job.name, src.label, `${e}`);
+          unregisterTask(job.name, task);
           taskFailures.push(idx);
           request.agent.remove(task.tid).catch(() => undefined);
           if (taskFailures.length + createFailures.length >= job.sources.length) {
@@ -351,7 +755,10 @@ async function downloadFileWithSources(
   });
 }
 
-/** Simple wrapper for the rare 1-source case (e.g. legacy direct-mirror only). */
+/** Simple wrapper for the rare 1-source case (e.g. legacy direct-mirror only).
+ *  Also used as the resume path: when `begins` > 0, the system issues an
+ *  HTTP Range request and appends to the existing .tmp file.
+ */
 async function downloadSingleSource(
   context: common.Context,
   dir: string,
@@ -359,15 +766,21 @@ async function downloadSingleSource(
   src: RaceSource,
   md5: string | null,
   onProgress: ProgressListener,
+  begins: number = 0,
 ): Promise<void> {
   const rm = context.resourceManager;
   const targetPath = `${dir}/${fileName}`;
-  onProgress(str(rm, 'download_fetching_file').replace('%s', src.label).replace('%s', fileName));
-  hilog.info(DOMAIN, TAG, 'Downloading %{public}s from %{public}s: %{public}s',
-             fileName, src.label, src.url);
+  if (begins > 0) {
+    onProgress(str(rm, 'download_resuming').replace('%s', fileName).replace('%d', `${Math.floor(begins / (1024 * 1024))}`));
+    hilog.info(DOMAIN, TAG, 'Resuming %{public}s from %{public}d bytes via %{public}s',
+               fileName, begins, src.label);
+  } else {
+    onProgress(str(rm, 'download_fetching_file').replace('%s', src.label).replace('%s', fileName));
+    hilog.info(DOMAIN, TAG, 'Downloading %{public}s from %{public}s: %{public}s',
+               fileName, src.label, src.url);
+  }
 
   const tmpPath = `${targetPath}.tmp`;
-  if (fs.accessSync(tmpPath)) fs.unlinkSync(tmpPath);
 
   await new Promise<void>((resolve, reject) => {
     let lastProgressTime = 0;
@@ -380,9 +793,10 @@ async function downloadSingleSource(
       method: 'GET',
       mode: request.agent.Mode.FOREGROUND,
       network: request.agent.Network.ANY,
-      retry: false,
+      begins: begins,
     };
     request.agent.create(context, config).then((task: request.agent.Task) => {
+      registerTask(fileName, task);
       task.on('progress', (p: request.agent.Progress) => {
         const now = Date.now();
         if (now - lastProgressTime > 500) {
@@ -409,16 +823,19 @@ async function downloadSingleSource(
         } catch (e) {
           reject(e as object);
         } finally {
+          unregisterTask(fileName, task);
           request.agent.remove(task.tid).catch(() => undefined);
         }
       });
       task.on('failed', () => {
+        unregisterTask(fileName, task);
         request.agent.show(task.tid).then(info => {
           reject(new Error(`Download failed: ${JSON.stringify(info.faults)}`));
         }).catch(() => {
           reject(new Error('Download failed'));
         }).finally(() => {
           request.agent.remove(task.tid).catch(() => undefined);
+          // NOTE: do NOT unlink tmp — preserved for resume.
         });
       });
       task.start();

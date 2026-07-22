@@ -33,7 +33,8 @@ import {
   STALE_MMPROJ_NAMES,
   findModelById,
 } from './ModelInfo';
-import { downloadModelsForSelected, ProgressListener } from '../utils/DownloadManager';
+import { ProgressListener } from '../utils/DownloadManager';
+import { ModelDownloadService } from '../download/ModelDownloadService';
 
 const TAG = 'LlamaEngine';
 const DOMAIN = 0xC0DE;
@@ -106,9 +107,21 @@ export class LlamaEngine {
 
   private state: LlamaState = LlamaState.Uninitialized;
   private listeners: StateListener[] = [];
+  /**
+   * id of the model currently loaded into the native engine, or null when
+   * none is loaded. The UI uses this to tell "the selected model is the one
+   * that's ready" from "some other model is ready" — the engine is a
+   * singleton holding ONE model, so engine state alone is ambiguous on a
+   * page that browses multiple models. See ModelManager.syncStatusFromSelectedEngine.
+   */
+  private loadedModelId: string | null = null;
 
   getCurrentState(): LlamaState {
     return this.state;
+  }
+
+  getLoadedModelId(): string | null {
+    return this.loadedModelId;
   }
 
   // Mirror of Dispatchers.IO.limitedParallelism(1): every native invocation
@@ -225,6 +238,7 @@ export class LlamaEngine {
         hilog.info(DOMAIN, TAG, 'Auto-unloading before loading new model');
         this.readyForSystemPrompt = false;
         this.mmprojLoaded = false;
+        this.loadedModelId = null;
         this.setState(LlamaState.UnloadingModel);
         nativeEngine.unload();
         this.setState(LlamaState.Initialized);
@@ -297,6 +311,10 @@ export class LlamaEngine {
       }
       hilog.info(DOMAIN, TAG, 'Model loaded!');
       this.readyForSystemPrompt = true;
+      // The caller just selected this model then called loadModel, so the
+      // pref-backed selected id IS the loaded one. Record it so the UI can
+      // distinguish "selected == loaded (ready)" from "selected != loaded".
+      this.loadedModelId = LlamaEngine.getSelectedModel(this.context).id;
       this.setState(LlamaState.ModelReady);
     });
   }
@@ -533,6 +551,7 @@ export class LlamaEngine {
         hilog.info(DOMAIN, TAG, 'Unloading model...');
         this.readyForSystemPrompt = false;
         this.mmprojLoaded = false;
+        this.loadedModelId = null;
         this.setState(LlamaState.UnloadingModel);
         nativeEngine.unload();
         this.setState(LlamaState.Initialized);
@@ -545,6 +564,7 @@ export class LlamaEngine {
   resetToInitialized(): void {
     this.mmprojLoaded = false;
     this.readyForSystemPrompt = false;
+    this.loadedModelId = null;
     this.setState(LlamaState.Initialized);
   }
 
@@ -808,11 +828,21 @@ export class LlamaEngine {
   }
 
   // ------------------------------------------------------------------
-  // Download wrapper (delegates to DownloadManager so the engine stays small)
+  // Download wrapper
   // ------------------------------------------------------------------
+  //
+  // Routed through ModelDownloadService so that EVERY download — whether
+  // triggered from the Index page's first-launch auto-download or from
+  // ModelManager's manual click — surfaces through AppStorage and is
+  // visible to any @StorageLink observer.
+  //
+  // The legacy `onProgress` callback parameter is kept for source-level
+  // backward compatibility with the existing Index.ets call site, but is
+  // intentionally IGNORED. Callers should observe AppStorage via
+  // @StorageLink(DOWNLOAD_STATE_KEY) instead.
 
-  static downloadModels(context: common.Context, onProgress: ProgressListener): Promise<void> {
-    return downloadModelsForSelected(context, onProgress);
+  static downloadModels(context: common.Context, _onProgress?: ProgressListener): Promise<void> {
+    return ModelDownloadService.shared.start(context);
   }
 
   // ------------------------------------------------------------------
