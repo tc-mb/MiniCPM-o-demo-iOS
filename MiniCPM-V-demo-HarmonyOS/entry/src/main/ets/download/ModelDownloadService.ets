@@ -21,6 +21,7 @@ import {
   resumeDownloadForFile,
   cancelDownloadForFile,
   reattachSystemTasks,
+  hasActiveTask,
 } from '../utils/DownloadManager';
 import { LlamaEngine } from '../engine/LlamaEngine';
 import { ModelInfo } from '../engine/ModelInfo';
@@ -34,6 +35,7 @@ import {
   scanModelDirForTmp,
   parseProgressMsg,
   expectedFilesForModel,
+  matchExpectedFile,
 } from './Reconciler';
 
 const DOMAIN = 0xC0DE;
@@ -112,24 +114,32 @@ export class ModelDownloadService {
     if (this._running) return;
     if (!this._reattachDone) {
       this._reattachDone = true;
-      await this.reattachAndPublish();
-      if (this._running) return;
+      // reattach re-hooks surviving tasks and publishes paused/running. If it
+      // found survivors, that publish is authoritative — return WITHOUT
+      // reconcileFromFs so a 0-byte mid-race partial can't be downgraded to
+      // 'idle' (which would let the user click Download and spawn a duplicate
+      // task on the same .tmp the survivor owns) — bug #1.
+      const found = await this.reattachAndPublish();
+      if (found || this._running) return;
     }
     await this.reconcileFromFs();
   }
 
   /**
-   * Probe the system service for any still-running download tasks owned
-   * by this app. If we find any whose saveas matches our selected model,
-   * pick them up (re-attach callbacks) and publish a 'running' snapshot.
+   * Probe the system service for surviving download tasks owned by this app
+   * whose saveas matches the selected model, RE-ATTACH to them (keep alive
+   * for task.resume — the platform's HTTP-Range resume), and publish a
+   * 'paused' (held task) or 'running' (still transferring) snapshot. Returns
+   * true iff any matching survivor was found (so attach can skip
+   * reconcileFromFs and avoid the #1 idle-clobber).
    *
-   * This MUST run before reconcileFromFs on app launch, otherwise the
-   * service would publish 'paused' (because .tmp exists) and let the user
-   * click Download — which would create a duplicate task writing to the
-   * same .tmp file the system task is still using → corruption.
+   * This is the ONLY path that truly resumes a partial: request.agent resume
+   * requires a live task + task.resume(); re-creating with Config.begins on a
+   * stale file fails on device. The user resumes the survivor via Resume →
+   * resume() → resumeDownloadForFile → task.resume().
    */
-  private async reattachAndPublish(): Promise<void> {
-    if (this._context === null) return;
+  private async reattachAndPublish(): Promise<boolean> {
+    if (this._context === null) return false;
     const model = LlamaEngine.getSelectedModel(this._context);
     this._currentModel = model;
     const dir = `${this._context.filesDir}/models/${model.id}`;
@@ -140,63 +150,63 @@ export class ModelDownloadService {
     if (model.acousticFileName && model.acousticMd5) md5Map.set(model.acousticFileName, model.acousticMd5);
 
     try {
-      const result = await reattachSystemTasks(this._context, dir, expected, md5Map, (msg) => {
-        this.onProgressMsg(msg);
-      });
+      const result = await reattachSystemTasks(this._context, dir, expected, md5Map,
+        (msg: string) => { this.onProgressMsg(msg); },
+        (fname: string) => { return this.onReattachedFileCompleted(fname); });
       if (result.matchedFileNames.length > 0) {
-        // Pick the first matched file as the "current" — multiple files
-        // (gguf + mmproj) being downloaded sequentially will fire progress
-        // for whichever the system task is currently processing.
         const firstName = result.matchedFileNames[0];
         this._currentFile = firstName;
         this._lastBytesOnDisk = this.fsBytesForCurrentFile();
         if (this._lastBytesOnDisk < 0) this._lastBytesOnDisk = 0;
         this._lastTickAt = Date.now();
-
         if (result.anyRunning) {
-          // Task survived the kill and is still live (RUNNING / RETRYING)
-          // — pick up where the previous session left off.
           this._running = true;
           this.startReconcileTimer();
           this.publish({
             status: { kind: 'running', modelId: model.id, fileName: firstName },
             bytesOnDisk: this._lastBytesOnDisk,
-            bytesTotal: 0,
-            pct: 0,
-            speed: 0,
-            eta: 0,
+            bytesTotal: 0, pct: 0, speed: 0, eta: 0,
             statusText: this.prefixModelName(this.str('download_status_preparing')),
             lastUpdated: Date.now(),
           });
           hilog.info(DOMAIN, TAG, 'reattached to %{public}d live task(s), currentFile=%{public}s',
             result.matchedFileNames.length, firstName);
         } else {
-          // Matched task(s) exist but are held (PAUSED / STOPPED / …) —
-          // the typical cold-start case after the user paused, then killed
-          // and relaunched the app. Publish 'paused' so the UI offers
-          // Resume + Cancel directly, instead of forcing a bogus
-          // Pause -> Resume round-trip. Do NOT set _running (so
-          // reconcileNow() can still re-evaluate when the user switches
-          // models, and so attach() falls through to reconcileFromFs)
-          // and do NOT start the reconcile timer (no bytes move while
-          // paused).
           this._running = false;
           this.publish({
             status: { kind: 'paused', modelId: model.id, fileName: firstName },
             bytesOnDisk: this._lastBytesOnDisk,
-            bytesTotal: 0,
-            pct: 0,
-            speed: 0,
-            eta: 0,
+            bytesTotal: 0, pct: 0, speed: 0, eta: 0,
             statusText: this.prefixModelName(this.str('download_status_paused_partial')),
             lastUpdated: Date.now(),
           });
           hilog.info(DOMAIN, TAG, 'reattached to %{public}d paused task(s), currentFile=%{public}s',
             result.matchedFileNames.length, firstName);
         }
+        return true;
       }
     } catch (e) {
       hilog.warn(DOMAIN, TAG, 'reattachAndPublish threw: %{public}s', `${e}`);
+    }
+    return false;
+  }
+
+  /**
+   * A file whose surviving task we re-attached has just completed. If the
+   * whole model is now present → publish completed; otherwise re-enter the
+   * job loop to fetch remaining files (the just-completed file is skipped via
+   * its MD5 fast-path). This is bug #3 — multi-file cold-start continuation.
+   */
+  private async onReattachedFileCompleted(_fileName: string): Promise<void> {
+    if (this._context === null) return;
+    if (LlamaEngine.modelsExist(this._context)) {
+      this._running = false;
+      this.stopReconcileTimer();
+      this.onCompleted(this._context);
+      return;
+    }
+    if (this._currentRun === null) {
+      this.start();
     }
   }
 
@@ -400,6 +410,17 @@ export class ModelDownloadService {
     if (this._running) return;
     if (this._currentFile === null) return;
     if (this._context === null) return;
+    // Cold-start / orphaned-.tmp case: a paused snapshot exists on disk but
+    // no system task survived (the system cleaned it after a long kill, or
+    // we stopped it during reattach). resumeDownloadForFile would be a no-op
+    // and we'd publish a bogus 'running'. Route through start() instead,
+    // which re-enters the job loop and resumes the .tmp via HTTP Range
+    // (Config.begins). The in-session pause→resume path (registry non-empty)
+    // still uses resumeDownloadForFile below.
+    if (!hasActiveTask(this._currentFile)) {
+      hilog.info(DOMAIN, TAG, 'resume: no live task for %{public}s — restarting via begins', this._currentFile);
+      return this.start();
+    }
     hilog.info(DOMAIN, TAG, 'resume requested for %{public}s', this._currentFile);
     try {
       await resumeDownloadForFile(this._currentFile);
@@ -478,20 +499,9 @@ export class ModelDownloadService {
       return;
     }
     for (const entry of entries) {
-      if (!entry.endsWith('.tmp')) continue;
-      let matched = false;
-      for (const fname of expected) {
-        if (entry === `${fname}.tmp`) { matched = true; break; }
-        const prefix = `${fname}.r`;
-        if (entry.startsWith(prefix) && entry.endsWith('.tmp')) {
-          const mid = entry.substring(prefix.length, entry.length - '.tmp'.length);
-          if (mid.length > 0 && /^\d+$/.test(mid)) { matched = true; break; }
-        }
-      }
-      if (matched) {
-        try { fs.unlinkSync(`${dir}/${entry}`); }
-        catch (e) { hilog.warn(DOMAIN, TAG, 'unlink %{public}s failed: %{public}s', entry, `${e}`); }
-      }
+      if (matchExpectedFile(entry, expected) === null) continue;
+      try { fs.unlinkSync(`${dir}/${entry}`); }
+      catch (e) { hilog.warn(DOMAIN, TAG, 'unlink %{public}s failed: %{public}s', entry, `${e}`); }
     }
   }
 

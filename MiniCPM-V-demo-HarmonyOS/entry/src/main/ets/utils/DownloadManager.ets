@@ -33,6 +33,7 @@ import {
   AVAILABLE_MODELS,
   DEFAULT_MODEL,
 } from '../engine/ModelInfo';
+import { matchExpectedFile } from '../download/Reconciler';
 
 const DOMAIN = 0xC0DE;
 const TAG = 'DownloadManager';
@@ -71,6 +72,47 @@ export async function resumeDownloadForFile(fileName: string): Promise<void> {
   })));
 }
 
+/** True iff at least one active task is registered for the given file. */
+export function hasActiveTask(fileName: string): boolean {
+  const arr = activeTasks.get(fileName);
+  return !!arr && arr.length > 0;
+}
+
+/**
+ * Diagnostic (read-only): enumerate every request.agent task this app owns
+ * and return a compact, human-readable summary (count + per-task tid · state ·
+ * saveas). Used to observe duplicate / orphan tasks — e.g. call before and
+ * after a download cycle and confirm the count is stable. No stop / remove.
+ *
+ * Callable from a debug page / the test module; also logs the summary via
+ * hilog so it shows up in the device log during real-device testing.
+ */
+export async function debugListSystemTasks(): Promise<string> {
+  const lines: string[] = [];
+  let tids: string[] = [];
+  try {
+    tids = await request.agent.search({ action: request.agent.Action.DOWNLOAD });
+  } catch (e) {
+    const msg = `debugListSystemTasks: search failed: ${e}`;
+    hilog.warn(DOMAIN, TAG, '%{public}s', msg);
+    return msg;
+  }
+  lines.push(`request.agent task count = ${tids.length}`);
+  for (const tid of tids) {
+    try {
+      const info = await request.agent.show(tid);
+      const saveas = info.saveas ?? '(empty)';
+      const state = info.progress.state;
+      lines.push(`  tid=${tid} state=0x${state.toString(16)} saveas=${saveas}`);
+    } catch (e) {
+      lines.push(`  tid=${tid} show failed: ${e}`);
+    }
+  }
+  const summary = lines.join('\n');
+  hilog.info(DOMAIN, TAG, 'debugListSystemTasks:\n%{public}s', summary);
+  return summary;
+}
+
 /**
  * Stop + remove every active task for the given file. Does NOT delete
  * the .tmp file — that's preserved for future resume.
@@ -91,47 +133,41 @@ export async function cancelDownloadForFile(fileName: string): Promise<void> {
 }
 
 /**
- * Result of reattach: how many alive system tasks we picked up, and which
- * of our expected file names they correspond to (so the service can mark
- * the right "current file").
+ * Result of reattach: which expected file names had surviving system tasks
+ * that we re-attached to (kept alive for task.resume), whether any is
+ * actively transferring, and how many stray non-matching tasks we cleaned up.
  */
 export interface ReattachResult {
   matchedFileNames: string[];
-  /**
-   * True iff at least one matched task is actively transferring bytes
-   * (state RUNNING or RETRYING). False when every matched task is held —
-   * notably PAUSED, the typical cold-start case after the user paused,
-   * killed, and relaunched the app — in which case the service must
-   * publish 'paused' so the UI offers Resume + Cancel directly, instead
-   * of wrongly publishing 'running' and forcing a bogus Pause -> Resume
-   * round-trip.
-   */
   anyRunning: boolean;
   cleanedUpStrayTids: number;
 }
 
 /**
- * On app launch (or any time we suspect system-managed tasks might be
- * lingering from a previous app session), call this to enumerate every
- * request.agent task owned by this app and reattach callbacks
- * to any whose saveas path matches one of `expectedFiles`.
+ * On app launch, enumerate every request.agent task owned by this app and
+ * RE-ATTACH to any whose saveas matches one of `expectedFiles` (keeping the
+ * task alive so the user can resume it via task.resume — the platform's
+ * HTTP-Range resume mechanism). Stray / terminal tasks are removed.
  *
- * Why this exists: request.agent tasks live in the system service, NOT in
- * the app process. Killing the app does NOT kill the task — it keeps
- * downloading. On next app launch we MUST either reattach (this function)
- * or explicitly stop the task; otherwise we'd create a new task that
- * writes to the same .tmp file as the surviving system task, corrupting
- * the download.
+ * Why keep+resume instead of stop+remove+recreate: request.agent resume is
+ * designed around a LIVE task + task.resume() (the system issues the Range
+ * request internally). Re-creating a task with Config.begins on an existing
+ * partial FAILS on device ("GetFd File exists" with overwrite:false; silent
+ * truncation with overwrite:true) — verified on MLN-AL00. So the only way to
+ * truly resume a partial is to keep the surviving task and resume it.
+ *
+ * Only the race WINNER survives a kill (losers are stopped during race
+ * settlement, before any kill), so there is at most one task per file — no
+ * winner-gate is needed, and the completed handler renames the ACTUAL saveas
+ * basename (.tmp or .rN.tmp), fixing the old wrong-rename bug (#2). If two
+ * tasks for the same file somehow survive (kill during race, before
+ * settlement), the duplicate is stopped+removed (keep first).
  *
  * Strategy:
- *   - For tasks matching our expected files (state RUNNING/WAITING/RETRYING):
- *     getTask + registerTask + on('progress'/'completed'/'failed')
- *   - For tasks in terminal states (COMPLETED/FAILED/REMOVED): remove() to free
- *     system resources
- *   - For tasks in PAUSED/STOPPED: reattach so user can resume via service.resume
- *
- * `dir` is the model directory (${context.filesDir}/models/<id>) so we can
- * resolve relative saveas paths and rename .tmp → final on completion.
+ *   - Matched, non-terminal task → getTask + register + re-hook callbacks
+ *   - Duplicate survivor for same file → stop + remove (keep first)
+ *   - Terminal task (COMPLETED/FAILED/REMOVED) → remove to free the record
+ *   - Non-matching task → remove (leftover from a deleted model)
  */
 export async function reattachSystemTasks(
   context: common.Context,
@@ -139,10 +175,12 @@ export async function reattachSystemTasks(
   expectedFiles: string[],
   md5Map: Map<string, string | null>,
   onProgress: ProgressListener,
+  onCompletedFile: (fileName: string) => Promise<void>,
 ): Promise<ReattachResult> {
   const matchedFileNames: string[] = [];
-  let cleanedUpStrayTids = 0;
+  const seen: Set<string> = new Set();
   let anyRunning = false;
+  let cleanedUpStrayTids = 0;
 
   let tids: string[];
   try {
@@ -155,7 +193,8 @@ export async function reattachSystemTasks(
     return { matchedFileNames, anyRunning, cleanedUpStrayTids };
   }
 
-  hilog.info(DOMAIN, TAG, 'reattach: search returned %{public}d task(s)', tids.length);
+  hilog.info(DOMAIN, TAG, 'reattach: search returned %{public}d task(s): %{public}s',
+    tids.length, tids.join(','));
 
   for (const tid of tids) {
     let info: request.agent.TaskInfo;
@@ -177,20 +216,10 @@ export async function reattachSystemTasks(
     const basename = saveas.indexOf('/') >= 0
       ? saveas.substring(saveas.lastIndexOf('/') + 1)
       : saveas;
-    let matchedFname: string | null = null;
-    for (const fname of expectedFiles) {
-      if (basename === `${fname}.tmp`) { matchedFname = fname; break; }
-      const prefix = `${fname}.r`;
-      const suffix = '.tmp';
-      if (basename.startsWith(prefix) && basename.endsWith(suffix)) {
-        const mid = basename.substring(prefix.length, basename.length - suffix.length);
-        if (mid.length > 0 && /^\d+$/.test(mid)) { matchedFname = fname; break; }
-      }
-    }
+    const matchedFname = matchExpectedFile(basename, expectedFiles);
 
     if (matchedFname === null) {
       // Not our task (different URL / leftover from deleted model).
-      // Clean it up so it doesn't linger forever.
       hilog.info(DOMAIN, TAG, 'reattach: tid %{public}s (saveas=%{public}s) does not match any expected file — removing',
         tid, basename);
       try {
@@ -202,7 +231,37 @@ export async function reattachSystemTasks(
       continue;
     }
 
-    // Reattach to the matched task
+    const fileName = matchedFname;
+    const state = info.progress.state;
+
+    // Terminal task (COMPLETED / FAILED / REMOVED): free the record.
+    if (state === request.agent.State.COMPLETED
+      || state === request.agent.State.FAILED
+      || state === request.agent.State.REMOVED) {
+      hilog.info(DOMAIN, TAG, 'reattach: %{public}s already terminal (state=%{public}d) — removing record',
+        fileName, state);
+      try { await request.agent.remove(tid); cleanedUpStrayTids++; } catch (_) { /* ignore */ }
+      continue;
+    }
+
+    // Duplicate survivor for the same file (kill happened during the race,
+    // before settlement). We cannot know which source won, so keep the first
+    // and stop+remove the extra to avoid two completions racing on rename.
+    if (seen.has(fileName)) {
+      hilog.info(DOMAIN, TAG, 'reattach: duplicate survivor for %{public}s (tid=%{public}s) — stopping+removing',
+        fileName, tid);
+      try {
+        const dup = await request.agent.getTask(context, tid);
+        try { await dup.stop(); } catch (_) { /* ignore */ }
+      } catch (_) { /* ignore */ }
+      try { await request.agent.remove(tid); cleanedUpStrayTids++; } catch (_) { /* ignore */ }
+      continue;
+    }
+    seen.add(fileName);
+
+    // Surviving in-flight task from a previous session — KEEP it and re-hook
+    // callbacks so the user can resume via task.resume() (the platform's
+    // Range-resume). Only the winner survives, so one task per file.
     let task: request.agent.Task;
     try {
       task = await request.agent.getTask(context, tid);
@@ -210,45 +269,16 @@ export async function reattachSystemTasks(
       hilog.warn(DOMAIN, TAG, 'reattach: getTask(%{public}s) failed: %{public}s', tid, `${e}`);
       continue;
     }
-
-    const fileName = matchedFname;
+    const actualTmpPath = `${dir}/${basename}`;
     const targetPath = `${dir}/${fileName}`;
-    const tmpPath = `${targetPath}.tmp`;
     const md5 = md5Map.get(fileName) ?? null;
-    const state = info.progress.state;
-
-    hilog.info(DOMAIN, TAG, 'reattach: picked up %{public}s (state=0x%{public}x, tid=%{public}s)',
-      fileName, state, tid);
-
-    // If task is already terminal, run cleanup path inline — no point
-    // subscribing to events that will never fire.
-    if (state === request.agent.State.COMPLETED
-      || state === request.agent.State.FAILED
-      || state === request.agent.State.REMOVED) {
-      hilog.info(DOMAIN, TAG, 'reattach: %{public}s already terminal (0x%{public}x) — cleaning up',
-        fileName, state);
-      try { await request.agent.remove(tid); cleanedUpStrayTids++; } catch (_) { /* ignore */ }
-      continue;
-    }
-
-    // A matched task counts as "running" only while it is actively
-    // transferring bytes (RUNNING) or retrying after a transient failure
-    // (RETRYING). Every other non-terminal state — notably PAUSED, the
-    // typical cold-start case after the user paused then killed and
-    // relaunched the app, but also WAITING / INITIALIZED / STOPPED —
-    // means the task is held and needs an explicit resume, so the service
-    // publishes 'paused' and the UI offers Resume + Cancel rather than
-    // Pause + Cancel. See ReattachResult.anyRunning.
-    if (state === request.agent.State.RUNNING
-      || state === request.agent.State.RETRYING) {
+    registerTask(fileName, task);
+    if (state === request.agent.State.RUNNING || state === request.agent.State.RETRYING) {
       anyRunning = true;
     }
+    hilog.info(DOMAIN, TAG, 'reattach: re-attached surviving %{public}s (state=%{public}d, tid=%{public}s, tmp=%{public}s)',
+      fileName, state, tid, basename);
 
-    registerTask(fileName, task);
-
-    // Wire up callbacks. Mirror the single-source progress/completed/
-    // failed semantics — reattached tasks are observationally equivalent
-    // to fresh ones from the service's perspective.
     let lastProgressTime = 0;
     task.on('progress', (p: request.agent.Progress) => {
       const now = Date.now();
@@ -272,7 +302,9 @@ export async function reattachSystemTasks(
     task.on('completed', async () => {
       try {
         if (fs.accessSync(targetPath)) fs.unlinkSync(targetPath);
-        fs.renameSync(tmpPath, targetPath);
+        // Rename the ACTUAL saveas file (.tmp or .rN.tmp), not a hardcoded
+        // .tmp — this was bug #2 (race tasks write .rN.tmp).
+        fs.renameSync(actualTmpPath, targetPath);
         if (md5) {
           onProgress(`verifying md5 ${fileName}`);
           const actual = await computeMd5(targetPath);
@@ -286,6 +318,9 @@ export async function reattachSystemTasks(
           hilog.info(DOMAIN, TAG, 'reattach %{public}s MD5 OK', fileName);
         }
         onProgress(`${fileName} complete`);
+        // Continue to any remaining files (#3): the service re-enters the
+        // job loop, which fast-paths this now-complete file and downloads rest.
+        await onCompletedFile(fileName);
       } catch (e) {
         hilog.error(DOMAIN, TAG, 'reattach %{public}s completed handler threw: %{public}s',
           fileName, `${e}`);
@@ -309,7 +344,7 @@ export async function reattachSystemTasks(
     matchedFileNames.push(fileName);
   }
 
-  hilog.info(DOMAIN, TAG, 'reattach: matched %{public}d task(s) (anyRunning=%{public}s), cleaned up %{public}d stray',
+  hilog.info(DOMAIN, TAG, 'reattach: re-attached %{public}d matched task(s) (anyRunning=%{public}s), cleaned up %{public}d stray',
     matchedFileNames.length, `${anyRunning}`, cleanedUpStrayTids);
   return { matchedFileNames, anyRunning, cleanedUpStrayTids };
 }
@@ -352,13 +387,30 @@ interface RaceTmpCandidate {
  * Used by the single-source path to decide whether to issue an HTTP Range
  * request (Config.begins) for resumption.
  */
-function detectExistingTmpBytes(dir: string, fileName: string): number {
+export function detectExistingTmpBytes(dir: string, fileName: string): number {
   const tmpPath = `${dir}/${fileName}.tmp`;
   try {
     if (!fs.accessSync(tmpPath)) return 0;
     return fs.statSync(tmpPath).size;
   } catch (_) {
     return 0;
+  }
+}
+
+/**
+ * Remove `<fileName>.tmp` and every `<fileName>.r<N>.tmp` under `dir`. Used
+ * when a leftover .tmp has no surviving live task and so cannot be resumed
+ * (begins-resume is unavailable on device) — discard it so the next download
+ * starts clean.
+ */
+export function cleanTmpsForFile(dir: string, fileName: string): void {
+  const prefix = `${fileName}.r`;
+  let entries: string[];
+  try { entries = fs.listFileSync(dir); } catch (_) { return; }
+  for (const e of entries) {
+    if (e === `${fileName}.tmp` || (e.startsWith(prefix) && e.endsWith('.tmp'))) {
+      try { fs.unlinkSync(`${dir}/${e}`); } catch (_) { /* ignore */ }
+    }
   }
 }
 
@@ -376,7 +428,7 @@ function detectExistingTmpBytes(dir: string, fileName: string): number {
  * must collapse to a single source. Picking the largest race tmp
  * preserves the most progress; discarding the others avoids confusion.
  */
-function consolidateRaceTmps(dir: string, fileName: string, targetPath: string): number {
+export function consolidateRaceTmps(dir: string, fileName: string, targetPath: string): number {
   const singleTmpPath = `${targetPath}.tmp`;
   let entries: string[];
   try {
@@ -562,14 +614,19 @@ async function downloadFileWithSources(
   // others discarded) and we resume via single-source + begins instead of
   // starting a fresh race. Race + begins would have multiple sources
   // writing to the same offset of different files — incoherent.
-  const consolidatedBegins = consolidateRaceTmps(dir, job.name, targetPath);
-  if (consolidatedBegins > 0) {
-    hilog.info(DOMAIN, TAG, 'Resume %{public}s from %{public}d bytes (consolidated from race tmps)',
-               job.name, consolidatedBegins);
-    // Use the first source for resume. If it fails, MD5 verification at
-    // the end will catch corruption and the user can retry.
-    await downloadSingleSource(context, dir, job.name, job.sources[0], job.md5, onProgress, consolidatedBegins);
-    return;
+  // begins-resume of an existing partial is BROKEN on device (GetFd error /
+  // truncation — request.agent resume requires a LIVE task via task.resume,
+  // not Config.begins on a stale file). We reach this multi-source branch
+  // only when there is a leftover .tmp but NO surviving live task (system
+  // cleaned it, or the race never settled). Such a .tmp is unrecoverable —
+  // discard it and start a fresh race. (The common cold-start case keeps the
+  // live task and resumes it directly via reattach, never reaching here.)
+  const hasLeftoverTmp = consolidateRaceTmps(dir, job.name, targetPath) > 0
+    || detectExistingTmpBytes(dir, job.name) > 0;
+  if (hasLeftoverTmp) {
+    hilog.info(DOMAIN, TAG, '%{public}s: discarding unrecoverable leftover .tmp (begins-resume unavailable) — fresh download',
+               job.name);
+    cleanTmpsForFile(dir, job.name);
   }
 
   hilog.info(DOMAIN, TAG, 'Race-downloading %{public}s from %{public}d sources', job.name, job.sources.length);
@@ -789,6 +846,13 @@ async function downloadSingleSource(
       url: src.url,
       headers: { 'User-Agent': 'MiniCPMV-demo/1.0' },
       saveas: tmpPath,
+      // NOTE: begins-resume of an EXISTING partial is broken on device:
+      //   overwrite:true  -> truncates .tmp, writes Range tail at offset 0 (corrupt)
+      //   overwrite:false -> "GetFd File exists" error
+      // request.agent resume is designed around task.pause()/resume() on a LIVE
+      // task (HTTP Range handled internally), not Config.begins on a stale file.
+      // Kept overwrite:true so a stale .tmp is replaced; true resume needs the
+      // live-task reattach path or Route B (@ohos.net.http Range). See tmp/.
       overwrite: true,
       method: 'GET',
       mode: request.agent.Mode.FOREGROUND,

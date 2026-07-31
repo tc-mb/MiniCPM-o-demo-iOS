@@ -46,23 +46,7 @@ export function scanModelDirForTmp(
   for (const entry of entries) {
     if (!entry.endsWith('.tmp')) continue;
 
-    let matchedFname: string | null = null;
-    for (const fname of expectedFiles) {
-      if (entry === `${fname}.tmp`) {
-        matchedFname = fname;
-        break;
-      }
-      // Race tmp: <fname>.r<N>.tmp
-      const prefix = `${fname}.r`;
-      const suffix = '.tmp';
-      if (entry.startsWith(prefix) && entry.endsWith(suffix)) {
-        const mid = entry.substring(prefix.length, entry.length - suffix.length);
-        if (mid.length > 0 && /^\d+$/.test(mid)) {
-          matchedFname = fname;
-          break;
-        }
-      }
-    }
+    const matchedFname = matchExpectedFile(entry, expectedFiles);
     if (matchedFname === null) continue;
 
     try {
@@ -86,6 +70,32 @@ export function expectedFilesForModel(model: ModelInfo): string[] {
   if (model.mmprojFileName) files.push(model.mmprojFileName);
   if (model.acousticFileName) files.push(model.acousticFileName);
   return files;
+}
+
+/**
+ * Match a disk entry / saveas basename to one of the expected model file
+ * names. Returns the matched file name, or null if it isn't one of ours.
+ *
+ * A match is either:
+ *   - `<fname>.tmp`      (single-source in-flight), or
+ *   - `<fname>.r<N>.tmp` (race in-flight, N a non-empty run of digits).
+ *
+ * Centralised because three call sites (scanModelDirForTmp, reattach's
+ * saveas matching, cleanupTmpFiles) previously inlined this logic and
+ * drifted — bug #2 was exactly such a drift: the reattach completed
+ * handler renamed `.tmp` while race tasks write `.rN.tmp`.
+ */
+export function matchExpectedFile(basename: string, expectedFiles: string[]): string | null {
+  const SUFFIX = '.tmp';
+  for (const fname of expectedFiles) {
+    if (basename === `${fname}${SUFFIX}`) return fname;
+    const prefix = `${fname}.r`;
+    if (basename.startsWith(prefix) && basename.endsWith(SUFFIX)) {
+      const mid = basename.substring(prefix.length, basename.length - SUFFIX.length);
+      if (mid.length > 0 && /^\d+$/.test(mid)) return fname;
+    }
+  }
+  return null;
 }
 
 /**
