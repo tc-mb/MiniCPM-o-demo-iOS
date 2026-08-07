@@ -204,19 +204,9 @@ napi_value LoadMmproj(napi_env env, napi_callback_info info) {
     mtmd_context_params mparams = mtmd_context_params_default();
     mparams.use_gpu             = false;
     mparams.print_timings       = false;
-    // Slice cap re-enabled (sub-module bumped to commit 87aee36b which
-    // re-adds custom_image_max_slice_nums hparam + runtime setter).
-    // Persist the value for SetImageMaxSliceNums() to read back, AND
-    // thread it through mtmd_context_params so the very first encode
-    // (before the user touches the slider) already respects it.
-    // -1 = "use model default" (currently 9 for MiniCPM-V).
-    g_image_max_slice_nums          = image_max_slice_nums;
-    // image_max_slice_nums removed from mtmd_context_params in upstream
-    // master mtmd. The field no longer exists; slice cap is now read from
-    // the mmproj's embedded hparams at init time and cannot be overridden
-    // at runtime. g_image_max_slice_nums is kept so the chat-page slider
-    // code compiles, but changing it has no runtime effect.
-    mparams.n_threads          = N_THREADS;
+    g_image_max_slice_nums       = image_max_slice_nums;
+    mparams.image_max_slice_nums = g_image_max_slice_nums;
+    mparams.n_threads            = N_THREADS;
 
     g_ctx_vision = mtmd_init_from_file(mmproj_path.c_str(), g_model, mparams);
     if (!g_ctx_vision) {
@@ -263,10 +253,6 @@ napi_value SetMinicpmvVersion(napi_env env, napi_callback_info info) {
     return make_undefined(env);
 }
 
-// Per-image slice cap.  Now wires through to mtmd_set_image_max_slice_nums
-// (added back in llama.cpp submodule commit 87aee36b), which patches
-// clip_hparams.custom_image_max_slice_nums in place.  Safe to call
-// between images; takes effect on the next encode.
 napi_value SetImageMaxSliceNums(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
@@ -277,12 +263,12 @@ napi_value SetImageMaxSliceNums(napi_env env, napi_callback_info info) {
         napi_get_value_int32(env, argv[0], &n);
     }
     g_image_max_slice_nums = n;
-    // mtmd_set_image_max_slice_nums removed in upstream master mtmd.
-    // Slice cap is now read-only from mmproj hparams at init time.
-    // The persisted value is stored for the chat-page slider UI, but
-    // changing it no longer has runtime effect.
-    LOGi("SetImageMaxSliceNums: image_max_slice_nums set to %{public}d "
-         "(mtmd ctx=%{public}p, no-op at native level)", n, (void*) g_ctx_vision);
+    if (g_ctx_vision) {
+        mtmd_set_image_max_slice_nums(g_ctx_vision, g_image_max_slice_nums);
+        LOGi("SetImageMaxSliceNums: image_max_slice_nums set to %{public}d (applied)", n);
+    } else {
+        LOGi("SetImageMaxSliceNums: image_max_slice_nums set to %{public}d (stored)", n);
+    }
     return make_undefined(env);
 }
 

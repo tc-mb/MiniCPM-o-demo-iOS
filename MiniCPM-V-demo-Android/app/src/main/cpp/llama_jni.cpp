@@ -143,13 +143,8 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_loadMmproj(JNIEnv *env, jobject,
     mparams.use_gpu   = false;
     mparams.print_timings = false;
 
-    // Slice cap re-enabled (sub-module bumped to commit 87aee36b which
-    // re-adds custom_image_max_slice_nums hparam + runtime setter).
-    // Persist the value for setImageMaxSliceNumsNative() to read back,
-    // AND thread it through mtmd_context_params so the very first
-    // encode (before the user touches the slider) already respects it.
-    // -1 = "use model default" (currently 9 for MiniCPM-V).
-    g_image_max_slice_nums          = (jint) jimage_max_slice_nums;
+    g_image_max_slice_nums       = (jint) jimage_max_slice_nums;
+    mparams.image_max_slice_nums = g_image_max_slice_nums;
 
     mparams.n_threads = N_THREADS;
 
@@ -200,21 +195,18 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_setMinicpmvVersionNative(JNIEnv * 
     LOGi("%s: minicpmv_version set to %d", __func__, g_minicpmv_version);
 }
 
-// Per-image slice cap.  Now wires through to mtmd_set_image_max_slice_nums
-// (added back in llama.cpp submodule commit 87aee36b), which patches
-// clip_hparams.custom_image_max_slice_nums in place.  Safe to call
-// between images; takes effect on the next encode.
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_minicpm_1v_1demo_LlamaEngine_setImageMaxSliceNumsNative(JNIEnv * /*env*/,
                                                                         jobject,
                                                                         jint jn) {
     g_image_max_slice_nums = (int) jn;
-    // mtmd_set_image_max_slice_nums not available in this llama.cpp-omni
-    // branch; slice cap is configured at mmproj load time or via model
-    // defaults. The persisted value is still tracked for future use.
-    LOGi("%s: image_max_slice_nums set to %d (stored, mtmd live-update unavailable)",
-         __func__, g_image_max_slice_nums);
+    if (g_ctx_vision) {
+        mtmd_set_image_max_slice_nums(g_ctx_vision, g_image_max_slice_nums);
+        LOGi("%s: image_max_slice_nums set to %d (applied)", __func__, g_image_max_slice_nums);
+    } else {
+        LOGi("%s: image_max_slice_nums set to %d (stored)", __func__, g_image_max_slice_nums);
+    }
 }
 
 static llama_context *init_context(llama_model *model, const int n_ctx = DEFAULT_CONTEXT_SIZE) {
