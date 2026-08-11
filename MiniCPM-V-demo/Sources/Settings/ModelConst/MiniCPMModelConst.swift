@@ -13,7 +13,7 @@ struct MiniCPMModelConst {
     // MARK: - Q4_K_M 2.6 多模态主模型
     
     /// MiniCPM 多模态-主模型 Q4_K_M 文件名
-    static let modelQ4_K_MFileName = "ggml-model-Q4_0.gguf"
+    static let modelQ4_K_MFileName = "MiniCPM-V-2_6-Q4_0.gguf"
     
     /// MiniCPM 多模态-主模型 Q4_K_M oss 下载地址
     static let modelQ4_K_MURLString = "https://huggingface.co/openbmb/MiniCPM-V-2_6-gguf/resolve/main/ggml-model-Q4_0.gguf"
@@ -59,7 +59,7 @@ struct MiniCPMModelConst {
     // MARK: - mbv4 多模态语言模型
     
     /// MiniCPM 多模态-主模型 Q4_K_M 文件名
-    static let modelv4_Q4_K_M_FileName = "ggml-model-Q4_0.gguf"
+    static let modelv4_Q4_K_M_FileName = "MiniCPM-V-4_0-Q4_0.gguf"
     
     /// MiniCPM 多模态-主模型 Q4_K_M oss 下载地址
     static let modelv4_Q4_K_M_URLString = "https://huggingface.co/openbmb/MiniCPM-V-4-gguf/resolve/main/ggml-model-Q4_0.gguf"
@@ -71,6 +71,9 @@ struct MiniCPMModelConst {
     
     /// Q4_K_M gguf 文件 md5 值
     static let modelv4_Q4_K_M_MD5 = "8fc4cc88e5ea73472ae795b57a0e7fdd"
+
+    /// V2.6 / V4.0 旧版本共用的落盘文件名。升级时按 MD5 迁移到对应独立文件名。
+    static let legacySharedModelFileName = "ggml-model-Q4_0.gguf"
     
     
     // MARK: - mbv4 mmproj VIT 模型

@@ -526,6 +526,7 @@ class MBV26ModelDownloadManager: NSObject {
                     debugLog("-->> V26主模型 期望MD5值: \(MiniCPMModelConst.modelQ4_K_MMD5)")
                     if checksum == MiniCPMModelConst.modelQ4_K_MMD5 {
                         debugLog("-->> V26主模型 MD5校验成功: \(checksum)")
+                        MBModelArtifactStore.markValidated(fileURL, expectedMD5: MiniCPMModelConst.modelQ4_K_MMD5)
                         self.modelV26_Q4_K_M_Manager?.status = "downloaded"
                     } else {
                         debugLog("-->> V26主模型 MD5校验失败")
@@ -556,6 +557,7 @@ class MBV26ModelDownloadManager: NSObject {
                     debugLog("-->> V26 VIT模型 期望MD5值: \(MiniCPMModelConst.modelMMProjMD5)")
                     if checksum == MiniCPMModelConst.modelMMProjMD5 {
                         debugLog("-->> V26 VIT模型 MD5校验成功: \(checksum)")
+                        MBModelArtifactStore.markValidated(fileURL, expectedMD5: MiniCPMModelConst.modelMMProjMD5)
                         self.mmprojV26_Manager?.status = "downloaded"
                     } else {
                         debugLog("-->> V26 VIT模型 MD5校验失败")
@@ -638,6 +640,7 @@ class MBV26ModelDownloadManager: NSObject {
     func deleteModelV26_Q4_K_M() {
         let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent(MiniCPMModelConst.modelQ4_K_MFileName)
+        MBModelArtifactStore.invalidate(fileURL)
         
         do {
             try FileManager.default.removeItem(at: fileURL)
@@ -653,6 +656,7 @@ class MBV26ModelDownloadManager: NSObject {
     func deleteMMProjV26() {
         let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent(MiniCPMModelConst.mmprojFileName)
+        MBModelArtifactStore.invalidate(fileURL)
         
         do {
             try FileManager.default.removeItem(at: fileURL)

@@ -32,27 +32,31 @@ extension MBHomeViewController {
             var modelURL: URL?
             var mmprojURL: URL?
             var selectedModelType: CurrentUsingModelTypeV2 = .Unknown
+            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+
+            MBModelArtifactStore.migrateLegacySharedModel(in: documentsDirectory)
+            MBModelArtifactStore.purgeStaleV46MMProj(in: documentsDirectory)
             
             // 判断用户在设置页选中的模型
             let lastSelectedModelString = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
             if lastSelectedModelString == "V26MultiModel" {
                 // V-2.6 8B 多模态模型
-                modelURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.modelQ4_K_MFileName)
-                mmprojURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.mmprojFileName)
+                modelURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.modelQ4_K_MFileName)
+                mmprojURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.mmprojFileName)
                 selectedModelType = .V26MultiModel
             } else if lastSelectedModelString == "V4MultiModel" {
                 // V-4.0 4B 多模态模型
-                modelURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.modelv4_Q4_K_M_FileName)
-                mmprojURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.mmprojv4_FileName)
+                modelURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.modelv4_Q4_K_M_FileName)
+                mmprojURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.mmprojv4_FileName)
                 selectedModelType = .V4MultiModel
             } else if lastSelectedModelString == "V46MultiModel" {
                 // V-4.6 多模态模型
-                modelURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.modelv46_FileName)
-                mmprojURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.mmprojv46_FileName)
+                modelURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.modelv46_FileName)
+                mmprojURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.mmprojv46_FileName)
                 selectedModelType = .V46MultiModel
             } else if lastSelectedModelString == "V5TextModel" {
                 // MiniCPM 5 纯文本模型（无 mmproj）
-                modelURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(MiniCPMModelConst.modelv5_FileName)
+                modelURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.modelv5_FileName)
                 selectedModelType = .V5TextModel
             }
             
@@ -65,6 +69,36 @@ extension MBHomeViewController {
                     hud.hide(animated: true, afterDelay: 3)
                 }
                 return
+            }
+
+            if !selectedModelType.isTextOnly {
+                let expectedMD5: (model: String, mmproj: String)
+                switch selectedModelType {
+                case .V26MultiModel:
+                    expectedMD5 = (MiniCPMModelConst.modelQ4_K_MMD5, MiniCPMModelConst.modelMMProjMD5)
+                case .V4MultiModel:
+                    expectedMD5 = (MiniCPMModelConst.modelv4_Q4_K_M_MD5, MiniCPMModelConst.modelMMProjv4_MD5)
+                case .V46MultiModel:
+                    expectedMD5 = (MiniCPMModelConst.modelv46_Q4_K_M_MD5, MiniCPMModelConst.modelMMProjv46_MD5)
+                default:
+                    expectedMD5 = ("", "")
+                }
+
+                guard let mmprojURL,
+                      !expectedMD5.model.isEmpty,
+                      MBModelArtifactStore.validatePair(
+                        modelURL: modelURL,
+                        modelMD5: expectedMD5.model,
+                        mmprojURL: mmprojURL,
+                        mmprojMD5: expectedMD5.mmproj
+                      ) else {
+                    DispatchQueue.main.async {
+                        hud.mode = .text
+                        hud.label.text = L.Home.initFailedDownloadFirst.loc
+                        hud.hide(animated: true, afterDelay: 3)
+                    }
+                    return
+                }
             }
 
             DispatchQueue.main.async {
@@ -82,7 +116,7 @@ extension MBHomeViewController {
                     await self.mtmdWrapperExample?.initialize(modelPath: modelURL.path, mmprojPath: mmprojURL!.path)
                 } else if selectedModelType == .V4MultiModel {
 
-                    await self.mtmdWrapperExample?.initialize()
+                    await self.mtmdWrapperExample?.initialize(modelPath: modelURL.path, mmprojPath: mmprojURL!.path)
 
                     // warm-up：注入一张全白图触发 mmproj 首次 forward。
                     let whiteImage = UIImage(named: "white")

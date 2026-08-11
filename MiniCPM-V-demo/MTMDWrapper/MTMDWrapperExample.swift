@@ -151,7 +151,7 @@ public class MTMDWrapperExample: ObservableObject {
                            nCtx: Int? = nil) async {
         do {
             let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let defaultModelPath = documentsDir.appendingPathComponent("ggml-model-Q4_0.gguf").path
+            let defaultModelPath = documentsDir.appendingPathComponent(MiniCPMModelConst.modelv4_Q4_K_M_FileName).path
             let defaultMmprojPath = documentsDir.appendingPathComponent(MiniCPMModelConst.mmprojv4_FileName).path
             
             let finalModelPath = modelPath ?? defaultModelPath
