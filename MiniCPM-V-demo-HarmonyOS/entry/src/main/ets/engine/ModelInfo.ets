@@ -119,7 +119,22 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     'mmproj-model-f16.gguf',
     '',
     'openbmb/MiniCPM-V-4-gguf',
-    'OpenBMB/MiniCPM-V-4-gguf'
+    'OpenBMB/MiniCPM-V-4-gguf',
+    'main',
+    'master',
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    // MD5s cross-checked against iOS MiniCPMModelConst.swift:73 / :90.
+    // Android deliberately omits these (claiming git-LFS provides integrity),
+    // but our downloader hits HF/MS via direct HTTPS resolve URLs that bypass
+    // LFS pointer verification — partial / corrupt bytes would land on disk
+    // unchecked. Same reasoning applies to MiniCPM5-1B below.
+    '8fc4cc88e5ea73472ae795b57a0e7fdd',
+    'fe15375bb4c579858df6054d2a8b639d'
   ),
   new ModelInfo(
     'minicpm-v-4_6-instruct',
@@ -157,7 +172,9 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     null,
     null,
     null,
-    null
+    null,
+    // MD5 from iOS MiniCPMModelConst.swift:181
+    'a5f29552a5abcc0533f18066851fe8dc'
   ),
   new ModelInfo(
     'voxcpm2',
@@ -182,7 +199,10 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
   ),
 ];
 
-export const DEFAULT_MODEL: ModelInfo = AVAILABLE_MODELS[0];
+// Default is V-4.6 (newest instruct model with MD5 verification + video
+// understanding support). The list still keeps V-4 at index 0 for ordering
+// stability in the picker UI.
+export const DEFAULT_MODEL: ModelInfo = AVAILABLE_MODELS[1];
 
 // Maps any historical filename (left) to the current canonical name (right)
 // for files that may already exist in a user's per-model subdirectory.

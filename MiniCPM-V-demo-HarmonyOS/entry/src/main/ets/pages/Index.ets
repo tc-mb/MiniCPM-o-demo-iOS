@@ -36,6 +36,8 @@ import {
   PickedVideo,
 } from '../utils/VideoFrameExtractor';
 import { LocaleManager } from '../manager/LocaleManager';
+import { DownloadSnapshot, IDLE_SNAPSHOT } from '../download/DownloadState';
+import { findModelById } from '../engine/ModelInfo';
 
 const DOMAIN = 0xC0DE;
 const TAG = 'Index';
@@ -68,6 +70,10 @@ struct Index {
   @State isVisionSupported: boolean = false;
   @State inputText: string = '';
   @State messageList: ChatMessageList = new ChatMessageList();
+  // Read-only observer of the global download state — Index needs to know
+  // whether a download is already in flight before deciding whether to
+  // auto-kick one on launch.
+  @StorageLink('minicpmv_download_state') dlState: DownloadSnapshot = IDLE_SNAPSHOT;
 
   private engine: LlamaEngine | null = null;
   private engineListener = (s: LlamaState) => this.onEngineState(s);
@@ -190,22 +196,65 @@ struct Index {
     const needsDownload = !fs.accessSync(modelPath) ||
         (!selectedModel.isTextOnly && !!mmprojPath && !fs.accessSync(mmprojPath));
     if (needsDownload) {
-      hilog.info(DOMAIN, TAG, 'Default model missing, auto-downloading...');
-      promptAction.showToast({ message: this.str('toast_first_use_downloading'), duration: 3000 });
-      try {
-        await LlamaEngine.downloadModels(ctx, (msg: string) => {
-          hilog.info(DOMAIN, TAG, 'download: %{public}s', msg);
+      // Three-branch policy:
+      //   1) A download is already in flight → don't queue another; just
+      //      tell the user to wait.
+      //   2) Fresh install (no models/ dir yet) → auto-download the
+      //      currently-selected model with the "首次进入" prompt.
+      //   3) Non-first-time user with missing files → don't auto-download;
+      //      point them at Model Manager so they can pick + download
+      //      deliberately. The "首次进入" wording would be a lie here.
+      const isDownloading = this.dlState.status.kind === 'running';
+      if (isDownloading) {
+        const dlId = this.dlState.status.modelId;
+        const dlName = dlId ? findModelById(dlId).displayName : '';
+        promptAction.showToast({
+          message: this.str('toast_another_downloading').replace('%s', dlName),
+          duration: 3000,
         });
-      } catch (e) {
-        hilog.error(DOMAIN, TAG, 'auto download failed: %{public}s', `${e}`);
-        this.engine.resetToInitialized();
         this.hasAutoLoaded = false;
-        promptAction.showToast({ message: `${this.str('toast_download_failed').replace('%s', `${e}`)}`, duration: 5000 });
         return;
       }
-      // Path strings may have been refreshed by legacy-name migrations.
-      modelPath = LlamaEngine.modelPath(ctx);
-      mmprojPath = LlamaEngine.mmprojPath(ctx);
+
+      const modelsRoot = `${ctx.filesDir}/models`;
+      let isFirstLaunch = false;
+      try {
+        isFirstLaunch = !fs.accessSync(modelsRoot);
+      } catch (_) {
+        isFirstLaunch = true;
+      }
+
+      if (isFirstLaunch) {
+        hilog.info(DOMAIN, TAG, 'First launch — auto-downloading default model');
+        promptAction.showToast({
+          message: this.str('toast_first_use_downloading').replace('%s', selectedModel.displayName),
+          duration: 3000,
+        });
+        try {
+          await LlamaEngine.downloadModels(ctx);
+        } catch (e) {
+          hilog.error(DOMAIN, TAG, 'auto download failed: %{public}s', `${e}`);
+          this.engine.resetToInitialized();
+          this.hasAutoLoaded = false;
+          promptAction.showToast({
+            message: this.str('toast_download_failed').replace('%s', `${e}`),
+            duration: 5000,
+          });
+          return;
+        }
+        // Path strings may have been refreshed by legacy-name migrations.
+        modelPath = LlamaEngine.modelPath(ctx);
+        mmprojPath = LlamaEngine.mmprojPath(ctx);
+      } else {
+        // Non-first-time + missing model — don't auto-download; prompt user
+        // to go to Model Manager and pick a model deliberately.
+        promptAction.showToast({
+          message: this.str('toast_model_missing_go_download'),
+          duration: 4000,
+        });
+        this.hasAutoLoaded = false;
+        return;
+      }
     }
 
     if (!fs.accessSync(modelPath)) {
