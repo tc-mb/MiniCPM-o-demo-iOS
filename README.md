@@ -73,7 +73,7 @@ The README is organised in two parts:
 
 #### 1.1.2 Build llama.xcframework (required on first build)
 
-This repo **does not track** any compiled artifacts, so the prebuilt `llama.xcframework` (~189 MB) needs to be produced locally from the `llama.cpp-omni` submodule and dropped into `MiniCPM-V-demo/thirdparty/` for Xcode to link against. A one-shot script is provided — by default it only builds the two slices the demo actually links (real device + simulator), which takes ~2-3 min on a modern M-series Mac:
+This repo **does not track** any compiled artefacts, so the prebuilt `llama.xcframework` (~189 MB) needs to be produced locally from the `llama.cpp-omni` submodule and dropped into `MiniCPM-V-demo/thirdparty/` for Xcode to link against. A one-shot script is provided — by default it only builds the two slices the demo actually links (real device + simulator), which takes ~2-3 min on a modern M-series Mac:
 
 ```bash
 ./scripts/build_xcframework.sh
@@ -106,7 +106,7 @@ During the build you will see warnings like `ignoring duplicate libraries` and `
 
 #### 1.1.3 Open in Xcode and run
 
-Open `MiniCPM-V-Apps/MiniCPM-V-demo.xcodeproj` with Xcode. It may take a moment for Xcode to automatically download the required dependencies. Select the target device at the top, then click the "Run" (triangle) button to launch the demo.
+Open `MiniCPM-V-demo.xcodeproj` with Xcode. It may take a moment for Xcode to automatically download the required dependencies. Select the target device at the top, then click the "Run" (triangle) button to launch the demo.
 
 If Xcode fails with `There is no XCFramework found at '.../llama.xcframework'`, you skipped §1.1.2 — go back and run the build.
 
