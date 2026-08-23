@@ -73,7 +73,7 @@ The README is organised in two parts:
 
 #### 1.1.2 Build llama.xcframework (required on first build)
 
-This repo **does not track** any compiled artefacts, so the prebuilt `llama.xcframework` (~189 MB) needs to be produced locally from the `llama.cpp-omni` submodule and dropped into `MiniCPM-V-demo/thirdparty/` for Xcode to link against. A one-shot script is provided — by default it only builds the two slices the demo actually links (real device + simulator), which takes ~2-3 min on a modern M-series Mac:
+This repo **does not track** any compiled artifacts, so the prebuilt `llama.xcframework` (~189 MB) needs to be produced locally from the `llama.cpp-omni` submodule and dropped into `MiniCPM-V-demo/thirdparty/` for Xcode to link against. A one-shot script is provided — by default it only builds the two slices the demo actually links (real device + simulator), which takes ~2-3 min on a modern M-series Mac:
 
 ```bash
 ./scripts/build_xcframework.sh
