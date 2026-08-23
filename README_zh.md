@@ -106,7 +106,7 @@ Build 过程中会出现 `ignoring duplicate libraries` 和 `skipping debug map 
 
 #### 1.1.3 用 Xcode 打开并运行
 
-用 Xcode 打开 `MiniCPM-V-demo/MiniCPM-V-demo.xcodeproj`，等待 Xcode 自动下载所需依赖。在顶部选择目标设备，点击 "Run"（三角形）按钮启动 demo。
+用 Xcode 打开 `MiniCPM-V-demo.xcodeproj`，等待 Xcode 自动下载所需依赖。在顶部选择目标设备，点击 "Run"（三角形）按钮启动 demo。
 
 如果 build 报 `There is no XCFramework found at '.../llama.xcframework'`，说明你跳过了 §1.1.2，回到上一步执行 build。
 
