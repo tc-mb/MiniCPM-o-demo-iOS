@@ -23,6 +23,7 @@
     <string name="load_model">加载模型</string>
     <string name="hint_input">发消息</string>
     <string name="add_image">添加图片</string>
+    <string name="think_toggle">思考</string>
     <string name="send">发送</string>
     <string name="stop_generating">终止生成</string>
     <string name="image_desc">图片</string>

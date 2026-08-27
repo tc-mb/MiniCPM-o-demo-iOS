@@ -86,6 +86,25 @@ static int                                g_image_max_slice_nums = 9;
 // Mirrors g_n_ctx in MiniCPM-V-demo-Android/app/src/main/cpp/llama_jni.cpp.
 static int                                g_n_ctx = DEFAULT_CONTEXT_SIZE;
 
+// MiniCPM5 text-only thinking toggle. Default off. Vision models ignore it.
+static bool                               g_enable_thinking = false;
+
+static void apply_minicpm5_thinking_suffix(std::string &prompt) {
+    static const char kAss[] = "<|im_start|>assistant\n";
+    static const char kOpen[] = "<think>\n";
+    static const char kClosed[] = "<think>\n\n</think>\n\n";
+    const size_t assLen = sizeof(kAss) - 1;
+    const auto pos = prompt.rfind(kAss);
+    if (pos != std::string::npos) {
+        const std::string rest = prompt.substr(pos + assLen);
+        if (rest.empty() || rest == kOpen || rest == kClosed) {
+            prompt.resize(pos);
+        }
+    }
+    prompt += kAss;
+    prompt += g_enable_thinking ? kOpen : kClosed;
+}
+
 // =============================================================================
 // Generic NAPI helpers
 // =============================================================================
@@ -250,6 +269,19 @@ napi_value SetMinicpmvVersion(napi_env env, napi_callback_info info) {
     }
     g_minicpmv_version = v;
     LOGi("SetMinicpmvVersion: minicpmv_version set to %{public}d", g_minicpmv_version);
+    return make_undefined(env);
+}
+
+napi_value SetEnableThinking(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value argv[1];
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    bool v = false;
+    if (argc >= 1) {
+        napi_get_value_bool(env, argv[0], &v);
+    }
+    g_enable_thinking = v;
+    LOGi("SetEnableThinking: enable_thinking=%{public}d", (int) g_enable_thinking);
     return make_undefined(env);
 }
 
@@ -774,6 +806,7 @@ static int run_user_prompt_prefill(const std::string &user_prompt, int n_predict
         } else {
             formatted_user_prompt = content_for_format;
         }
+        apply_minicpm5_thinking_suffix(formatted_user_prompt);
     }
 
     if (g_ctx_vision) {

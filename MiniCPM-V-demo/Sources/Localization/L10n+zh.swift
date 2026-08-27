@@ -64,6 +64,7 @@ extension LocalizationManager {
         L.ModelDetail.mainButtonOneTapDownload:   "一键下载",
         L.ModelDetail.mainButtonOneTapDownloadV46: "一键下载（约 1.6 GB）",
         L.ModelDetail.mainButtonOneTapDownloadV5:  "一键下载（约 656 MB）",
+        L.ModelDetail.mainButtonOneTapDownloadV526: "一键下载（约 1.5 GB）",
         L.ModelDetail.mainButtonDownloadingFormat: "下载中 %d%%",
         L.ModelDetail.mainButtonUseThis:          "使用该模型",
 
@@ -125,6 +126,7 @@ extension LocalizationManager {
 
         L.Home.sendButton:               "发送",
         L.Home.stopButton:               "停止",
+        L.Home.thinkToggle:              "思考",
 
         L.Home.statusLoading:            "加载中…",
         L.Home.statusGenerating:         "生成中…",

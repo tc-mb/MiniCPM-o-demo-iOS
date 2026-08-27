@@ -145,6 +145,9 @@ extension MBHomeViewController {
 
                 // 通知 C bridge 当前模型版本，用于选择正确的 assistant prompt prefix
                 await self.mtmdWrapperExample?.applyModelVersion()
+                await self.mtmdWrapperExample?.setEnableThinking(
+                    UserDefaults.standard.bool(forKey: "enable_thinking")
+                )
             }
             
             // 检查模型加载状态

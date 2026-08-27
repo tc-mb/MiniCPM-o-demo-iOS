@@ -369,6 +369,12 @@ public class MTMDWrapperExample: ObservableObject {
         print("MTMDWrapperExample: model_version set to \(version)")
     }
 
+    /// MiniCPM5 thinking toggle. Safe before init: stored on the wrapper and
+    /// pushed into the C bridge once a context exists.
+    public func setEnableThinking(_ enable: Bool) {
+        mtmdWrapper.setEnableThinking(enable)
+    }
+
     /// Persist + live-apply the user's chosen slice cap.  Safe to call
     /// before init: the value is stored in UserDefaults and seeded into
     /// MTMDParams on the next initialize().

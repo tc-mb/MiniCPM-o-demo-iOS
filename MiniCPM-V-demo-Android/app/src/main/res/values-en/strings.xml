@@ -21,6 +21,7 @@
     <string name="load_model">Load Model</string>
     <string name="hint_input">Message</string>
     <string name="add_image">Add Image</string>
+    <string name="think_toggle">Think</string>
     <string name="send">Send</string>
     <string name="stop_generating">Stop</string>
     <string name="image_desc">Image</string>

@@ -191,6 +191,22 @@ import llama
         return btn
     }()
 
+    /// MiniCPM5 思考开关：占用纯文本时隐藏的图片按钮位，形态对齐 DeepSeek / 通义输入栏 chip。
+    lazy var thinkButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.imagePadding = 4
+        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10)
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+            return out
+        }
+        let btn = UIButton(configuration: config)
+        btn.addTarget(self, action: #selector(handleThinkToggle), for: .touchUpInside)
+        btn.isHidden = true
+        return btn
+    }()
+
     /// 录像功能-按钮
     lazy var captureVideoButton: UIButton = {
         let btn = UIButton()
@@ -605,6 +621,10 @@ import llama
         
         // 非视觉模型：隐藏图片选择按钮和图片切片设置按钮
         chooseImageButton.isHidden = isNonVisual
+        thinkButton.isHidden = !isTextOnly
+        if isTextOnly {
+            refreshThinkButtonAppearance()
+        }
         
         // 更新顶导右侧按钮组（隐藏切图设置按钮）
         if let items = self.navigationItem.rightBarButtonItems {
@@ -765,6 +785,15 @@ import llama
             make.width.height.equalTo(40)
             make.right.equalTo(self.sendButton.snp.left).offset(-16)
         }
+
+        // 思考开关：与图片按钮同一槽位（纯文本时图片按钮已隐藏）
+        self.inputRoundCornerView.addSubview(self.thinkButton)
+        self.thinkButton.snp.makeConstraints { make in
+            make.centerY.equalTo(self.sendButton)
+            make.height.equalTo(32)
+            make.right.equalTo(self.sendButton.snp.left).offset(-8)
+        }
+        refreshThinkButtonAppearance()
 
         // 实时捕获视频 button（实时理解功能暂未调通，暂时隐藏）
         // self.inputRoundCornerView.addSubview(self.captureVideoButton)
@@ -1026,6 +1055,31 @@ import llama
         Task {
             await processImageAndTextMixModeSendLogic()
         }
+    }
+
+    @objc func handleThinkToggle() {
+        let next = !UserDefaults.standard.bool(forKey: "enable_thinking")
+        UserDefaults.standard.set(next, forKey: "enable_thinking")
+        mtmdWrapperExample?.setEnableThinking(next)
+        refreshThinkButtonAppearance()
+    }
+
+    func refreshThinkButtonAppearance() {
+        let on = UserDefaults.standard.bool(forKey: "enable_thinking")
+        let accent = UIColor.mb_color(with: "#007AFF") ?? .systemBlue
+        let muted = UIColor.mb_color(with: "#6B7280") ?? .gray
+        var config = thinkButton.configuration ?? UIButton.Configuration.plain()
+        config.title = L.Home.thinkToggle.loc
+        config.image = UIImage(systemName: on ? "lightbulb.fill" : "lightbulb")
+        config.baseForegroundColor = on ? accent : muted
+        config.background.backgroundColor = on ? accent.withAlphaComponent(0.12) : .clear
+        config.background.strokeColor = on ? accent : (UIColor.mb_color(with: "#D1D5DB") ?? .lightGray)
+        config.background.strokeWidth = 1
+        config.background.cornerRadius = 16
+        config.imagePadding = 4
+        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10)
+        thinkButton.configuration = config
+        thinkButton.accessibilityLabel = L.Home.thinkToggle.loc
     }
 
 

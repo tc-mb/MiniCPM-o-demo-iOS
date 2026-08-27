@@ -11,6 +11,7 @@
     { "name": "page_title_model", "value": "Model Management" },
 
     { "name": "input_hint", "value": "Message" },
+    { "name": "think_toggle", "value": "Think" },
     { "name": "btn_send", "value": "Send" },
     { "name": "btn_image", "value": "Image" },
     { "name": "btn_clear", "value": "Clear" },

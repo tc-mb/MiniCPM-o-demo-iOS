@@ -91,6 +91,7 @@ public enum L {
         // `mainButtonOneTapDownload` above.
         public static let mainButtonOneTapDownloadV46 = "modelDetail.mainButton.oneTap.v46"
         public static let mainButtonOneTapDownloadV5  = "modelDetail.mainButton.oneTap.v5"
+        public static let mainButtonOneTapDownloadV526 = "modelDetail.mainButton.oneTap.v526"
         // Format with %d for the percent value: "下载中 %d%%" / "Downloading %d%%"
         public static let mainButtonDownloadingFormat = "modelDetail.mainButton.downloadingFormat"
         public static let mainButtonUseThis  = "modelDetail.mainButton.useThis"
@@ -177,6 +178,7 @@ public enum L {
         // Inline send / stop
         public static let sendButton         = "home.button.send"
         public static let stopButton         = "home.button.stop"
+        public static let thinkToggle        = "home.button.think"
 
         // Status pills above the input
         public static let statusLoading      = "home.status.loading"

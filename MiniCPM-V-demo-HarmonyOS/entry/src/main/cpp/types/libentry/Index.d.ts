@@ -23,6 +23,7 @@ export const getMinicpmvVersion: () => number;
 // see the right value.  Required since upstream master mtmd dropped
 // mtmd_get_minicpmv_version().  Call right after a successful loadMmproj.
 export const setMinicpmvVersion: (version: number) => void;
+export const setEnableThinking: (enable: boolean) => void;
 // Per-image slice cap.  No-op on upstream master mtmd (the runtime
 // override API was removed); kept so existing call sites compile.
 // Slice control now happens at mtmd_context creation time and the chat

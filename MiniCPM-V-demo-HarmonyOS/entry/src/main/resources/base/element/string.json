@@ -12,6 +12,7 @@
     { "name": "page_title_model", "value": "模型管理" },
 
     { "name": "input_hint", "value": "请输入问题..." },
+    { "name": "think_toggle", "value": "思考" },
     { "name": "btn_send", "value": "发送" },
     { "name": "btn_image", "value": "图片" },
     { "name": "btn_clear", "value": "清空" },

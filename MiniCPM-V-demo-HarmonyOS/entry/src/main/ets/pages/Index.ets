@@ -66,6 +66,8 @@ struct Index {
   @State stateName: LlamaStateName = 'Uninitialized';
   @State isModelReady: boolean = false;
   @State isVisionSupported: boolean = false;
+  @State isTextOnly: boolean = false;
+  @State enableThinking: boolean = false;
   @State inputText: string = '';
   @State messageList: ChatMessageList = new ChatMessageList();
 
@@ -100,8 +102,13 @@ struct Index {
     this.engine = LlamaEngine.getInstance(getContext(this));
     this.messageList.push(ChatMessage.welcome());
     this.engine.addListener(this.engineListener);
+    const selected = LlamaEngine.getSelectedModel(getContext(this));
+    this.isTextOnly = selected.isTextOnly;
     LlamaEngine.getImageMaxSliceNums(getContext(this)).then((v: number) => {
       this.imageMaxSlice = v;
+    });
+    LlamaEngine.getEnableThinking(getContext(this)).then((v: boolean) => {
+      this.enableThinking = v;
     });
   }
 
@@ -149,6 +156,7 @@ struct Index {
         this.isModelReady = true;
         const wasVision = this.isVisionSupported;
         this.isVisionSupported = !!this.engine && this.engine.isVisionSupported();
+        this.isTextOnly = LlamaEngine.getSelectedModel(getContext(this)).isTextOnly;
         // When vision support state changes (model switch), clear the chat
         // and show a fresh welcome card. Use a unique id so LazyForEach's
         // key changes and it creates a brand-new WelcomeCard component
@@ -465,6 +473,14 @@ struct Index {
     this.imageSliceDialogController.open();
   }
 
+  private onClickThinkToggle(): void {
+    const next = !this.enableThinking;
+    this.enableThinking = next;
+    if (this.engine) {
+      this.engine.setEnableThinking(next);
+    }
+  }
+
   private async onClickSend(): Promise<void> {
     if (!this.engine) return;
     const text = this.inputText.trim();
@@ -656,6 +672,32 @@ struct Index {
           LongPressGesture({ repeat: false, duration: 500 })
             .onAction(() => this.onLongPressImageDebug()),
         );
+      } else if (this.isTextOnly) {
+        Button({ type: ButtonType.Normal, stateEffect: true }) {
+          Row({ space: 4 }) {
+            Image($r('app.media.ic_lightbulb'))
+              .width(16).height(16)
+              .fillColor(this.enableThinking
+                ? $r('app.color.primary')
+                : $r('app.color.on_surface_variant'));
+            Text($r('app.string.think_toggle'))
+              .fontSize(12)
+              .fontColor(this.enableThinking
+                ? $r('app.color.primary')
+                : $r('app.color.on_surface_variant'));
+          }
+        }
+        .height(32)
+        .padding({ left: 10, right: 10 })
+        .borderRadius(16)
+        .backgroundColor(this.enableThinking
+          ? $r('app.color.primary_container')
+          : Color.Transparent)
+        .border({
+          width: 1,
+          color: this.enableThinking ? $r('app.color.primary') : $r('app.color.outline'),
+        })
+        .onClick(() => this.onClickThinkToggle());
       }
 
       Button({ type: ButtonType.Circle, stateEffect: true }) {

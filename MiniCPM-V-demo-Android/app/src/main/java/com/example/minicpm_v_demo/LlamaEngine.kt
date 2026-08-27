@@ -70,6 +70,7 @@ class LlamaEngine private constructor(
         private const val KEY_SELECTED_MODEL = "selected_model_id"
         private const val KEY_IMAGE_MAX_SLICE = "image_max_slice_nums"
         private const val KEY_MODEL_SWITCHED = "model_switched"
+        private const val KEY_ENABLE_THINKING = "enable_thinking"
 
         // MiniCPM-V's hard upper bound on slice count.  Values higher than 9
         // get clamped by clip.cpp::get_best_grid anyway; we cap on the UI
@@ -124,6 +125,13 @@ class LlamaEngine private constructor(
         fun setImageMaxSliceNumsPref(context: Context, n: Int) {
             val clamped = n.coerceIn(MIN_IMAGE_SLICE, MAX_IMAGE_SLICE)
             prefs(context).edit().putInt(KEY_IMAGE_MAX_SLICE, clamped).apply()
+        }
+
+        fun getEnableThinking(context: Context): Boolean =
+            prefs(context).getBoolean(KEY_ENABLE_THINKING, false)
+
+        fun setEnableThinkingPref(context: Context, enable: Boolean) {
+            prefs(context).edit().putBoolean(KEY_ENABLE_THINKING, enable).apply()
         }
 
         fun modelDir(context: Context): String =
@@ -882,6 +890,8 @@ class LlamaEngine private constructor(
     // logic see the right value.  Required since upstream master mtmd
     // dropped mtmd_get_minicpmv_version().  See LlamaEngine.loadModel.
     private external fun setMinicpmvVersionNative(version: Int)
+    // MiniCPM5 text-only thinking toggle. Default off.
+    private external fun setEnableThinkingNative(enable: Boolean)
     // 0 if no mmproj is loaded.  46 / 460 / 461 = MiniCPM-V-4.6 family.
     // Used by [isVideoUnderstandingSupported] to gate the video path.
     private external fun getMinicpmvVersionNative(): Int
@@ -984,6 +994,7 @@ class LlamaEngine private constructor(
                 Log.i(TAG, "Model loaded!")
                 _readyForSystemPrompt = true
                 _cancelGeneration = false
+                setEnableThinkingNative(getEnableThinking(context))
                 _state.value = LlamaState.ModelReady
             } catch (e: Exception) {
                 Log.e(TAG, (e.message ?: "Error loading model") + "\n" + pathToModel, e)
@@ -1009,6 +1020,12 @@ class LlamaEngine private constructor(
         } else {
             Log.i(TAG, "image_max_slice_nums = $clamped persisted; will apply on next mmproj load")
         }
+    }
+
+    fun setEnableThinking(enable: Boolean) {
+        setEnableThinkingPref(context, enable)
+        setEnableThinkingNative(enable)
+        Log.i(TAG, "enable_thinking=$enable")
     }
 
     suspend fun setSystemPrompt(prompt: String) =

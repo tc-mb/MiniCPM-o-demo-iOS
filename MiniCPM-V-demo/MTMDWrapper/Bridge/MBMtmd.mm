@@ -143,6 +143,8 @@ struct mb_mtmd_context {
 
     int                 model_version = 46; // 26=V2.6, 40=V4.0, 46=V4.6, 5=MiniCPM5
 
+    bool                enable_thinking = false; // MiniCPM5 text-only; default off
+
     // UTF-8 byte cache: BPE byte-level tokens may split multi-byte chars
     // (e.g. emoji 😊 = F0 9F 98 8A across 4 tokens). We accumulate raw
     // bytes here and only emit when the sequence forms valid UTF-8, exactly
@@ -435,6 +437,10 @@ void mb_mtmd_set_model_version(mb_mtmd_context * ctx, int version) {
     if (ctx) ctx->model_version = version;
 }
 
+void mb_mtmd_set_enable_thinking(mb_mtmd_context * ctx, bool enable) {
+    if (ctx) ctx->enable_thinking = enable;
+}
+
 void mb_mtmd_set_image_max_slice_nums(mb_mtmd_context * ctx, int n) {
     if (ctx && ctx->vision) {
         mtmd_set_image_max_slice_nums(ctx->vision.get(), n);
@@ -592,12 +598,13 @@ int mb_mtmd_prefill_text(mb_mtmd_context * ctx, const char * text_in, const char
     if (role == "user") {
         formatted += "<|im_start|>user\n" + text + "<|im_end|>\n";
         if (ctx->text_only) {
-            // MiniCPM5 (enable_thinking=true): the Jinja2 template places
-            // <think>\n after the assistant header.  With parse_special=true,
-            // llama_tokenize correctly maps "<think>" to the single special
-            // token (not individual characters), matching the Android path's
-            // common_tokenize + Jinja2 behavior.
-            formatted += "<|im_start|>assistant\n<think>\n";
+            // MiniCPM5: match the GGUF Jinja2 chat_template's enable_thinking
+            // branches. parse_special=true maps "<think>" to one special token.
+            if (ctx->enable_thinking) {
+                formatted += "<|im_start|>assistant\n<think>\n";
+            } else {
+                formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";
+            }
         } else if (ctx->model_version == 46 || ctx->model_version == 460) {
             // V4.6: disable thinking — inject empty think block
             formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";

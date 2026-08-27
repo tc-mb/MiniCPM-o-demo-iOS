@@ -75,6 +75,26 @@ static int                                g_image_max_slice_nums = 9;
 // llama-side defaults when llama_context_default_params changes.
 static int                                g_n_ctx = DEFAULT_CONTEXT_SIZE;
 
+// MiniCPM5 text-only thinking toggle. Default off so the first reply is
+// not a long <think> dump. Vision models ignore this flag.
+static bool                               g_enable_thinking = false;
+
+static void apply_minicpm5_thinking_suffix(std::string &prompt) {
+    static const char kAss[] = "<|im_start|>assistant\n";
+    static const char kOpen[] = "<think>\n";
+    static const char kClosed[] = "<think>\n\n</think>\n\n";
+    const size_t assLen = sizeof(kAss) - 1;
+    const auto pos = prompt.rfind(kAss);
+    if (pos != std::string::npos) {
+        const std::string rest = prompt.substr(pos + assLen);
+        if (rest.empty() || rest == kOpen || rest == kClosed) {
+            prompt.resize(pos);
+        }
+    }
+    prompt += kAss;
+    prompt += g_enable_thinking ? kOpen : kClosed;
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_minicpm_1v_1demo_LlamaEngine_init(JNIEnv *env, jobject /*unused*/, jstring nativeLibDir) {
@@ -207,6 +227,15 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_setImageMaxSliceNumsNative(JNIEnv 
     } else {
         LOGi("%s: image_max_slice_nums set to %d (stored)", __func__, g_image_max_slice_nums);
     }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_minicpm_1v_1demo_LlamaEngine_setEnableThinkingNative(JNIEnv * /*env*/,
+                                                                     jobject,
+                                                                     jboolean jenable) {
+    g_enable_thinking = (bool) jenable;
+    LOGi("%s: enable_thinking=%d", __func__, (int) g_enable_thinking);
 }
 
 static llama_context *init_context(llama_model *model, const int n_ctx = DEFAULT_CONTEXT_SIZE) {
@@ -612,6 +641,7 @@ Java_com_example_minicpm_1v_1demo_LlamaEngine_processUserPrompt(
         } else {
             formatted_user_prompt = content_for_format;
         }
+        apply_minicpm5_thinking_suffix(formatted_user_prompt);
     }
     env->ReleaseStringUTFChars(juser_prompt, user_prompt);
 

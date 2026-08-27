@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import io.noties.markwon.Markwon
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etInput: TextInputEditText
     private lateinit var btnSend: ImageButton
     private lateinit var btnImage: ImageButton
+    private lateinit var btnThink: MaterialButton
     private lateinit var btnClearChat: ImageButton
     private lateinit var btnModelManager: ImageButton
     private lateinit var btnImageSlice: ImageButton
@@ -104,6 +106,7 @@ class MainActivity : AppCompatActivity() {
         etInput = findViewById(R.id.et_input)
         btnSend = findViewById(R.id.btn_send)
         btnImage = findViewById(R.id.btn_image)
+        btnThink = findViewById(R.id.btn_think)
         btnClearChat = findViewById(R.id.btn_clear_chat)
         btnModelManager = findViewById(R.id.btn_model_manager)
         btnImageSlice = findViewById(R.id.btn_image_slice)
@@ -153,6 +156,11 @@ class MainActivity : AppCompatActivity() {
         // only fed to the model if the loaded model is V-4.6 (gated in
         // [handleSelectedMedia] / [LlamaEngine.isVideoUnderstandingSupported]).
         btnImage.setOnClickListener { getMedia.launch(arrayOf("image/*", "video/*")) }
+        btnThink.setOnClickListener {
+            val next = !LlamaEngine.getEnableThinking(this)
+            engine.setEnableThinking(next)
+            refreshThinkButton()
+        }
         btnSend.setOnClickListener { handleUserInput() }
         btnClearChat.setOnClickListener { showClearChatDialog() }
         btnModelManager.setOnClickListener {
@@ -340,8 +348,18 @@ class MainActivity : AppCompatActivity() {
         btnImage.visibility = if (isVision) View.VISIBLE else View.GONE
         btnImageSlice.visibility = if (isVision) View.VISIBLE else View.GONE
         btnImage.isEnabled = isVision
+        btnThink.visibility = if (model.isTextOnly) View.VISIBLE else View.GONE
+        if (model.isTextOnly) {
+            refreshThinkButton()
+        }
 
         refreshWelcomeCard(model.isTextOnly)
+    }
+
+    private fun refreshThinkButton() {
+        val on = LlamaEngine.getEnableThinking(this)
+        btnThink.isChecked = on
+        btnThink.alpha = if (on) 1f else 0.7f
     }
 
     private fun refreshWelcomeCard(isTextOnly: Boolean) {

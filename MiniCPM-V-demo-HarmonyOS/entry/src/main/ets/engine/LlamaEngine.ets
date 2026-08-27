@@ -41,6 +41,7 @@ const DOMAIN = 0xC0DE;
 const PREFS_NAME = 'model_prefs';
 const KEY_SELECTED_MODEL = 'selected_model_id';
 const KEY_IMAGE_MAX_SLICE = 'image_max_slice_nums';
+const KEY_ENABLE_THINKING = 'enable_thinking';
 
 // Slice cap bounds.  9 = MiniCPM-V upper bound (clip.cpp::get_best_grid).
 // Out-of-the-box we default to the upper bound so first-launch image
@@ -297,6 +298,8 @@ export class LlamaEngine {
       }
       hilog.info(DOMAIN, TAG, 'Model loaded!');
       this.readyForSystemPrompt = true;
+      const thinking = await LlamaEngine.getEnableThinking(this.context);
+      nativeEngine.setEnableThinking(thinking);
       this.setState(LlamaState.ModelReady);
     });
   }
@@ -710,6 +713,44 @@ export class LlamaEngine {
     const p = await LlamaEngine.prefs(context);
     await p.put(KEY_IMAGE_MAX_SLICE, clamped);
     await p.flush();
+  }
+
+  private static cachedEnableThinking: boolean | null = null;
+
+  static async getEnableThinking(context: common.Context): Promise<boolean> {
+    if (LlamaEngine.cachedEnableThinking != null) {
+      return LlamaEngine.cachedEnableThinking;
+    }
+    try {
+      const p = await LlamaEngine.prefs(context);
+      const v = await p.get(KEY_ENABLE_THINKING, false) as boolean;
+      LlamaEngine.cachedEnableThinking = !!v;
+      return LlamaEngine.cachedEnableThinking;
+    } catch (e) {
+      hilog.warn(DOMAIN, TAG, 'getEnableThinking failed: %{public}s', `${e}`);
+      LlamaEngine.cachedEnableThinking = false;
+      return false;
+    }
+  }
+
+  static getEnableThinkingCached(): boolean {
+    return LlamaEngine.cachedEnableThinking ?? false;
+  }
+
+  static async setEnableThinkingPref(context: common.Context, enable: boolean): Promise<void> {
+    LlamaEngine.cachedEnableThinking = enable;
+    const p = await LlamaEngine.prefs(context);
+    await p.put(KEY_ENABLE_THINKING, enable);
+    await p.flush();
+  }
+
+  setEnableThinking(enable: boolean): void {
+    LlamaEngine.cachedEnableThinking = enable;
+    nativeEngine.setEnableThinking(enable);
+    LlamaEngine.setEnableThinkingPref(this.context, enable).catch((e: Error) => {
+      hilog.warn(DOMAIN, TAG, 'persist enable_thinking failed: %{public}s', `${e}`);
+    });
+    hilog.info(DOMAIN, TAG, 'enable_thinking=%{public}s', `${enable}`);
   }
 
   // Live update of the slice cap.  Persists the new value AND patches the

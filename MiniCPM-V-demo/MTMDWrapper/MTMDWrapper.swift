@@ -33,6 +33,9 @@ public class MTMDWrapper: ObservableObject {
     
     /// 是否为纯文本模型（影响 <think> 注入行为）
     public var isTextOnlyModel: Bool = false
+
+    /// MiniCPM5 thinking toggle. Default off. Applied on the next user turn.
+    public var enableThinking: Bool = false
     
     // MARK: - Private Properties
     
@@ -143,6 +146,7 @@ public class MTMDWrapper: ObservableObject {
                     self.params = params
                     self.isTextOnlyModel = true
                     self.initializationState = .initialized
+                    mb_mtmd_set_enable_thinking(ctx, self.enableThinking)
                     print("MTMDWrapper: 纯文本模型初始化成功")
                     continuation.resume()
                 }
@@ -329,6 +333,14 @@ public class MTMDWrapper: ObservableObject {
         mb_mtmd_set_model_version(ctx, Int32(version))
     }
 
+    /// MiniCPM5 thinking toggle. Stored locally so it survives a later init,
+    /// and pushed to the C bridge when a context exists.
+    public func setEnableThinking(_ enable: Bool) {
+        enableThinking = enable
+        guard let ctx = context else { return }
+        mb_mtmd_set_enable_thinking(ctx, enable)
+    }
+
     /// 重置上下文
     public func reset() async {
         stopGeneration()
@@ -408,7 +420,7 @@ public class MTMDWrapper: ObservableObject {
         // prompt as a special token, so the model won't generate it itself.
         // Pre-seed fullOutput so the UI can parse <think>...</think> blocks.
         // Mirrors Android's cached_token_chars = "<think>\n" logic.
-        var accumulated: String = isTextOnlyModel ? "<think>\n" : ""
+        var accumulated: String = (isTextOnlyModel && enableThinking) ? "<think>\n" : ""
         fullOutput = accumulated
 
         // 50ms = 20 fps 节流。再短主线程会被打扰太多次（每帧 sink → markdown

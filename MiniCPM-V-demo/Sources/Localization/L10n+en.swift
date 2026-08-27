@@ -67,6 +67,7 @@ extension LocalizationManager {
         L.ModelDetail.mainButtonOneTapDownload:   "Download All",
         L.ModelDetail.mainButtonOneTapDownloadV46: "Download All (~1.6 GB)",
         L.ModelDetail.mainButtonOneTapDownloadV5:  "Download All (~656 MB)",
+        L.ModelDetail.mainButtonOneTapDownloadV526: "Download All (~1.5 GB)",
         L.ModelDetail.mainButtonDownloadingFormat: "Downloading %d%%",
         L.ModelDetail.mainButtonUseThis:          "Use This Model",
 
@@ -128,6 +129,7 @@ extension LocalizationManager {
 
         L.Home.sendButton:               "Send",
         L.Home.stopButton:               "Stop",
+        L.Home.thinkToggle:              "Think",
 
         L.Home.statusLoading:            "Loading…",
         L.Home.statusGenerating:         "Generating…",
