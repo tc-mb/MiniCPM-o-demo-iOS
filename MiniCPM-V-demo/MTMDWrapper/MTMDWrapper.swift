@@ -34,8 +34,15 @@ public class MTMDWrapper: ObservableObject {
     /// 是否为纯文本模型（影响 <think> 注入行为）
     public var isTextOnlyModel: Bool = false
 
-    /// MiniCPM5 thinking toggle. Default off. Applied on the next user turn.
+    /// MiniCPM5 / V-4.6 thinking toggle. Default off. Applied on the next user turn.
     public var enableThinking: Bool = false
+
+    /// 26=V2.6, 40=V4.0, 46/460/461=V4.6, 5=MiniCPM5
+    public private(set) var modelVersion: Int = 0
+
+    private var supportsThinkingPrefix: Bool {
+        isTextOnlyModel || modelVersion == 46 || modelVersion == 460 || modelVersion == 461
+    }
     
     // MARK: - Private Properties
     
@@ -111,6 +118,7 @@ public class MTMDWrapper: ObservableObject {
                     self.context = ctx
                     self.params = params
                     self.initializationState = .initialized
+                    mb_mtmd_set_enable_thinking(ctx, self.enableThinking)
                     print("MTMDWrapper: 初始化成功")
                     continuation.resume()
                 }
@@ -329,11 +337,12 @@ public class MTMDWrapper: ObservableObject {
     /// Set the model version so the C bridge can pick the correct prompt template.
     /// - Parameter version: 26=V2.6, 40=V4.0, 46=V4.6, 5=MiniCPM5
     public func setModelVersion(_ version: Int) {
+        modelVersion = version
         guard let ctx = context else { return }
         mb_mtmd_set_model_version(ctx, Int32(version))
     }
 
-    /// MiniCPM5 thinking toggle. Stored locally so it survives a later init,
+    /// MiniCPM5 / V-4.6 thinking toggle. Stored locally so it survives a later init,
     /// and pushed to the C bridge when a context exists.
     public func setEnableThinking(_ enable: Bool) {
         enableThinking = enable
@@ -358,6 +367,7 @@ public class MTMDWrapper: ObservableObject {
         fullOutput = ""
         hasContent = false
         isTextOnlyModel = false
+        modelVersion = 0
         params = nil
         
         print("MTMDWrapper: 上下文已重置")
@@ -416,11 +426,10 @@ public class MTMDWrapper: ObservableObject {
             return
         }
 
-        // For text-only models (MiniCPM5), <think>\n is injected into the
-        // prompt as a special token, so the model won't generate it itself.
-        // Pre-seed fullOutput so the UI can parse <think>...</think> blocks.
-        // Mirrors Android's cached_token_chars = "<think>\n" logic.
-        var accumulated: String = (isTextOnlyModel && enableThinking) ? "<think>\n" : ""
+        // MiniCPM5 / V-4.6: <think>\n is injected into the prompt as a
+        // special token, so the model won't generate it itself. Pre-seed
+        // fullOutput so the UI can parse <think>...</think> blocks.
+        var accumulated: String = (supportsThinkingPrefix && enableThinking) ? "<think>\n" : ""
         fullOutput = accumulated
 
         // 50ms = 20 fps 节流。再短主线程会被打扰太多次（每帧 sink → markdown

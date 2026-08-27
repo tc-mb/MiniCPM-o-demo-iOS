@@ -67,6 +67,7 @@ struct Index {
   @State isModelReady: boolean = false;
   @State isVisionSupported: boolean = false;
   @State isTextOnly: boolean = false;
+  @State supportsThinking: boolean = false;
   @State enableThinking: boolean = false;
   @State inputText: string = '';
   @State messageList: ChatMessageList = new ChatMessageList();
@@ -104,6 +105,7 @@ struct Index {
     this.engine.addListener(this.engineListener);
     const selected = LlamaEngine.getSelectedModel(getContext(this));
     this.isTextOnly = selected.isTextOnly;
+    this.supportsThinking = selected.supportsThinking;
     LlamaEngine.getImageMaxSliceNums(getContext(this)).then((v: number) => {
       this.imageMaxSlice = v;
     });
@@ -156,7 +158,9 @@ struct Index {
         this.isModelReady = true;
         const wasVision = this.isVisionSupported;
         this.isVisionSupported = !!this.engine && this.engine.isVisionSupported();
-        this.isTextOnly = LlamaEngine.getSelectedModel(getContext(this)).isTextOnly;
+        const selected = LlamaEngine.getSelectedModel(getContext(this));
+        this.isTextOnly = selected.isTextOnly;
+        this.supportsThinking = selected.supportsThinking;
         // When vision support state changes (model switch), clear the chat
         // and show a fresh welcome card. Use a unique id so LazyForEach's
         // key changes and it creates a brand-new WelcomeCard component
@@ -641,7 +645,7 @@ struct Index {
   }
 
   // Bottom input bar.  Layout (mirrors Android `activity_main.xml`):
-  //   [ TextArea (flex 1)  |  image-icon-button  |  send-icon-button ]
+  //   [ TextArea  |  image?  |  think?  |  send ]
   //
   // Long-press on the image button triggers the bundled rawfile test images
   // for QA without a media library.
@@ -672,32 +676,10 @@ struct Index {
           LongPressGesture({ repeat: false, duration: 500 })
             .onAction(() => this.onLongPressImageDebug()),
         );
-      } else if (this.isTextOnly) {
-        Button({ type: ButtonType.Normal, stateEffect: true }) {
-          Row({ space: 4 }) {
-            Image($r('app.media.ic_lightbulb'))
-              .width(16).height(16)
-              .fillColor(this.enableThinking
-                ? $r('app.color.primary')
-                : $r('app.color.on_surface_variant'));
-            Text($r('app.string.think_toggle'))
-              .fontSize(12)
-              .fontColor(this.enableThinking
-                ? $r('app.color.primary')
-                : $r('app.color.on_surface_variant'));
-          }
-        }
-        .height(32)
-        .padding({ left: 10, right: 10 })
-        .borderRadius(16)
-        .backgroundColor(this.enableThinking
-          ? $r('app.color.primary_container')
-          : Color.Transparent)
-        .border({
-          width: 1,
-          color: this.enableThinking ? $r('app.color.primary') : $r('app.color.outline'),
-        })
-        .onClick(() => this.onClickThinkToggle());
+      }
+
+      if (this.supportsThinking) {
+        this.ThinkChip();
       }
 
       Button({ type: ButtonType.Circle, stateEffect: true }) {
@@ -718,6 +700,34 @@ struct Index {
     .margin({ left: 12, right: 12, top: 6, bottom: 12 })
     .backgroundColor($r('app.color.surface_variant'))
     .borderRadius(28);
+  }
+
+  @Builder ThinkChip() {
+    Button({ type: ButtonType.Normal, stateEffect: true }) {
+      Row({ space: 4 }) {
+        Image($r('app.media.ic_lightbulb'))
+          .width(16).height(16)
+          .fillColor(this.enableThinking
+            ? $r('app.color.primary')
+            : $r('app.color.on_surface_variant'));
+        Text($r('app.string.think_toggle'))
+          .fontSize(12)
+          .fontColor(this.enableThinking
+            ? $r('app.color.primary')
+            : $r('app.color.on_surface_variant'));
+      }
+    }
+    .height(32)
+    .padding({ left: 10, right: 10 })
+    .borderRadius(16)
+    .backgroundColor(this.enableThinking
+      ? $r('app.color.primary_container')
+      : Color.Transparent)
+    .border({
+      width: 1,
+      color: this.enableThinking ? $r('app.color.primary') : $r('app.color.outline'),
+    })
+    .onClick(() => this.onClickThinkToggle());
   }
 
   // Translates the engine state into a one-line status under the title.

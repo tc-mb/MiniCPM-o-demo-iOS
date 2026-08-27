@@ -75,8 +75,8 @@ static int                                g_image_max_slice_nums = 9;
 // llama-side defaults when llama_context_default_params changes.
 static int                                g_n_ctx = DEFAULT_CONTEXT_SIZE;
 
-// MiniCPM5 text-only thinking toggle. Default off so the first reply is
-// not a long <think> dump. Vision models ignore this flag.
+// MiniCPM5 / V-4.6 thinking toggle. Default off so the first reply is
+// not a long <think> dump.
 static bool                               g_enable_thinking = false;
 
 static void apply_minicpm5_thinking_suffix(std::string &prompt) {
@@ -328,25 +328,17 @@ static void reset_long_term_states(const bool clear_kv_cache = true) {
         llama_memory_clear(llama_get_memory(g_context), false);
 }
 
-// Mirror of iOS demo (mtmd-ios.cpp prefill_text role="user"):
-// the assistant turn prefix depends on the MiniCPM-V variant. v4.6-instruct
-// uses enable_thinking=false and embeds the empty <think>...</think> block
-// directly so the model emits the response right after; v4.6-thinking lets
-// the model produce its own thinking; v4.0 / v2.x use plain ChatML.
-//
-// Note: convert_hf_to_gguf.py currently hard-codes clip.minicpmv_version = 46
-// for ALL MiniCPM-V 4.6 mmproj (does not differentiate instruct/thinking).
-// Since this demo only ships the instruct variant, we treat 46 as instruct
-// to match the iOS path (which hard-codes the instruct prefix unconditionally).
-// If a thinking-flavored mmproj is ever shipped, it should write 461 to
-// avoid this collision.
+// Mirror of iOS MBMtmd.mm prefill_text role="user":
+// MiniCPM-V-4.6 (46/460/461) follows g_enable_thinking, same as MiniCPM5.
+// v4.0 / v2.x use plain ChatML and have no thinking toggle.
 static const char * assistant_turn_prefix() {
     switch (g_minicpmv_version) {
-        case 46:  // MiniCPM-V-4.6 (default tag from convert_hf_to_gguf.py; treated as instruct)
-        case 460: // MiniCPM-V-4.6 instruct (enable_thinking = false)
-            return "<|im_start|>assistant\n<think>\n\n</think>\n\n";
-        case 461: // MiniCPM-V-4.6 thinking (model emits its own <think>...</think>)
-            return "<|im_start|>assistant\n";
+        case 46:
+        case 460:
+        case 461:
+            return g_enable_thinking
+                ? "<|im_start|>assistant\n<think>\n"
+                : "<|im_start|>assistant\n<think>\n\n</think>\n\n";
         default:
             return "<|im_start|>assistant\n";
     }

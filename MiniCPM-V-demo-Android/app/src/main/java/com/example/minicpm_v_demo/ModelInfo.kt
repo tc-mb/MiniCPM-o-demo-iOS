@@ -57,6 +57,10 @@ data class ModelInfo(
     val isTts: Boolean
         get() = acousticFileName != null
 
+    /** MiniCPM5 (text) and MiniCPM-V-4.6 expose a thinking toggle. */
+    val supportsThinking: Boolean
+        get() = isTextOnly || id == "minicpm-v-4_6-instruct"
+
     fun getDescription(context: Context): String {
         val resId = context.resources.getIdentifier(descriptionResName, "string", context.packageName)
         return if (resId != 0) context.getString(resId) else descriptionResName

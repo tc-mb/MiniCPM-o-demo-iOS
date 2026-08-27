@@ -150,11 +150,11 @@ bool mb_mtmd_clean_kv_cache(mb_mtmd_context * ctx);
 // If never called, defaults to 46 (legacy behaviour).
 void mb_mtmd_set_model_version(mb_mtmd_context * ctx, int version);
 
-// MiniCPM5 text-only thinking toggle. Default is off (empty <think> block).
+// MiniCPM5 / V-4.6 thinking toggle. Default is off (empty <think> block).
 // On:  assistant header + "<think>\n" so the model writes its own reasoning.
 // Off: assistant header + "<think>\n\n</think>\n\n" so it answers immediately.
-// No-op for vision models. Safe to call between turns; next prefill_text
-// picks up the new value. Must be called after init.
+// No-op for models without thinking (V-4 / V-2.6). Safe to call between
+// turns; next prefill_text picks up the new value. Must be called after init.
 void mb_mtmd_set_enable_thinking(mb_mtmd_context * ctx, bool enable);
 
 // Runtime override of the per-image slice-count knob.

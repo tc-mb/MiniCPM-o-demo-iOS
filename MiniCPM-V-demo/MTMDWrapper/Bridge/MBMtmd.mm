@@ -143,7 +143,7 @@ struct mb_mtmd_context {
 
     int                 model_version = 46; // 26=V2.6, 40=V4.0, 46=V4.6, 5=MiniCPM5
 
-    bool                enable_thinking = false; // MiniCPM5 text-only; default off
+    bool                enable_thinking = false; // MiniCPM5 / V-4.6; default off
 
     // UTF-8 byte cache: BPE byte-level tokens may split multi-byte chars
     // (e.g. emoji 😊 = F0 9F 98 8A across 4 tokens). We accumulate raw
@@ -597,17 +597,18 @@ int mb_mtmd_prefill_text(mb_mtmd_context * ctx, const char * text_in, const char
 
     if (role == "user") {
         formatted += "<|im_start|>user\n" + text + "<|im_end|>\n";
-        if (ctx->text_only) {
-            // MiniCPM5: match the GGUF Jinja2 chat_template's enable_thinking
-            // branches. parse_special=true maps "<think>" to one special token.
+        const bool supports_thinking = ctx->text_only
+            || ctx->model_version == 46
+            || ctx->model_version == 460
+            || ctx->model_version == 461;
+        if (supports_thinking) {
+            // MiniCPM5 / V-4.6: match Jinja2 enable_thinking branches.
+            // parse_special=true maps "<think>" to one special token.
             if (ctx->enable_thinking) {
                 formatted += "<|im_start|>assistant\n<think>\n";
             } else {
                 formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";
             }
-        } else if (ctx->model_version == 46 || ctx->model_version == 460) {
-            // V4.6: disable thinking — inject empty think block
-            formatted += "<|im_start|>assistant\n<think>\n\n</think>\n\n";
         } else {
             // V4.0 / V2.6: plain assistant header, no thinking support
             formatted += "<|im_start|>assistant\n";

@@ -348,8 +348,8 @@ class MainActivity : AppCompatActivity() {
         btnImage.visibility = if (isVision) View.VISIBLE else View.GONE
         btnImageSlice.visibility = if (isVision) View.VISIBLE else View.GONE
         btnImage.isEnabled = isVision
-        btnThink.visibility = if (model.isTextOnly) View.VISIBLE else View.GONE
-        if (model.isTextOnly) {
+        btnThink.visibility = if (model.supportsThinking) View.VISIBLE else View.GONE
+        if (model.supportsThinking) {
             refreshThinkButton()
         }
 

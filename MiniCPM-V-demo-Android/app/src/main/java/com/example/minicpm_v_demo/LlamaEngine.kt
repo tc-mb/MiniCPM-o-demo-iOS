@@ -890,7 +890,7 @@ class LlamaEngine private constructor(
     // logic see the right value.  Required since upstream master mtmd
     // dropped mtmd_get_minicpmv_version().  See LlamaEngine.loadModel.
     private external fun setMinicpmvVersionNative(version: Int)
-    // MiniCPM5 text-only thinking toggle. Default off.
+    // MiniCPM5 / V-4.6 thinking toggle. Default off.
     private external fun setEnableThinkingNative(enable: Boolean)
     // 0 if no mmproj is loaded.  46 / 460 / 461 = MiniCPM-V-4.6 family.
     // Used by [isVideoUnderstandingSupported] to gate the video path.

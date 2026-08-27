@@ -37,6 +37,11 @@ export class ModelInfo {
     return !this.mmprojFileName && !this.acousticFileName;
   }
 
+  /** MiniCPM5 (text) and MiniCPM-V-4.6 expose a thinking toggle. */
+  get supportsThinking(): boolean {
+    return this.isTextOnly || this.id === 'minicpm-v-4_6-instruct';
+  }
+
   /** True for TTS (text-to-speech) models with an acoustic component. */
   get isTts(): boolean {
     return !!this.acousticFileName;

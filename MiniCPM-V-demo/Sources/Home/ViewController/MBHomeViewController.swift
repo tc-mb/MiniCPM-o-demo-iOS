@@ -191,7 +191,7 @@ import llama
         return btn
     }()
 
-    /// MiniCPM5 思考开关：占用纯文本时隐藏的图片按钮位，形态对齐 DeepSeek / 通义输入栏 chip。
+    /// MiniCPM5 / V-4.6 思考开关。纯文本时占图片按钮位；V-4.6 与图片按钮并排。
     lazy var thinkButton: UIButton = {
         var config = UIButton.Configuration.plain()
         config.imagePadding = 4
@@ -608,6 +608,12 @@ import llama
         return key == "V5TextModel" || key == "V526TextModel"
     }
 
+    /// MiniCPM5 / MiniCPM-V-4.6 才有思考开关；V-4 / V-2.6 / TTS 没有。
+    var isSelectedModelSupportsThinking: Bool {
+        let key = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
+        return key == "V5TextModel" || key == "V526TextModel" || key == "V46MultiModel"
+    }
+
     /// 是否需要隐藏视觉相关 UI（纯文本 / TTS 模型）
     var isSelectedModelNonVisual: Bool {
         let key = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
@@ -618,12 +624,35 @@ import llama
     func updateUIForModelType() {
         let isTextOnly = isSelectedModelTextOnly
         let isNonVisual = isSelectedModelNonVisual
+        let supportsThinking = isSelectedModelSupportsThinking
         
         // 非视觉模型：隐藏图片选择按钮和图片切片设置按钮
         chooseImageButton.isHidden = isNonVisual
-        thinkButton.isHidden = !isTextOnly
-        if isTextOnly {
+        thinkButton.isHidden = !supportsThinking
+        if supportsThinking {
             refreshThinkButtonAppearance()
+        }
+
+        if thinkButton.superview != nil {
+            thinkButton.snp.remakeConstraints { make in
+                make.centerY.equalTo(self.sendButton)
+                make.height.equalTo(32)
+                make.right.equalTo(self.sendButton.snp.left).offset(-8)
+            }
+            chooseImageButton.snp.remakeConstraints { make in
+                make.bottom.equalTo(-14)
+                make.width.height.equalTo(40)
+                if supportsThinking {
+                    make.right.equalTo(self.thinkButton.snp.left).offset(-8)
+                } else {
+                    make.right.equalTo(self.sendButton.snp.left).offset(-16)
+                }
+            }
+        }
+        if textInputView.superview != nil {
+            textInputView.snp.updateConstraints { make in
+                make.right.equalTo(supportsThinking && !isNonVisual ? -248 : -173)
+            }
         }
         
         // 更新顶导右侧按钮组（隐藏切图设置按钮）
@@ -786,7 +815,7 @@ import llama
             make.right.equalTo(self.sendButton.snp.left).offset(-16)
         }
 
-        // 思考开关：与图片按钮同一槽位（纯文本时图片按钮已隐藏）
+        // 思考开关：纯文本时与图片同一槽位；V-4.6 时排在发送按钮左侧、图片右侧
         self.inputRoundCornerView.addSubview(self.thinkButton)
         self.thinkButton.snp.makeConstraints { make in
             make.centerY.equalTo(self.sendButton)
@@ -811,6 +840,8 @@ import llama
             make.top.equalTo(self.inputRoundCornerView.snp.bottom).offset(14)
             make.left.right.equalTo(self.inputContainerView)
         }
+
+        updateUIForModelType()
     }
         
     /// 创建 uitextview 内嵌的文本区 placeholder view
