@@ -204,6 +204,8 @@ import llama
         let btn = UIButton(configuration: config)
         btn.addTarget(self, action: #selector(handleThinkToggle), for: .touchUpInside)
         btn.isHidden = true
+        btn.setContentHuggingPriority(.required, for: .horizontal)
+        btn.setContentCompressionResistancePriority(.required, for: .horizontal)
         return btn
     }()
 
@@ -650,8 +652,20 @@ import llama
             }
         }
         if textInputView.superview != nil {
-            textInputView.snp.updateConstraints { make in
-                make.right.equalTo(supportsThinking && !isNonVisual ? -248 : -173)
+            // Pin to the leftmost visible accessory so V-4.6 (image + think)
+            // does not eat the text field on 320pt devices. Hidden views still
+            // occupy Auto Layout space, so do not pin to a hidden button.
+            textInputView.snp.remakeConstraints { make in
+                make.left.equalTo(12)
+                make.top.equalTo(16)
+                make.bottom.equalTo(-14)
+                if !isNonVisual {
+                    make.right.equalTo(self.chooseImageButton.snp.left).offset(-8)
+                } else if supportsThinking {
+                    make.right.equalTo(self.thinkButton.snp.left).offset(-8)
+                } else {
+                    make.right.equalTo(self.sendButton.snp.left).offset(-8)
+                }
             }
         }
         
@@ -790,14 +804,8 @@ import llama
         tapFocusInput.cancelsTouchesInView = false
         self.inputRoundCornerView.addGestureRecognizer(tapFocusInput)
 
-        // textview 输入框
+        // textview 先入层级，保证在按钮下面。right 等按钮约束装好后再钉。
         self.inputRoundCornerView.addSubview(self.textInputView)
-        self.textInputView.snp.makeConstraints { make in
-            make.left.equalTo(12)
-            make.top.equalTo(16)
-            make.bottom.equalTo(-14)
-            make.right.equalTo(-173)
-        }
 
         // 发送按钮
         self.inputRoundCornerView.addSubview(self.sendButton)
@@ -823,6 +831,13 @@ import llama
             make.right.equalTo(self.sendButton.snp.left).offset(-8)
         }
         refreshThinkButtonAppearance()
+
+        self.textInputView.snp.makeConstraints { make in
+            make.left.equalTo(12)
+            make.top.equalTo(16)
+            make.bottom.equalTo(-14)
+            make.right.equalTo(self.sendButton.snp.left).offset(-8)
+        }
 
         // 实时捕获视频 button（实时理解功能暂未调通，暂时隐藏）
         // self.inputRoundCornerView.addSubview(self.captureVideoButton)
