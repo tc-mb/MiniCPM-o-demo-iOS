@@ -547,7 +547,7 @@ import llama
             return
         }
 
-        let isTextOnly = (lastSelectedModelString == "V5TextModel")
+        let isTextOnly = (lastSelectedModelString == "V5TextModel" || lastSelectedModelString == "V526TextModel")
         let brandName = isTextOnly ? "MiniCPM" : "MiniCPM-V"
 
         let newTitle: String
@@ -562,6 +562,8 @@ import llama
                 modelDisplayedName = MiniCPMModelConst.modelv46_DisplayedName
             } else if lastSelectedModelString == "V5TextModel" {
                 modelDisplayedName = MiniCPMModelConst.modelv5_DisplayedName
+            } else if lastSelectedModelString == "V526TextModel" {
+                modelDisplayedName = MiniCPMModelConst.modelv526_DisplayedName
             }
 
             if !modelDisplayedName.isEmpty {
@@ -587,13 +589,13 @@ import llama
     /// 从 UserDefaults 判断当前选中的模型是否为纯文本
     var isSelectedModelTextOnly: Bool {
         let key = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
-        return key == "V5TextModel"
+        return key == "V5TextModel" || key == "V526TextModel"
     }
 
     /// 是否需要隐藏视觉相关 UI（纯文本 / TTS 模型）
     var isSelectedModelNonVisual: Bool {
         let key = UserDefaults.standard.value(forKey: "current_selected_model") as? String ?? ""
-        return key == "V5TextModel" || key == "Voxcpm2Model"
+        return key == "V5TextModel" || key == "V526TextModel" || key == "Voxcpm2Model"
     }
 
     /// 根据当前模型类型（视觉 vs 纯文本）动态显示/隐藏 UI 元素

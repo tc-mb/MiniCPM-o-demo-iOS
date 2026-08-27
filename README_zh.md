@@ -8,6 +8,7 @@
 * **MiniCPM-V 4.0**
 * **MiniCPM-V 4.6**
 * **MiniCPM5-1B**（纯文本）
+* **MiniCPM5-2B**（纯文本）
 * **VoxCPM2**（语音合成 TTS）
 
 仓库中包含三份基于 `llama.cpp` 完整本地推理的 demo：
@@ -163,12 +164,13 @@ cd MiniCPM-V-demo-Android
 | MiniCPM-V 4.0 | 4.1B | Q4_K_M | ~2.0 GB | ~0.9 GB | ~2.9 GB | **≥ 6 GB** |
 | MiniCPM-V 4.6 | 1.3B | Q4_K_M | ~0.5 GB | ~1.1 GB | ~1.6 GB | **≥ 6 GB** |
 | MiniCPM5-1B | 1B | Q4_K_M | ~0.5 GB | — | ~0.5 GB | **≥ 4 GB** |
+| MiniCPM5-2B | 2B | Q4_K_M | ~1.5 GB | — | ~1.5 GB | **≥ 6 GB** |
 | VoxCPM2 (TTS) | ~2B | Q4_K_M + F16 | ~1.0 GB | — | ~2.8 GB | **≥ 6 GB** |
 
 补充说明：
 
 * `mmproj` 是视觉投影器 + ViT 权重，统一保留 **f16** 精度——视觉塔做低比特量化对感知质量的伤害比 LLM 更明显。
-* MiniCPM5-1B 为纯文本模型，不需要 `mmproj` 文件。
+* MiniCPM5-1B 与 MiniCPM5-2B 为纯文本模型，不需要 `mmproj` 文件。
 * VoxCPM2 需要两个 GGUF 文件（BaseLM + Acoustic），同样不需要 `mmproj`——它是一个纯语音合成模型。
 * 三端 demo 默认上下文长度为 4K token。上下文越长，KV cache 占用近似线性增长，临界设备上可能需要相应调小。
 * Android / HarmonyOS 上跑 V 2.6 强烈建议 8 GB 及以上内存。iOS 上 V 2.6 已在 iPhone 15 Pro / 16 系列以及搭载 M 系列芯片的较新 iPad 上验证；早期 6 GB 内存设备容易出现频繁换页。
@@ -209,7 +211,16 @@ cd MiniCPM-V-demo-Android
 
 请从仓库下载语言模型文件（例如 `MiniCPM5-1B-Q4_K_M.gguf`）。MiniCPM5 为纯文本模型，不需要 `mmproj`。
 
-### 2.5 VoxCPM2 GGUF 模型文件（语音合成）
+### 2.5 MiniCPM5-2B GGUF 模型文件（纯文本）
+
+Llama 架构 2B 纯文本权重（Q4_K_M，约 1.5 GB）。官方 HF / ModelScope GGUF 仓库尚未上架，demo 目前从 OBS 中转桶拉取：
+
+* OBS: `https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-2B-Q4_K_M.gguf`
+* MD5: `4e1a8117d05ca3fd3b6d9f77fd661601`
+
+不需要 `mmproj`。
+
+### 2.6 VoxCPM2 GGUF 模型文件（语音合成）
 
 VoxCPM2 是约 2B 参数的语音合成模型，由两个 GGUF 文件组成：
 

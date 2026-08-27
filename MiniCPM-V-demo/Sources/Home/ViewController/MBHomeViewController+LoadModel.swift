@@ -58,6 +58,10 @@ extension MBHomeViewController {
                 // MiniCPM 5 纯文本模型（无 mmproj）
                 modelURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.modelv5_FileName)
                 selectedModelType = .V5TextModel
+            } else if lastSelectedModelString == "V526TextModel" {
+                // MiniCPM5-2B 纯文本模型（无 mmproj）
+                modelURL = documentsDirectory.appendingPathComponent(MiniCPMModelConst.modelv526_FileName)
+                selectedModelType = .V526TextModel
             }
             
             // 纯文本模型不需要 mmproj
@@ -108,8 +112,8 @@ extension MBHomeViewController {
             
             // 加载模型
             if await self.mtmdWrapperExample?.multiModelLoadingSuccess == false {
-                if selectedModelType == .V5TextModel {
-                    // MiniCPM 5 纯文本模型：无 mmproj，走 text-only 初始化路径
+                if selectedModelType == .V5TextModel || selectedModelType == .V526TextModel {
+                    // MiniCPM5 纯文本模型：无 mmproj，走 text-only 初始化路径
                     await self.mtmdWrapperExample?.initializeTextOnly(modelPath: modelURL.path)
                 } else if selectedModelType == .V26MultiModel {
                     // V2.6 不走 CoreML / ANE，没有冷启动文案。

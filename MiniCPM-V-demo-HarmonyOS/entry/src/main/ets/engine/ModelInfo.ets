@@ -160,6 +160,27 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     null
   ),
   new ModelInfo(
+    'minicpm5-2b',
+    'MiniCPM5-2B (Q4_K_M)',
+    'model_desc_minicpm5_2b',
+    'MiniCPM5-2B-Q4_K_M.gguf',
+    '',
+    '',
+    null,
+    null,
+    'main',
+    'master',
+    null,
+    null,
+    null,
+    'https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-2B-Q4_K_M.gguf',
+    null,
+    null,
+    '4e1a8117d05ca3fd3b6d9f77fd661601',
+    null,
+    null
+  ),
+  new ModelInfo(
     'voxcpm2',
     'VoxCPM2',
     'model_desc_voxcpm2',

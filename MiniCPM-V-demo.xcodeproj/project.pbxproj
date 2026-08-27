@@ -111,6 +111,8 @@
 		FEF20005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift */; };
 		FEF20006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift */; };
 		FEF20007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift */; };
+		FEF2000BAAAAABBBCCCCDDDD0B /* MBV526ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF1000BAAAAABBBCCCCDDDD0B /* MBV526ModelDownloadManager.swift */; };
+		FEF2000CAAAAABBBCCCCDDDD0C /* MBV526ModelDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF1000CAAAAABBBCCCCDDDD0C /* MBV526ModelDetailViewController.swift */; };
 		FEF20008AAAAABBBCCCCDDDD08 /* TtsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF10008AAAAABBBCCCCDDDD08 /* TtsViewController.swift */; };
 		FEF20009AAAAABBBCCCCDDDD09 /* 默认女声.wav in Resources */ = {isa = PBXBuildFile; fileRef = FEF10009AAAAABBBCCCCDDDD09 /* 默认女声.wav */; };
 		FEF2000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav in Resources */ = {isa = PBXBuildFile; fileRef = FEF1000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav */; };
@@ -254,6 +256,8 @@
 		FEF10005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBAudioPlayer.swift; sourceTree = "<group>"; };
 		FEF10006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBVoxcpm2ModelDownloadManager.swift; sourceTree = "<group>"; };
 		FEF10007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBVoxcpm2ModelDetailViewController.swift; sourceTree = "<group>"; };
+		FEF1000BAAAAABBBCCCCDDDD0B /* MBV526ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV526ModelDownloadManager.swift; sourceTree = "<group>"; };
+		FEF1000CAAAAABBBCCCCDDDD0C /* MBV526ModelDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MBV526ModelDetailViewController.swift; sourceTree = "<group>"; };
 		FEF10008AAAAABBBCCCCDDDD08 /* TtsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TtsViewController.swift; sourceTree = "<group>"; };
 		FEF10009AAAAABBBCCCCDDDD09 /* 默认女声.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "默认女声.wav"; sourceTree = "<group>"; };
 		FEF1000AAAAAAABBBCCCCDDDD0A /* 默认男声.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "默认男声.wav"; sourceTree = "<group>"; };
@@ -550,6 +554,7 @@
 				FA812D2E2E21FC80000CE130 /* MBV26ModelDetailViewController.swift */,
 				FA812D2C2E21FC80000CE131 /* MBV46ModelDetailViewController.swift */,
 				FAA610F148B7DE4F44AEBF62 /* MBV5ModelDetailViewController.swift */,
+				FEF1000CAAAAABBBCCCCDDDD0C /* MBV526ModelDetailViewController.swift */,
 				FEF10007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift */,
 			);
 			path = ModelDetail;
@@ -594,6 +599,7 @@
 				FAA3C9752E220C30007FAD29 /* MBV26ModelDownloadManager.swift */,
 				FAA3C9772E220C30007FAD29 /* MBV46ModelDownloadManager.swift */,
 				FA2CE11E1B73CD40A8A9DF3A /* MBV5ModelDownloadManager.swift */,
+				FEF1000BAAAAABBBCCCCDDDD0B /* MBV526ModelDownloadManager.swift */,
 				FEF10006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift */,
 			);
 			path = DownloadManager;
@@ -974,6 +980,8 @@
 				FEF20005AAAAABBBCCCCDDDD05 /* MBAudioPlayer.swift in Sources */,
 				FEF20006AAAAABBBCCCCDDDD06 /* MBVoxcpm2ModelDownloadManager.swift in Sources */,
 				FEF20007AAAAABBBCCCCDDDD07 /* MBVoxcpm2ModelDetailViewController.swift in Sources */,
+				FEF2000BAAAAABBBCCCCDDDD0B /* MBV526ModelDownloadManager.swift in Sources */,
+				FEF2000CAAAAABBBCCCCDDDD0C /* MBV526ModelDetailViewController.swift in Sources */,
 				FEF20008AAAAABBBCCCCDDDD08 /* TtsViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

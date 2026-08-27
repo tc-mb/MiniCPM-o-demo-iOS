@@ -276,6 +276,9 @@ extension MBSettingsViewController: UITableViewDelegate {
             } else if title == "MiniCPM5-1B" {
                 let detailVC = MBV5ModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
+            } else if title == "MiniCPM5-2B" {
+                let detailVC = MBV526ModelDetailViewController(with: mtmdWrapperExample)
+                self.navigationController?.pushViewController(detailVC, animated: true)
             } else if title == MiniCPMModelConst.voxcpm2_DisplayedName {
                 let detailVC = MBVoxcpm2ModelDetailViewController(with: mtmdWrapperExample)
                 self.navigationController?.pushViewController(detailVC, animated: true)
@@ -466,6 +469,21 @@ extension MBSettingsViewController {
         }
         
         section.append(model)
+
+        let model26 = MBSettingsModel()
+        model26.title = "MiniCPM5-2B"
+        model26.icon = UIImage(systemName: "text.bubble")
+        model26.accessoryIcon = UIImage(named: "setting_accessory_icon")
+        model26.selectedIcon = UIImage(systemName: "checkmark.circle.fill")
+
+        if currentSelectedModel == "V526TextModel" {
+            model26.status = "selected"
+            model26.statusString = L.Settings.statusInUse.loc
+        } else {
+            model26.status = "none"
+        }
+
+        section.append(model26)
         
         dataArray.append(section)
     }
@@ -551,6 +569,8 @@ extension MBSettingsViewController {
             mtmdWrapperExample?.currentUsingModelType = .V46MultiModel
         } else if currentSelectedModel == "V5TextModel" {
             mtmdWrapperExample?.currentUsingModelType = .V5TextModel
+        } else if currentSelectedModel == "V526TextModel" {
+            mtmdWrapperExample?.currentUsingModelType = .V526TextModel
         } else if currentSelectedModel == "Voxcpm2Model" {
             mtmdWrapperExample?.currentUsingModelType = .Voxcpm2Model
         }

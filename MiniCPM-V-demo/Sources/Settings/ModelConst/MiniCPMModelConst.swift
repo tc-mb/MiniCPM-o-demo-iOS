@@ -191,8 +191,26 @@ struct MiniCPMModelConst {
     static let staleModelv5_FileNames: [String] = [
         "MiniCPM5-0.9B-Q4_K_M.gguf",  // OBS 上的开源前 0.9B 命名版本
     ]
-    
-    
+
+
+    // MARK: - MiniCPM5 纯文本模型（2B）
+
+    /// MiniCPM5-2B 主模型文件名。当前走 OBS 直链（尚未上架官方 HF / ModelScope）。
+    static let modelv526_FileName = "MiniCPM5-2B-Q4_K_M.gguf"
+
+    /// MiniCPM5-2B 显示名
+    static let modelv526_DisplayedName = "MiniCPM5-2B LLM INT4"
+
+    /// MiniCPM5-2B 主模型下载地址（华为云 OBS）
+    static let modelv526_URLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-2B-Q4_K_M.gguf"
+
+    /// MiniCPM5-2B 备用下载地址（与主源相同，待官方 HF / MS 上架后再拆）
+    static let modelv526_BackUpURLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/MiniCPM5-2B-Q4_K_M.gguf"
+
+    /// MiniCPM5-2B 主模型 MD5（本地 Q4_K_M，1484 MiB）
+    static let modelv526_MD5 = "4e1a8117d05ca3fd3b6d9f77fd661601"
+
+
     // MARK: - MiniCPM-V 4.6 ANE 模块
     
     /// V4.6 ANE CoreML 目录名（编译后的 .mlmodelc，或 Xcode 可直接加载的 .mlpackage 包）
