@@ -1,0 +1,2 @@
+{"id":"office-example-answerability-1","task":"answerability","label":"SUPPORTED","document_id":"office-example-document-a","distribution":"real_office_redacted","redaction_status":"reviewed","question":"差旅报销上限是多少？","evidence":"公司差旅制度规定，单次住宿报销上限为八百元。","answer":""}
+{"id":"office-example-groundedness-1","task":"groundedness","label":"GROUNDED","document_id":"office-example-document-g","distribution":"real_office_redacted","redaction_status":"reviewed","question":"差旅报销上限是多少？","evidence":"公司差旅制度规定，单次住宿报销上限为八百元。","answer":"单次住宿报销上限为八百元。"}

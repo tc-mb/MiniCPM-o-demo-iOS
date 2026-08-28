@@ -1,0 +1,9 @@
+{
+  "device": "V2359A",
+  "measuredRuns": 5,
+  "histories": [
+    {"turns":0,"plainTtftMs":[171, 193, 210, 171, 170],"plainP50Ms":171,"plainP95Ms":210,"ragTtftMs":[1836, 1826, 1801, 1798, 1814],"ragP50Ms":1814,"ragP95Ms":1836,"peakPssKb":2361463},
+    {"turns":10,"plainTtftMs":[182, 177, 182, 178, 179],"plainP50Ms":179,"plainP95Ms":182,"ragTtftMs":[1914, 1880, 1912, 1883, 1879],"ragP50Ms":1883,"ragP95Ms":1914,"peakPssKb":2358561},
+    {"turns":30,"plainTtftMs":[200, 216, 217, 208, 214],"plainP50Ms":214,"plainP95Ms":217,"ragTtftMs":[2190, 2344, 2355, 2359, 2360],"ragP50Ms":2355,"ragP95Ms":2360,"peakPssKb":2358500}
+  ]
+}

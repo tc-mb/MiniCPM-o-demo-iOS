@@ -56,6 +56,16 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         llama_jni.cpp
         omni_jni.cpp)
 
+add_library(rag_hnsw SHARED
+        rag_hnsw_jni.cpp)
+
+target_include_directories(rag_hnsw PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/third_party/hnswlib)
+
+target_link_libraries(rag_hnsw
+        android
+        log)
+
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
         GGML_SYSTEM_ARCH=${GGML_SYSTEM_ARCH}
         GGML_CPU_KLEIDIAI=$<BOOL:${GGML_CPU_KLEIDIAI}>

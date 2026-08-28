@@ -32,10 +32,20 @@
         android:supportsRtl="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.MiniCPMVdemo">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/camera_file_paths" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="locale|layoutDirection"
+            android:configChanges="locale|layoutDirection|orientation|screenSize"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,17 +61,34 @@
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".OriginalImageViewerActivity"
+            android:exported="false"
+            android:label="@string/original_image_title" />
+        <activity
             android:name=".TtsActivity"
             android:exported="false"
             android:configChanges="locale|layoutDirection"
             android:label="@string/tts_title"
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".KnowledgeBaseActivity"
+            android:exported="false"
+            android:label="@string/rag_knowledge_bases"
+            android:parentActivityName=".MainActivity" />
 
         <service
             android:name=".ModelDownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
+        <receiver
+            android:name=".rag.work.RagImportCancelReceiver"
+            android:exported="false" />
 
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

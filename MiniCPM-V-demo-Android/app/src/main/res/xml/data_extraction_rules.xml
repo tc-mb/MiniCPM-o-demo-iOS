@@ -5,15 +5,25 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
+        <exclude domain="file" path="conversation-store/" />
+        <exclude domain="file" path="conversation-images/" />
+        <exclude domain="file" path="rag/" />
+        <exclude domain="database" path="local-rag.db" />
+        <exclude domain="database" path="local-rag.db-wal" />
+        <exclude domain="database" path="local-rag.db-shm" />
+        <exclude domain="sharedpref" path="minicpm_local_rag_crypto.xml" />
         <!-- TODO: Use <include> and <exclude> to control what is backed up.
         <include .../>
         <exclude .../>
         -->
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="file" path="conversation-store/" />
+        <exclude domain="file" path="conversation-images/" />
+        <exclude domain="file" path="rag/" />
+        <exclude domain="database" path="local-rag.db" />
+        <exclude domain="database" path="local-rag.db-wal" />
+        <exclude domain="database" path="local-rag.db-shm" />
+        <exclude domain="sharedpref" path="minicpm_local_rag_crypto.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>

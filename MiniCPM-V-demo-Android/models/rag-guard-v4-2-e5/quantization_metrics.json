@@ -1,0 +1,51 @@
+{
+  "compression_ratio": 0.2512633906971046,
+  "evaluated_splits": [
+    "calibration"
+  ],
+  "fp32_bytes": 470310373,
+  "fp32_pytorch_max_abs": 8.821487426757812e-06,
+  "int8_bytes": 118171779,
+  "int8_fp32_label_agreement": 0.9693585127489162,
+  "int8_fp32_max_abs_logit_delta": 5.933208465576172,
+  "int8_fp32_mean_abs_logit_delta": 0.24869035184383392,
+  "largest_macro_f1_drop": 0.01078691295800005,
+  "splits": {
+    "calibration": {
+      "fp32": {
+        "answerability": {
+          "accuracy": 0.8986260053619303,
+          "count": 5968.0,
+          "ece": 0.044369235984361814,
+          "macro_f1": 0.9076910259363652
+        },
+        "groundedness": {
+          "accuracy": 0.9528857479387515,
+          "count": 7641.0,
+          "ece": 0.02395167813814676,
+          "macro_f1": 0.9569909765877307
+        }
+      },
+      "int8": {
+        "answerability": {
+          "accuracy": 0.8865616621983914,
+          "count": 5968.0,
+          "ece": 0.04514046704481495,
+          "macro_f1": 0.8969041129783651
+        },
+        "groundedness": {
+          "accuracy": 0.9463421018191336,
+          "count": 7641.0,
+          "ece": 0.021236597321573562,
+          "macro_f1": 0.9510476835055687
+        }
+      }
+    }
+  },
+  "test": null,
+  "test_evaluated": false,
+  "versions": {
+    "onnxruntime": "1.23.2",
+    "torch": "2.4.1+cpu"
+  }
+}

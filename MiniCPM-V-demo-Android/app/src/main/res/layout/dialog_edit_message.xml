@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.textfield.TextInputLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="20dp"
+    android:hint="@string/edit_message_hint">
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_edit_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine|textCapSentences"
+        android:maxLines="8"
+        android:minLines="3" />
+</com.google.android.material.textfield.TextInputLayout>

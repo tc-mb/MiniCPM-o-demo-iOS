@@ -13,7 +13,6 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -30,7 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class TtsActivity : AppCompatActivity() {
+class TtsActivity : StatusBarVisibleActivity() {
 
     companion object {
         private val TAG = TtsActivity::class.java.simpleName
@@ -78,14 +77,16 @@ class TtsActivity : AppCompatActivity() {
         createdWithLocale = LocaleManager.currentLanguage(this).tag
         setContentView(R.layout.activity_tts)
 
-        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         val root = findViewById<View>(android.R.id.content)
         ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
             val sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             v.updatePadding(
-                left = 0, top = 0,
-                right = 0, bottom = ime.bottom
+                left = sysBars.left,
+                top = sysBars.top,
+                right = sysBars.right,
+                bottom = maxOf(sysBars.bottom, ime.bottom)
             )
             insets
         }

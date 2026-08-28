@@ -9,6 +9,7 @@
     android:paddingVertical="6dp">
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/ai_message_bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="48dp"
@@ -90,6 +91,16 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="15sp"
                 android:lineSpacingMultiplier="1.2" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/group_rag_sources"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                app:chipSpacingHorizontal="6dp"
+                app:chipSpacingVertical="4dp"
+                app:singleLine="false" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

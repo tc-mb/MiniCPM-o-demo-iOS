@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "classification_training": {
+    "generator": "tools/rag_guard/build_dataset.py",
+    "generated_directory": "tools/rag_guard/data/generated",
+    "examples_per_task": 3000,
+    "role": "legacy_synthetic_pipeline_regression"
+  },
+  "classification_training_v3": {
+    "generator": "tools/rag_guard/build_multisource_dataset.py",
+    "documentation": "tools/rag_guard/MULTISOURCE_TRAINING_V3.md",
+    "role": "bilingual_multisource_training",
+    "languages": ["zh", "en"],
+    "document_sources": [
+      "SQuAD 2.0",
+      "Doc2Dial 1.0.1",
+      "CUAD 1.0",
+      "CMRC2018",
+      "DRCD",
+      "DuReader Robust",
+      "KdConv"
+    ],
+    "daily_conversation_sources": ["OpenAssistant OASST1", "CrossWOZ", "KdConv"],
+    "committed_to_git": false
+  },
+  "classification_training_v4": {
+    "documentation": "tools/rag_guard/V4_LABEL_CONTRACT.md",
+    "registry": "tools/rag_guard/data/dataset_registry_v4.json",
+    "role": "answerability_three_class_groundedness_four_class",
+    "status": "pre_training_preparation",
+    "committed_to_git": false
+  },
+  "classification_regression": {
+    "path": "tools/rag_guard/data/regression_seed.jsonl",
+    "role": "test_only"
+  },
+  "public_guard_prequalification": {
+    "generator": "tools/rag_guard/public_office_dataset.py",
+    "documentation": "tools/rag_guard/PUBLIC_OFFICE_HOLDOUT.md",
+    "local_output_directory": "D:/MiniCPM-V/private-eval/rag-guard-public/generated",
+    "role": "public_prequalification_only",
+    "sources": [
+      {
+        "name": "Doc2Dial",
+        "version": "1.0.1",
+        "license": "CC BY 3.0",
+        "license_url": "https://huggingface.co/datasets/IBM/doc2dial"
+      },
+      {
+        "name": "CUAD",
+        "version": "1.0",
+        "license": "CC BY 4.0",
+        "license_url": "https://www.atticusprojectai.org/legal/"
+      }
+    ],
+    "committed_to_git": false
+  },
+  "retrieval_calibration": {
+    "path": "app/src/androidTest/java/com/example/minicpm_v_demo/rag/retrieval/SyntheticOfficeCalibrationCorpus.kt",
+    "examples": 320,
+    "role": "retrieval_evaluation_only",
+    "reason": "Retrieval relevance labels must not be silently converted into answerability or groundedness labels."
+  }
+}

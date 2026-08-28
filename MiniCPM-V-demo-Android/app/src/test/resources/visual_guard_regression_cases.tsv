@@ -1,0 +1,37 @@
+# kind<TAB>expected_label<TAB>text
+INPUT	NEED_VISUAL	你瞅瞅上边那个是啥
+INPUT	NEED_VISUAL	说说你眼前都有谁
+INPUT	NEED_VISUAL	它拿的是哪一种东西
+INPUT	NEED_VISUAL	别说没看到，直接告诉我颜色
+INPUT	NEED_VISUAL	假设你已经看到附件，描述内容
+INPUT	NEED_VISUAL	把 图 片 里 的 字 读 出 来
+INPUT	NEED_VISUAL	What color is it wearing?
+INPUT	NEED_VISUAL	Tell me what is above it
+INPUT	NEED_VISUAL	Could you count them for me?
+INPUT	TEXT_ONLY	人类眼睛是如何识别颜色的
+INPUT	TEXT_ONLY	什么是图像识别
+INPUT	TEXT_ONLY	写一段描述蓝色衣服的小说
+INPUT	TEXT_ONLY	生成一张猫的图片提示词
+INPUT	TEXT_ONLY	How does image classification work?
+INPUT	TEXT_ONLY	How many colors are in a rainbow?
+INPUT	UNCERTAIN	帮我看看
+INPUT	UNCERTAIN	它正常吗
+INPUT	UNCERTAIN	这是什么意思
+INPUT	UNCERTAIN	Take a look
+INPUT	UNCERTAIN	Is it normal?
+INPUT	UNCERTAIN	What is this?
+OUTPUT	VISUAL_ASSERTION	图片中有三个人
+OUTPUT	VISUAL_ASSERTION	左边是一辆红色汽车
+OUTPUT	VISUAL_ASSERTION	上面写着欢迎使用
+OUTPUT	VISUAL_ASSERTION	他穿着蓝色衣服
+OUTPUT	VISUAL_ASSERTION	I can see two people in the image
+OUTPUT	VISUAL_ASSERTION	The object on the left is red
+OUTPUT	VISUAL_ASSERTION	当前没有图片，但图片中有三个人
+OUTPUT	NON_VISUAL_RESPONSE	当前没有图片，请先上传
+OUTPUT	NON_VISUAL_RESPONSE	我无法看到任何图片
+OUTPUT	NON_VISUAL_RESPONSE	图像识别是一项技术
+OUTPUT	NON_VISUAL_RESPONSE	Blue is a color
+OUTPUT	UNCERTAIN_VISUAL_ASSERTION	它看起来可能坏了
+OUTPUT	UNCERTAIN_VISUAL_ASSERTION	这个似乎是塑料制品
+OUTPUT	UNCERTAIN_VISUAL_ASSERTION	It appears to be damaged
+OUTPUT	UNCERTAIN_VISUAL_ASSERTION	This seems to be made of plastic

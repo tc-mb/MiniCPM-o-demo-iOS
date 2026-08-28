@@ -3,6 +3,7 @@ package com.example.minicpm_v_demo
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.example.minicpm_v_demo.rag.EphemeralContextEngine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -43,10 +44,32 @@ sealed class LlamaState {
     data class Error(val exception: Exception) : LlamaState()
 }
 
+enum class ModelHistoryRole(val nativeValue: Int) {
+    USER(0),
+    ASSISTANT(1)
+}
+
+data class NativeContextDebugSnapshot(
+    val currentPosition: Int,
+    val contextCapacity: Int,
+    val chatMessageCount: Int,
+    val chatHistoryDigest: String,
+    val imagePrefilled: Boolean,
+    val visionMode: Boolean,
+    val activeCheckpointCount: Int,
+)
+
+class NativeCheckpoint internal constructor(
+    internal val handle: Long,
+    val sizeBytes: Long,
+) {
+    internal var active: Boolean = true
+}
+
 class LlamaEngine private constructor(
     private val context: Context,
     private val nativeLibDir: String
-) {
+) : EphemeralContextEngine {
 
     companion object {
         private val TAG = LlamaEngine::class.java.simpleName
@@ -862,6 +885,21 @@ class LlamaEngine private constructor(
     private val _state = MutableStateFlow<LlamaState>(LlamaState.Uninitialized)
     val state: StateFlow<LlamaState> = _state.asStateFlow()
 
+    private val visualContextPolicy = VisualContextPolicy()
+    val hasVisualContext: StateFlow<Boolean> = visualContextPolicy.hasVisualContext
+
+    fun evaluateVisualPrompt(message: String): VisualPromptDecision =
+        visualContextPolicy.evaluatePrompt(message)
+
+    fun evaluateVisualResponse(
+        response: String,
+        hadVisualContext: Boolean
+    ): VisualResponseDecision =
+        visualContextPolicy.evaluateResponse(response, hadVisualContext)
+
+    fun shouldBlockVisualRequest(message: String): Boolean =
+        visualContextPolicy.shouldBlock(message)
+
     @Volatile
     private var _cancelGeneration = false
 
@@ -889,10 +927,23 @@ class LlamaEngine private constructor(
     private external fun systemInfo(): String
     private external fun processSystemPrompt(systemPrompt: String): Int
     private external fun processUserPrompt(userPrompt: String, predictLength: Int): Int
+    private external fun appendHistoryMessage(role: Int, content: String): Int
     private external fun generateNextToken(): String?
     private external fun prefillImage(imageData: ByteArray, imageSize: Int): Int
     private external fun fullReset()
     private external fun nativeCancelGeneration()
+    private external fun beginEphemeralTurnNative(): Long
+    private external fun restoreEphemeralTurnNative(handle: Long): Boolean
+    private external fun releaseEphemeralTurnNative(handle: Long)
+    private external fun checkpointSizeBytesNative(handle: Long): Long
+    private external fun currentActiveCheckpointCountNative(): Int
+    private external fun currentContextPositionNative(): Int
+    private external fun currentContextCapacityNative(): Int
+    private external fun currentChatMessageCountNative(): Int
+    private external fun currentChatHistoryDigestNative(): String
+    private external fun currentImagePrefilledNative(): Boolean
+    private external fun currentVisionModeNative(): Boolean
+    private external fun countPromptTokensNative(text: String): Int
     private external fun unload()
     private external fun shutdown()
 
@@ -935,6 +986,7 @@ class LlamaEngine private constructor(
                 "Cannot load model in ${_state.value.javaClass.simpleName}!"
             }
             try {
+                visualContextPolicy.reset()
                 Log.i(TAG, "Checking access to model file... \n$pathToModel")
                 File(pathToModel).let {
                     require(it.exists()) { "File not found: $pathToModel" }
@@ -985,6 +1037,9 @@ class LlamaEngine private constructor(
                 _readyForSystemPrompt = true
                 _cancelGeneration = false
                 _state.value = LlamaState.ModelReady
+                if (_mmprojLoaded) {
+                    setSystemPrompt(context.getString(R.string.visual_grounding_system_prompt))
+                }
             } catch (e: Exception) {
                 Log.e(TAG, (e.message ?: "Error loading model") + "\n" + pathToModel, e)
                 _state.value = LlamaState.Error(e)
@@ -1049,6 +1104,7 @@ class LlamaEngine private constructor(
                 throw RuntimeException("Failed to prefill image (code: $result)")
             }
             Log.i(TAG, "Image prefilled!")
+            visualContextPolicy.markVisualContextAvailable()
             _state.value = LlamaState.ModelReady
         }
 
@@ -1124,6 +1180,7 @@ class LlamaEngine private constructor(
                 onProgress(idx + 1, frames.size)
             }
             Log.i(TAG, "Video frames prefilled successfully")
+            visualContextPolicy.markVisualContextAvailable()
         } finally {
             if (needSliceOverride) {
                 Log.i(TAG, "Restoring image_max_slice_nums=$savedSliceCap after video")
@@ -1139,15 +1196,71 @@ class LlamaEngine private constructor(
                 "Cannot clear context in ${_state.value.javaClass.simpleName}"
             }
             fullReset()
+            visualContextPolicy.reset()
             _readyForSystemPrompt = true
+            if (_mmprojLoaded) {
+                setSystemPrompt(context.getString(R.string.visual_grounding_system_prompt))
+            }
             Log.i(TAG, "Context fully reset - context recreated, ready for new conversation")
         }
+
+    /** Replays one completed visible turn without sampling a new response. */
+    suspend fun replayHistoryMessage(role: ModelHistoryRole, content: String) =
+        withContext(llamaDispatcher) {
+            require(content.isNotBlank()) { "Cannot replay an empty history message" }
+            check(_state.value is LlamaState.ModelReady) {
+                "Cannot replay history in ${_state.value.javaClass.simpleName}"
+            }
+            _state.value = LlamaState.ProcessingUserPrompt
+            try {
+                val result = appendHistoryMessage(role.nativeValue, content)
+                if (result != 0) {
+                    throw RuntimeException("Failed to replay ${role.name} history (code: $result)")
+                }
+            } finally {
+                if (_state.value !is LlamaState.Error) {
+                    _state.value = LlamaState.ModelReady
+                }
+            }
+        }
+
+    override suspend fun appendStableHistory(role: ModelHistoryRole, text: String) {
+        replayHistoryMessage(role, text)
+    }
 
     fun sendUserPrompt(
         message: String,
         predictLength: Int = DEFAULT_PREDICT_LENGTH
+    ): Flow<String> = sendPrompt(
+        modelPrompt = message,
+        originalUserTextForSafety = message,
+        predictLength = predictLength,
+    )
+
+    fun sendPreparedPrompt(
+        modelPrompt: String,
+        originalUserTextForSafety: String,
+        predictLength: Int = DEFAULT_PREDICT_LENGTH,
+    ): Flow<String> = sendPrompt(
+        modelPrompt = modelPrompt,
+        originalUserTextForSafety = originalUserTextForSafety,
+        predictLength = predictLength,
+    )
+
+    private fun sendPrompt(
+        modelPrompt: String,
+        originalUserTextForSafety: String,
+        predictLength: Int,
     ): Flow<String> = flow {
-        require(message.isNotEmpty()) { "User prompt must not be empty!" }
+        require(modelPrompt.isNotEmpty()) { "User prompt must not be empty!" }
+        require(originalUserTextForSafety.isNotEmpty()) {
+            "Original user text for safety must not be empty!"
+        }
+        val promptDecision = visualContextPolicy.evaluatePrompt(originalUserTextForSafety)
+        check(promptDecision == VisualPromptDecision.ALLOW) {
+            "Visual request rejected because this conversation has no visual context: " +
+                promptDecision.name
+        }
         check(_state.value is LlamaState.ModelReady) {
             "User prompt discarded due to: ${_state.value.javaClass.simpleName}"
         }
@@ -1158,7 +1271,7 @@ class LlamaEngine private constructor(
             _readyForSystemPrompt = false
             _state.value = LlamaState.ProcessingUserPrompt
 
-            processUserPrompt(message, predictLength).let { result ->
+            processUserPrompt(modelPrompt, predictLength).let { result ->
                 if (result != 0) {
                     Log.e(TAG, "Failed to process user prompt: $result")
                     return@flow
@@ -1196,9 +1309,71 @@ class LlamaEngine private constructor(
         }
     }
 
+    override suspend fun beginEphemeralTurn(): NativeCheckpoint = withContext(llamaDispatcher) {
+        check(_state.value is LlamaState.ModelReady) {
+            "Cannot checkpoint context in ${_state.value.javaClass.simpleName}"
+        }
+        val handle = beginEphemeralTurnNative()
+        check(handle != 0L) { "Native context checkpoint could not be created" }
+        val sizeBytes = checkpointSizeBytesNative(handle)
+        check(sizeBytes in 1..(256L * 1024L * 1024L)) {
+            releaseEphemeralTurnNative(handle)
+            "Invalid native checkpoint size: $sizeBytes"
+        }
+        NativeCheckpoint(handle, sizeBytes)
+    }
+
+    override suspend fun restoreEphemeralTurn(checkpoint: NativeCheckpoint) = withContext(llamaDispatcher) {
+        check(checkpoint.active) { "Native checkpoint has already been consumed" }
+        check(restoreEphemeralTurnNative(checkpoint.handle)) {
+            "Native context checkpoint could not be restored"
+        }
+        checkpoint.active = false
+        _state.value = LlamaState.ModelReady
+        _state.value = LlamaState.ModelReady
+        _state.value = LlamaState.ModelReady
+    }
+
+    override suspend fun releaseEphemeralTurn(checkpoint: NativeCheckpoint) = withContext(llamaDispatcher) {
+        if (checkpoint.active) {
+            releaseEphemeralTurnNative(checkpoint.handle)
+            checkpoint.active = false
+        }
+    }
+
+    suspend fun nativeContextDebugSnapshot(): NativeContextDebugSnapshot =
+        withContext(llamaDispatcher) {
+            NativeContextDebugSnapshot(
+                currentPosition = currentContextPositionNative(),
+                contextCapacity = currentContextCapacityNative(),
+                chatMessageCount = currentChatMessageCountNative(),
+                chatHistoryDigest = currentChatHistoryDigestNative(),
+                imagePrefilled = currentImagePrefilledNative(),
+                visionMode = currentVisionModeNative(),
+                activeCheckpointCount = currentActiveCheckpointCountNative(),
+            )
+        }
+
+    suspend fun countPromptTokens(text: String): Int = withContext(llamaDispatcher) {
+        check(_state.value is LlamaState.ModelReady) {
+            "Cannot count prompt tokens in ${_state.value.javaClass.simpleName}"
+        }
+        countPromptTokensNative(text).also { count ->
+            check(count >= 0) { "Native prompt tokenization failed" }
+        }
+    }
+
+    suspend fun remainingContextTokens(): Int = withContext(llamaDispatcher) {
+        check(_state.value is LlamaState.ModelReady) {
+            "Cannot inspect context capacity in ${_state.value.javaClass.simpleName}"
+        }
+        (currentContextCapacityNative() - currentContextPositionNative()).coerceAtLeast(0)
+    }
+
     suspend fun unloadModel() = withContext(llamaDispatcher) {
         if (_state.value is LlamaState.ModelReady) {
             Log.i(TAG, "Unloading model...")
+            visualContextPolicy.reset()
             _readyForSystemPrompt = false
             _mmprojLoaded = false
             _state.value = LlamaState.UnloadingModel
@@ -1209,6 +1384,7 @@ class LlamaEngine private constructor(
     }
 
     fun resetToInitialized() {
+        visualContextPolicy.reset()
         _mmprojLoaded = false
         _readyForSystemPrompt = false
         _cancelGeneration = false
@@ -1221,6 +1397,7 @@ class LlamaEngine private constructor(
             when (val state = _state.value) {
                 is LlamaState.ModelReady -> {
                     Log.i(TAG, "Unloading model and free resources...")
+                    visualContextPolicy.reset()
                     _readyForSystemPrompt = false
                     _mmprojLoaded = false
                     _state.value = LlamaState.UnloadingModel
@@ -1230,6 +1407,7 @@ class LlamaEngine private constructor(
                 }
                 is LlamaState.Error -> {
                     Log.i(TAG, "Resetting error states...")
+                    visualContextPolicy.reset()
                     _mmprojLoaded = false
                     _state.value = LlamaState.Initialized
                 }
@@ -1240,6 +1418,7 @@ class LlamaEngine private constructor(
 
     fun destroy() {
         _cancelGeneration = true
+        visualContextPolicy.reset()
         runBlocking(llamaDispatcher) {
             _readyForSystemPrompt = false
             _mmprojLoaded = false

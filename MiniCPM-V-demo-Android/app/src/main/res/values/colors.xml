@@ -15,6 +15,15 @@
     <color name="outline">#FF79747E</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="rag_selected_surface">#FFEAF2FF</color>
+    <color name="rag_selected_outline">#FF78A7F5</color>
+    <color name="rag_card_outline">#FFE3E7EE</color>
+    <color name="rag_status_neutral">#FF536273</color>
+    <color name="rag_status_neutral_surface">#FFF1F4F8</color>
+    <color name="rag_status_success">#FF177A45</color>
+    <color name="rag_status_success_surface">#FFE8F7EE</color>
+    <color name="rag_status_error">#FFB3261E</color>
+    <color name="rag_status_error_surface">#FFFFEDEA</color>
 
     <!-- Launcher icon background (matches iOS AppIcon white canvas). -->
     <color name="ic_launcher_background">#FFFFFFFF</color>

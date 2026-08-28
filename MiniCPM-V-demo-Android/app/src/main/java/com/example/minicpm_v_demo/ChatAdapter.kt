@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import io.noties.markwon.Markwon
 
@@ -23,18 +25,38 @@ class ChatAdapter(
         private const val TYPE_AI = 2
     }
 
-    private var onSuggestionClick: ((String) -> Unit)? = null
+    private var onWelcomeAction: ((WelcomeAction) -> Unit)? = null
     private var onStopClick: (() -> Unit)? = null
+    private var onImageClick: ((String) -> Unit)? = null
+    private var onPrivacyInputChoice: ((Long, Boolean) -> Unit)? = null
+    private var onMessageLongClick: ((ChatMessage) -> Unit)? = null
+    private var onCitationClick: ((CitationRef) -> Unit)? = null
 
     private var activeAiHolder: AiMessageViewHolder? = null
     private var activeAiId: Long = -1L
 
-    fun setOnSuggestionClick(listener: (String) -> Unit) {
-        onSuggestionClick = listener
+    fun setOnWelcomeAction(listener: (WelcomeAction) -> Unit) {
+        onWelcomeAction = listener
     }
 
     fun setOnStopClick(listener: () -> Unit) {
         onStopClick = listener
+    }
+
+    fun setOnImageClick(listener: (String) -> Unit) {
+        onImageClick = listener
+    }
+
+    fun setOnPrivacyInputChoice(listener: (Long, Boolean) -> Unit) {
+        onPrivacyInputChoice = listener
+    }
+
+    fun setOnMessageLongClick(listener: (ChatMessage) -> Unit) {
+        onMessageLongClick = listener
+    }
+
+    fun setOnCitationClick(listener: (CitationRef) -> Unit) {
+        onCitationClick = listener
     }
 
     fun setActiveAiMessage(id: Long) {
@@ -114,26 +136,62 @@ class ChatAdapter(
         private val btnSuggestion2: MaterialButton = itemView.findViewById(R.id.btn_suggestion_2)
 
         fun bind(item: ChatMessage.WelcomeCard) {
-            val ctx = itemView.context
-            if (item.isTextOnly) {
-                tvWelcomeTitle.setText(R.string.welcome_title_text)
-                tvWelcomeDesc.setText(R.string.welcome_desc_text)
-                btnSuggestion1.setText(R.string.suggestion_1_text)
-                btnSuggestion2.setText(R.string.suggestion_2_text)
-                btnSuggestion1.setIconResource(R.drawable.ic_lightbulb)
-                btnSuggestion2.setIconResource(R.drawable.ic_lightbulb)
-            } else {
-                tvWelcomeTitle.setText(R.string.welcome_title)
-                tvWelcomeDesc.setText(R.string.welcome_desc)
-                btnSuggestion1.setText(R.string.suggestion_1)
-                btnSuggestion2.setText(R.string.suggestion_2)
-                btnSuggestion1.setIconResource(R.drawable.ic_lightbulb)
-                btnSuggestion2.setIconResource(R.drawable.ic_image)
+            when (WelcomeSuggestionPolicy.mode(item.isTextOnly, item.hasVisualContext)) {
+                WelcomeSuggestionMode.TEXT_PROMPTS -> {
+                    tvWelcomeTitle.setText(R.string.welcome_title_text)
+                    tvWelcomeDesc.setText(R.string.welcome_desc_text)
+                    configurePromptButton(
+                        btnSuggestion1,
+                        R.string.suggestion_1_text,
+                        R.drawable.ic_lightbulb
+                    )
+                    configurePromptButton(
+                        btnSuggestion2,
+                        R.string.suggestion_2_text,
+                        R.drawable.ic_lightbulb
+                    )
+                }
+                WelcomeSuggestionMode.VISUAL_INPUT_ACTIONS -> {
+                    tvWelcomeTitle.setText(R.string.welcome_title)
+                    tvWelcomeDesc.setText(R.string.welcome_desc_no_image)
+                    btnSuggestion1.setText(R.string.add_image)
+                    btnSuggestion1.setIconResource(R.drawable.ic_image)
+                    btnSuggestion1.setOnClickListener {
+                        onWelcomeAction?.invoke(WelcomeAction.PickMedia)
+                    }
+                    btnSuggestion2.setText(R.string.camera_capture)
+                    btnSuggestion2.setIconResource(R.drawable.ic_camera)
+                    btnSuggestion2.setOnClickListener {
+                        onWelcomeAction?.invoke(WelcomeAction.TakePhoto)
+                    }
+                }
+                WelcomeSuggestionMode.VISUAL_PROMPTS -> {
+                    tvWelcomeTitle.setText(R.string.welcome_title)
+                    tvWelcomeDesc.setText(R.string.welcome_desc)
+                    configurePromptButton(
+                        btnSuggestion1,
+                        R.string.suggestion_1,
+                        R.drawable.ic_lightbulb
+                    )
+                    configurePromptButton(
+                        btnSuggestion2,
+                        R.string.suggestion_2,
+                        R.drawable.ic_image
+                    )
+                }
             }
-            val s1 = btnSuggestion1.text.toString()
-            val s2 = btnSuggestion2.text.toString()
-            btnSuggestion1.setOnClickListener { onSuggestionClick?.invoke(s1) }
-            btnSuggestion2.setOnClickListener { onSuggestionClick?.invoke(s2) }
+        }
+
+        private fun configurePromptButton(
+            button: MaterialButton,
+            textRes: Int,
+            iconRes: Int
+        ) {
+            button.setText(textRes)
+            button.setIconResource(iconRes)
+            button.setOnClickListener {
+                onWelcomeAction?.invoke(WelcomeAction.SendPrompt(button.text.toString()))
+            }
         }
     }
 
@@ -144,8 +202,18 @@ class ChatAdapter(
         private val ivVideoBadge: ImageView = itemView.findViewById(R.id.iv_video_play_badge)
         private val tvImageInfo: TextView = itemView.findViewById(R.id.tv_image_info)
         private val progressImage: LinearProgressIndicator = itemView.findViewById(R.id.progress_image)
+        private val privacyConfirmationPanel: View =
+            itemView.findViewById(R.id.privacy_confirmation_panel)
+        private val btnPrivacyReject: MaterialButton =
+            itemView.findViewById(R.id.btn_privacy_reject)
+        private val btnPrivacyApprove: MaterialButton =
+            itemView.findViewById(R.id.btn_privacy_approve)
 
         fun bind(item: ChatMessage.UserMessage) {
+            itemView.setOnLongClickListener {
+                onMessageLongClick?.invoke(item)
+                true
+            }
             tvText.text = item.text
             tvText.visibility = if (item.text.isNotBlank()) View.VISIBLE else View.GONE
 
@@ -156,16 +224,41 @@ class ChatAdapter(
                 tvImageInfo.visibility = View.VISIBLE
                 tvImageInfo.text = item.imageInfo ?: ""
                 progressImage.visibility = if (item.isPrefilling) View.VISIBLE else View.GONE
+                flImageContainer.isClickable = !item.isVideo && item.originalImageToken != null
+                flImageContainer.setOnClickListener {
+                    item.originalImageToken?.takeUnless { item.isVideo }
+                        ?.let { token -> onImageClick?.invoke(token) }
+                }
             } else {
                 flImageContainer.visibility = View.GONE
                 ivVideoBadge.visibility = View.GONE
                 tvImageInfo.visibility = View.GONE
                 progressImage.visibility = View.GONE
+                flImageContainer.isClickable = false
+                flImageContainer.setOnClickListener(null)
+            }
+
+            privacyConfirmationPanel.visibility = if (item.requiresPrivacyConfirmation) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+            if (item.requiresPrivacyConfirmation) {
+                btnPrivacyReject.setOnClickListener {
+                    onPrivacyInputChoice?.invoke(item.id, false)
+                }
+                btnPrivacyApprove.setOnClickListener {
+                    onPrivacyInputChoice?.invoke(item.id, true)
+                }
+            } else {
+                btnPrivacyReject.setOnClickListener(null)
+                btnPrivacyApprove.setOnClickListener(null)
             }
         }
     }
 
     inner class AiMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val messageBubble: ViewGroup = itemView.findViewById(R.id.ai_message_bubble)
         private val tvText: TextView = itemView.findViewById(R.id.tv_ai_text)
         private val btnStop: MaterialButton = itemView.findViewById(R.id.btn_stop_generating)
         private val layoutThinking: View = itemView.findViewById(R.id.layout_thinking)
@@ -174,19 +267,79 @@ class ChatAdapter(
         private val tvThinkingLabel: TextView = itemView.findViewById(R.id.tv_thinking_label)
         private val tvThinkingText: TextView = itemView.findViewById(R.id.tv_thinking_text)
         private val dividerThinking: View = itemView.findViewById(R.id.divider_thinking)
+        private val sourceGroup: ChipGroup = itemView.findViewById(R.id.group_rag_sources)
 
         private var thinkingExpanded = false
         private var streamingMinWidth = 0
 
         fun bind(item: ChatMessage.AiMessage) {
+            itemView.setOnLongClickListener(null)
+            bindLongPressToWholeBubble(item)
             if (!item.isGenerating) {
                 streamingMinWidth = 0
                 (tvText.parent as? ViewGroup)?.minimumWidth = 0
             }
-            renderWithThinking(item.text, item.isGenerating)
+            val renderedText = if (item.isGenerating && item.text.isBlank()) {
+                when (item.ragGenerationStage) {
+                    RagGenerationStage.RETRIEVING -> itemView.context.getString(R.string.rag_stage_retrieving)
+                    RagGenerationStage.ORGANIZING -> itemView.context.getString(R.string.rag_stage_organizing)
+                    RagGenerationStage.GENERATING -> itemView.context.getString(R.string.rag_stage_generating)
+                    null -> item.text
+                }
+            } else {
+                item.text
+            }
+            renderWithThinking(renderedText, item.isGenerating)
+            bindSources(item.citations)
             btnStop.visibility = if (item.isGenerating) View.VISIBLE else View.GONE
             btnStop.setOnClickListener {
                 onStopClick?.invoke()
+            }
+        }
+
+        private fun bindSources(citations: List<CitationRef>) {
+            sourceGroup.removeAllViews()
+            sourceGroup.visibility = if (citations.isEmpty()) View.GONE else View.VISIBLE
+            citations.forEach { citation ->
+                sourceGroup.addView(
+                    Chip(itemView.context).apply {
+                        text = itemView.context.getString(
+                            R.string.rag_source_chip,
+                            citation.sourceId,
+                            citation.documentNameSnapshot,
+                            citation.locator,
+                        )
+                        contentDescription = itemView.context.getString(
+                            R.string.rag_source_chip_description,
+                            citation.sourceId,
+                            citation.documentNameSnapshot,
+                            citation.locator,
+                        )
+                        isCheckable = false
+                        isClickable = true
+                        setEnsureMinTouchTargetSize(true)
+                        setChipBackgroundColorResource(R.color.rag_selected_surface)
+                        setTextColor(itemView.context.getColor(R.color.on_surface_variant))
+                        setOnClickListener { onCitationClick?.invoke(citation) }
+                    },
+                )
+            }
+        }
+
+        private fun bindLongPressToWholeBubble(item: ChatMessage.AiMessage) {
+            val listener = View.OnLongClickListener {
+                if (!item.isGenerating) onMessageLongClick?.invoke(item)
+                !item.isGenerating
+            }
+            bindLongPressRecursively(messageBubble, listener)
+        }
+
+        private fun bindLongPressRecursively(view: View, listener: View.OnLongClickListener) {
+            view.setOnLongClickListener(listener)
+            if (view is ViewGroup) {
+                for (index in 0 until view.childCount) {
+                    bindLongPressRecursively(view.getChildAt(index), listener)
+                }
             }
         }
 
@@ -281,17 +434,34 @@ class ChatAdapter(
             return when {
                 oldItem is ChatMessage.UserMessage && newItem is ChatMessage.UserMessage ->
                     oldItem.text == newItem.text &&
-                            oldItem.imageBitmap == newItem.imageBitmap &&
+                            bitmapsHaveSameContent(oldItem.imageBitmap, newItem.imageBitmap) &&
                             oldItem.imageInfo == newItem.imageInfo &&
+                            oldItem.originalImageToken == newItem.originalImageToken &&
+                            oldItem.previewImageToken == newItem.previewImageToken &&
                             oldItem.isPrefilling == newItem.isPrefilling &&
+                            oldItem.requiresPrivacyConfirmation ==
+                            newItem.requiresPrivacyConfirmation &&
+                            oldItem.includeInModelContext == newItem.includeInModelContext &&
                             oldItem.isVideo == newItem.isVideo
                 oldItem is ChatMessage.AiMessage && newItem is ChatMessage.AiMessage ->
                     oldItem.isGenerating == newItem.isGenerating &&
-                            (oldItem.isGenerating || oldItem.text == newItem.text)
+                            oldItem.includeInModelContext == newItem.includeInModelContext &&
+                            (oldItem.isGenerating || oldItem.text == newItem.text) &&
+                            oldItem.citations == newItem.citations &&
+                            oldItem.ragRunId == newItem.ragRunId &&
+                            oldItem.answerEdited == newItem.answerEdited &&
+                            oldItem.ragGenerationStage == newItem.ragGenerationStage
                 oldItem is ChatMessage.WelcomeCard && newItem is ChatMessage.WelcomeCard ->
-                    oldItem.isTextOnly == newItem.isTextOnly
+                    oldItem.isTextOnly == newItem.isTextOnly &&
+                        oldItem.hasVisualContext == newItem.hasVisualContext
                 else -> false
             }
+        }
+
+        private fun bitmapsHaveSameContent(oldBitmap: Bitmap?, newBitmap: Bitmap?): Boolean {
+            if (oldBitmap === newBitmap) return true
+            if (oldBitmap == null || newBitmap == null) return false
+            return oldBitmap.sameAs(newBitmap)
         }
     }
 }

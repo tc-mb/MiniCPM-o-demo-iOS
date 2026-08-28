@@ -1,0 +1,4 @@
+onnx==1.19.0
+onnxruntime==1.23.2
+onnxruntime-extensions==0.13.0
+numpy==2.2.6

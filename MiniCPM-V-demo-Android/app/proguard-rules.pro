@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ONNX Runtime resolves Java tensor/session types through JNI and reflection.
+# Required by the upstream Android integration guide when R8 is enabled.
+-keep class ai.onnxruntime.** { *; }

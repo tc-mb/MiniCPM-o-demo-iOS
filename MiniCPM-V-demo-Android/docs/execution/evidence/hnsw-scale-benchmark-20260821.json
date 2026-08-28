@@ -1,0 +1,12 @@
+{
+  "device": "V2359A",
+  "androidApi": 36,
+  "dimension": 384,
+  "topK": 10,
+  "efSearchValues": [48, 64, 96, 128, 256, 512],
+  "results": [
+    {"size":1000,"queryCount":12,"pagedExactP50Ms":35.030077,"pagedExactP95Ms":38.739077,"hnswRuns":[{"efSearch":48,"recallAt10":1.0,"p50Ms":0.101461,"p95Ms":0.125},{"efSearch":64,"recallAt10":1.0,"p50Ms":0.127384,"p95Ms":0.140077},{"efSearch":96,"recallAt10":1.0,"p50Ms":0.155,"p95Ms":0.172231},{"efSearch":128,"recallAt10":1.0,"p50Ms":0.173,"p95Ms":0.202538},{"efSearch":256,"recallAt10":1.0,"p50Ms":0.271154,"p95Ms":0.288539},{"efSearch":512,"recallAt10":1.0,"p50Ms":0.413539,"p95Ms":0.437539}],"productionHnsw":null,"buildMs":184.069846,"loadMs":2.950769,"encryptionMs":7.363769,"plaintextBytes":1684244,"encryptedBytes":1684278,"pssDeltaBuildKb":0,"activeHandlesAfterClose":0},
+    {"size":5000,"queryCount":12,"pagedExactP50Ms":153.811616,"pagedExactP95Ms":169.739615,"hnswRuns":[{"efSearch":48,"recallAt10":1.0,"p50Ms":0.107692,"p95Ms":0.142154},{"efSearch":64,"recallAt10":1.0,"p50Ms":0.133846,"p95Ms":0.177539},{"efSearch":96,"recallAt10":1.0,"p50Ms":0.156077,"p95Ms":0.197539},{"efSearch":128,"recallAt10":1.0,"p50Ms":0.194769,"p95Ms":0.247385},{"efSearch":256,"recallAt10":1.0,"p50Ms":0.333,"p95Ms":0.380924},{"efSearch":512,"recallAt10":1.0,"p50Ms":0.604923,"p95Ms":0.667693}],"productionHnsw":null,"buildMs":1000.485923,"loadMs":13.613769,"encryptionMs":24.317308,"plaintextBytes":8423148,"encryptedBytes":8423182,"pssDeltaBuildKb":0,"activeHandlesAfterClose":0},
+    {"size":20000,"queryCount":12,"pagedExactP50Ms":561.276538,"pagedExactP95Ms":563.368538,"hnswRuns":[{"efSearch":48,"recallAt10":0.9,"p50Ms":0.124077,"p95Ms":0.183308},{"efSearch":64,"recallAt10":0.9833333333333333,"p50Ms":0.180308,"p95Ms":0.257231},{"efSearch":96,"recallAt10":0.9833333333333333,"p50Ms":0.188307,"p95Ms":0.295692},{"efSearch":128,"recallAt10":0.9833333333333333,"p50Ms":0.227308,"p95Ms":0.348846},{"efSearch":256,"recallAt10":0.9833333333333333,"p50Ms":0.465616,"p95Ms":0.598462},{"efSearch":512,"recallAt10":0.9833333333333333,"p50Ms":0.928,"p95Ms":1.135}],"productionHnsw":{"efSearch":256,"recallAt10":0.9833333333333333,"p50Ms":206.605154,"p95Ms":216.162385},"buildMs":4870.307077,"loadMs":58.882231,"encryptionMs":84.350539,"plaintextBytes":33693732,"encryptedBytes":33693766,"pssDeltaBuildKb":23471,"activeHandlesAfterClose":0}
+  ]
+}

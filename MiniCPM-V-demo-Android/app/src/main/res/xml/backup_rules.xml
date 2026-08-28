@@ -6,6 +6,17 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
+    <!-- Conversations can contain private text and identity data. Keep them only on-device. -->
+    <exclude domain="file" path="conversation-store/" />
+    <exclude domain="file" path="conversation-images/" />
+    <!-- Local RAG data is encrypted with a device-bound Keystore key. Backing up
+         ciphertext or its wrapped database passphrase is both private and unusable
+         after restore to another device. -->
+    <exclude domain="file" path="rag/" />
+    <exclude domain="database" path="local-rag.db" />
+    <exclude domain="database" path="local-rag.db-wal" />
+    <exclude domain="database" path="local-rag.db-shm" />
+    <exclude domain="sharedpref" path="minicpm_local_rag_crypto.xml" />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>
