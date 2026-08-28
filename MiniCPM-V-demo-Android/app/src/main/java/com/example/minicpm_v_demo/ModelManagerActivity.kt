@@ -10,7 +10,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -25,7 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class ModelManagerActivity : AppCompatActivity() {
+class ModelManagerActivity : StatusBarVisibleActivity() {
 
     private lateinit var tvModelStatus: TextView
     private lateinit var btnDownload: MaterialButton

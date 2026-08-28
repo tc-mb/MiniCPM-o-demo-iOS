@@ -1,14 +1,73 @@
 <resources>
+    <string name="back">Back</string>
     <!-- Keys not listed here fall back to values/strings.xml (Chinese default).
          Brand names (app_name, app_title, welcome_title, etc.), preset English
          prompts (suggestion_2, suggestion_2_text, disclaimer), and other strings
          that are already English are intentionally omitted. -->
 
     <string name="welcome_desc">I can help you learn, get inspired, and work faster — and I can also understand images for you.</string>
+    <string name="welcome_desc_no_image">Upload an image or take a photo to start visual Q&amp;A, or type a regular text question.</string>
     <string name="welcome_desc_text">I can help you learn, get inspired, and work faster — ask me anything.</string>
     <string name="suggestion_1">What\'s in this photo?</string>
     <string name="suggestion_1_text">Write a poem on spring.</string>
     <string name="model_management">Model Management</string>
+    <string name="chat_settings">Settings</string>
+    <string name="rag_knowledge_bases">Knowledge bases</string>
+    <string name="rag_settings_summary">Create knowledge bases and import documents from this device</string>
+    <string name="rag_knowledge_base_summary">Select a knowledge base, then submit multiple documents. Content is copied, validated, and encrypted in the background.</string>
+    <string name="rag_knowledge_base_priority_notice">When the model and knowledge base disagree, the knowledge-base answer takes priority. Make sure imported documents are accurate and up to date.</string>
+    <string name="rag_create_knowledge_base">Create knowledge base</string>
+    <string name="rag_import_documents">Import documents</string>
+    <string name="rag_knowledge_base_name_hint">Knowledge base name</string>
+    <string name="rag_invalid_knowledge_base_name">Enter 1–50 safe characters</string>
+    <string name="rag_duplicate_knowledge_base_name">That knowledge base name already exists</string>
+    <string name="rag_select_knowledge_base_first">Select or create a knowledge base first</string>
+    <string name="rag_selected_name">✓ %1$s</string>
+    <string name="rag_documents_queued">Queued for background import: %1$d/%2$d documents</string>
+    <string name="rag_import_notification_channel">Knowledge base imports</string>
+    <string name="rag_import_notification_title">Importing knowledge base document</string>
+    <string name="rag_import_notification_body">Processing knowledge-base document</string>
+    <string name="rag_document_stage_status">%1$s\n%2$s</string>
+    <string name="rag_document_stage_queued">Waiting for background processing</string>
+    <string name="rag_document_stage_copying">Securely copying and encrypting document</string>
+    <string name="rag_document_stage_parsing">Parsing document content</string>
+    <string name="rag_document_stage_ocr">Recognizing document text</string>
+    <string name="rag_document_stage_chunking">Preparing knowledge chunks</string>
+    <string name="rag_document_stage_embedding">Generating vector index</string>
+    <string name="rag_document_stage_indexing">Finalizing knowledge-base index</string>
+    <string name="rag_document_stage_ready">Import complete</string>
+    <string name="rag_empty_knowledge_bases">No knowledge bases yet\nCreate one using the button below</string>
+    <string name="rag_delete_knowledge_base">Delete knowledge base</string>
+    <string name="rag_delete_knowledge_base_confirm">Delete “%1$s”? Its documents and index will also be deleted. This cannot be undone.</string>
+    <string name="rag_knowledge_base_deleted">Knowledge base deleted</string>
+    <string name="rag_document_processing">%1$s\nImporting securely…</string>
+    <string name="rag_document_uploaded">%1$s\nImport complete</string>
+    <string name="rag_document_uploaded_action">%1$s\nImport complete · Long-press to delete</string>
+    <string name="rag_document_failed">%1$s\nFailed: %2$s</string>
+    <string name="rag_document_failed_dismiss">%1$s\n%2$s · Swipe left to dismiss</string>
+    <string name="rag_failed_import_swipe_description">%1$s, %2$s. Swipe left to dismiss this notice.</string>
+    <string name="rag_delete_document">Delete document</string>
+    <string name="rag_delete_document_confirm">Delete “%1$s”? Its chunks and vectors will also be removed.</string>
+    <string name="rag_document_deleted">Document deleted</string>
+    <string name="rag_document_delete_failed">Could not delete the document. Try again.</string>
+    <string name="rag_knowledge_base_delete_failed">Could not delete the knowledge base. Try again.</string>
+    <string name="rag_document_default_name">Document</string>
+    <string name="settings_model_summary">Current model: %1$s</string>
+    <string name="settings_slice_summary">Current slices: %1$d · Higher preserves more detail</string>
+    <string name="settings_clear_chat_summary">Delete current messages, image cache, and model context</string>
+    <string name="conversation_management">Conversation Management</string>
+    <string name="settings_conversation_summary">Create, switch, or delete conversations</string>
+    <string name="new_conversation">New conversation</string>
+    <string name="switch_conversation">Switch</string>
+    <string name="delete_current_conversation">Delete current</string>
+    <string name="delete_conversation_confirm">Delete “%1$s” and all its messages?</string>
+    <string name="conversation_switched">Switched to “%1$s”</string>
+    <string name="message_actions">Message actions</string>
+    <string name="edit_message">Edit message</string>
+    <string name="delete_message">Delete this message</string>
+    <string name="edit_message_hint">Messages after this one will be truncated</string>
+    <string name="delete_message_confirm">Only this message will be deleted; no response will be regenerated. Continue?</string>
+    <string name="conversation_rebuild_failed">Failed to restore conversation context: %1$s</string>
     <string name="status_uninitialized">Not initialized — download or load a model</string>
     <string name="status_initializing">Initializing…</string>
     <string name="status_initialized">Initialized — load a model</string>
@@ -21,6 +80,7 @@
     <string name="load_model">Load Model</string>
     <string name="hint_input">Message</string>
     <string name="add_image">Add Image</string>
+    <string name="camera_capture">Take photo</string>
     <string name="send">Send</string>
     <string name="stop_generating">Stop</string>
     <string name="image_desc">Image</string>
@@ -51,7 +111,19 @@
     <!-- MainActivity -->
     <string name="toast_load_model_first">Please load a model first</string>
     <string name="toast_wait_video">Please wait for video processing to finish</string>
+    <string name="toast_wait_image_preprocessing">Please wait for image preprocessing to finish</string>
+    <string name="toast_camera_failed">Failed to take photo: %1$s</string>
     <string name="toast_empty_input">Please enter a message</string>
+    <string name="response_blocked_no_visual_context">There is no usable image in this conversation, so I cannot determine image content. Upload one or take a photo first.</string>
+    <string name="response_uncertain_visual_request">There is no usable image in this conversation. If you mean image content, upload one or take a photo; otherwise, clarify the text question.</string>
+    <string name="privacy_input_confirmation_label">Private information detected. Send it anyway?</string>
+    <string name="privacy_input_reject">No, delete</string>
+    <string name="privacy_input_approve">Yes, send</string>
+    <string name="response_privacy_output_confirmation">The response may contain private data and has been hidden. Show it? Reply exactly “yes” or “no”.</string>
+    <string name="response_privacy_cancelled">Cancelled. The private content will not be submitted or displayed.</string>
+    <string name="response_privacy_confirmation_required">Reply exactly “yes” or “no”. The private content will not be submitted or displayed until you confirm.</string>
+    <string name="response_illegal_refusal">This request involves illegal or high-risk activity, so I can’t provide that content.</string>
+    <string name="response_safety_review">The safety risk of this request could not be determined, so processing was stopped. Please ask again in a clear and lawful way.</string>
     <string name="toast_clear_chat_failed">Failed to clear chat: %1$s</string>
     <string name="toast_model_load_failed">Failed to load model: %1$s</string>
     <string name="toast_image_failed">Failed to process image: %1$s</string>
@@ -59,9 +131,20 @@
     <string name="toast_unsupported_file">Unsupported file type: %1$s</string>
     <string name="error_decode_image">Unable to decode image</string>
     <string name="error_read_image">Unable to read image</string>
+    <string name="error_image_too_large">Image is too large; maximum is 64 MB</string>
+    <string name="error_create_camera_file">Unable to create camera cache file</string>
+    <string name="image_preprocessing">Preprocessing image…</string>
+    <string name="image_preprocessing_wait">Preprocessing image, please wait</string>
+    <string name="image_ready_view_original">Image ready — tap to view original</string>
+    <string name="open_original_image">Tap to view original image</string>
+    <string name="remove_pending_image">Remove pending image</string>
+    <string name="original_image_title">Original image</string>
+    <string name="original_image_unavailable">Original image cache is no longer available</string>
+    <string name="pending_image_ready">Image preprocessing complete</string>
     <string name="video_only_v46">Video understanding is only available on MiniCPM-V-4.6. Please switch models in Model Management.</string>
     <string name="video_processing_progress">%1$s · Processing %2$d/%3$d</string>
     <string name="video_preprocessing_done">%1$s · Preprocess %2$.1fs</string>
+    <string name="visual_grounding_system_prompt">Only answer visual questions using image or video content actually provided in this conversation. If no visual content is available, clearly say that you cannot inspect an image and ask the user to upload one or take a photo. Never invent visual details.</string>
 
     <!-- Download prompt dialog -->
     <string name="download_prompt_title">Model Download Required</string>
@@ -118,6 +201,16 @@
 
     <!-- LlamaEngine download progress -->
     <string name="source_direct">Direct</string>
+    <string name="rag_source_chip">%1$s · %2$s · %3$s</string>
+    <string name="rag_source_chip_description">Source %1$s, file %2$s, location %3$s</string>
+    <string name="rag_source_detail_title">Source %1$s</string>
+    <string name="rag_source_detail_body">File: %1$s\nLocation: %2$s\n\nArchived excerpt:\n%3$s</string>
+    <string name="rag_source_available_body">Source status: current source available\nFile: %1$s\nLocation: %2$s\n\nCurrent indexed text:\n%3$s</string>
+    <string name="rag_source_deleted_body">Source status: source deleted; the archived excerpt from answer time is retained\nFile: %1$s\nLocation: %2$s\n\nArchived excerpt:\n%3$s</string>
+    <string name="rag_source_unavailable_body">Source status: current index unavailable; the archived excerpt from answer time is retained\nFile: %1$s\nLocation: %2$s\n\nArchived excerpt:\n%3$s</string>
+    <string name="rag_stage_retrieving">Searching the knowledge base…</string>
+    <string name="rag_stage_organizing">Organizing supporting evidence…</string>
+    <string name="rag_stage_generating">Generating the answer…</string>
     <string name="download_race_start">%1$s multi-source race started…</string>
     <string name="download_all_complete">All model files downloaded!</string>
     <string name="download_verifying_existing">Verifying existing %1$s…</string>
@@ -153,7 +246,7 @@
     <string name="tts_play_ref">Play</string>
     <string name="tts_clear_ref">Clear</string>
     <string name="tts_recording">Recording…</string>
-    <string name="tts_ref_recorded">Recorded %.1fs, %d KB</string>
+    <string name="tts_ref_recorded">Recorded %1$.1fs, %2$d KB</string>
     <string name="tts_params_label">Inference Parameters</string>
     <string name="tts_cfg_label">CFG Scale</string>
     <string name="tts_timesteps_label">Timesteps</string>

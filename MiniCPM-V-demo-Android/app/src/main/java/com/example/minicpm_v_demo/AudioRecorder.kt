@@ -35,7 +35,12 @@ class AudioRecorder(private val context: Context) {
 
     fun startRecording(targetFile: File): Boolean {
         if (isRecording) return false
-        if (!hasPermission) return false
+        if (
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return false
+        }
 
         val minBuffer = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
         val bufferSize = maxOf(minBuffer, 4096)

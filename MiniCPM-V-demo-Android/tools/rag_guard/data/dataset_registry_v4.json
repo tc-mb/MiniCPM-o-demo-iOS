@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "dataset_schema": 2,
+  "status": "metadata_only_pre_training",
+  "sources": [
+    {
+      "id": "contract_nli",
+      "required_for_v4": true,
+      "name": "ContractNLI",
+      "license": "CC BY 4.0",
+      "license_status": "approved",
+      "homepage": "https://stanfordnlp.github.io/contract-nli/",
+      "enabled": true,
+      "acquisition_status": "ready",
+      "acceptance_confirmed_on": "2026-08-24",
+      "acceptance_scope": "project_model_training_and_evaluation",
+      "note": "Archive is complete and verified. The user explicitly confirmed acceptance of the official click-through terms; no identity information is stored.",
+      "official_files": [
+        {
+          "name": "contract-nli.zip",
+          "url": "https://stanfordnlp.github.io/contract-nli/resources/contract-nli.zip",
+          "bytes": 65362913,
+          "sha256": "e03fc77bbf8b53e2976a250e81d8a294bc3d5e5fb014521e477dee9340d6287b"
+        }
+      ],
+      "tasks": ["answerability", "groundedness"]
+    },
+    {
+      "id": "squad_2",
+      "required_for_v4": true,
+      "name": "SQuAD 2.0",
+      "license": "CC BY-SA 4.0",
+      "license_status": "approved",
+      "homepage": "https://rajpurkar.github.io/SQuAD-explorer/",
+      "enabled": true,
+      "acquisition_status": "ready",
+      "official_files": [
+        {
+          "name": "train-v2.0.json",
+          "url": "https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v2.0.json",
+          "bytes": 42123633,
+          "sha256": "68dcfbb971bd3e96d5b46c7177b16c1a4e7d4bdef19fb204502738552dede002"
+        },
+        {
+          "name": "dev-v2.0.json",
+          "url": "https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v2.0.json",
+          "bytes": 4370528,
+          "sha256": "80a5225e94905956a6446d296ca1093975c4d3b3260f1d6c8f68bc2ab77182d8"
+        }
+      ],
+      "tasks": ["answerability", "groundedness"]
+    },
+    {
+      "id": "cmrc_2018",
+      "required_for_v4": true,
+      "name": "CMRC 2018",
+      "license": "CC BY-SA 4.0",
+      "license_status": "approved",
+      "homepage": "https://github.com/ymcui/cmrc2018",
+      "enabled": true,
+      "acquisition_status": "ready",
+      "official_files": [
+        {
+          "name": "cmrc2018_train.json",
+          "url": "https://raw.githubusercontent.com/ymcui/cmrc2018/master/squad-style-data/cmrc2018_train.json",
+          "bytes": 7408757,
+          "sha256": "5497aa2f81908e31d6b0e27d99b1f90ab63a8f58fa92fffe5d17cf62eba0c212"
+        },
+        {
+          "name": "cmrc2018_dev.json",
+          "url": "https://raw.githubusercontent.com/ymcui/cmrc2018/master/squad-style-data/cmrc2018_dev.json",
+          "bytes": 3367259,
+          "sha256": "b522907e2beb8e4de711d5c84026921bd189cd47f40599caf3f77c6e52f35993"
+        }
+      ],
+      "tasks": ["answerability", "groundedness"]
+    },
+    {
+      "id": "finqa",
+      "name": "FinQA",
+      "license": "CC BY 4.0",
+      "license_status": "review_required",
+      "homepage": "https://finqasite.github.io/",
+      "enabled": false,
+      "tasks": ["answerability", "groundedness"],
+      "note": "Approve only after every included third-party source component is reviewed."
+    },
+    {
+      "id": "hover",
+      "required_for_v4": true,
+      "name": "HoVer",
+      "license": "CC BY-SA 4.0",
+      "license_status": "approved",
+      "homepage": "https://hover-nlp.github.io/",
+      "enabled": true,
+      "acquisition_status": "ready",
+      "official_repository": "https://github.com/hover-nlp/hover",
+      "official_files": [
+        {
+          "name": "hover_train_release_v1.1.json",
+          "url": "https://raw.githubusercontent.com/hover-nlp/hover/main/data/hover/hover_train_release_v1.1.json",
+          "bytes": 9205582,
+          "sha256": "1f1cd57abd616fa00c70bdc575ce77c16fc6cf1a6cffd5ff87c208030a336bb6"
+        },
+        {
+          "name": "hover_dev_release_v1.1.json",
+          "url": "https://raw.githubusercontent.com/hover-nlp/hover/main/data/hover/hover_dev_release_v1.1.json",
+          "bytes": 2153439,
+          "sha256": "67c14858f2d7fcdb96b6fe3d538ffcd6f76e3ba594aa2c0cd4359f601101e89d"
+        },
+        {
+          "name": "wiki_wo_links.db",
+          "url": "https://nlp.cs.unc.edu/data/hover/wiki_wo_links.db",
+          "bytes": 2156273664,
+          "sha256": "c37ee397916ec0bffacfe8902db454a5cda88a7a188409217b2e15231fe5ee2f"
+        }
+      ],
+      "tasks": ["answerability", "groundedness"]
+    },
+    {
+      "id": "ragtruth",
+      "name": "RAGTruth",
+      "license": "mixed third-party sources",
+      "license_status": "review_required",
+      "homepage": "https://github.com/ParticleMedia/RAGTruth",
+      "enabled": false,
+      "tasks": ["groundedness"]
+    }
+  ]
+}

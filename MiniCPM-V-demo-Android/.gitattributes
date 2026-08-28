@@ -1,0 +1,4 @@
+.gitattributes text eol=lf
+models/rag-guard-v4-2-e5/*.md text eol=lf
+models/rag-guard-v4-2-e5/*.json text eol=lf
+models/rag-guard-v4-2-e5/*.onnx filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,9 @@
+{
+  "threshold": 0.95,
+  "results": [
+    {"case":"correct","expectedPass":true,"label":"GROUNDED","groundedProbability":0.99274147,"accepted":true},
+    {"case":"wrong_amount","expectedPass":false,"label":"GROUNDED","groundedProbability":0.99171877,"accepted":true},
+    {"case":"wrong_date","expectedPass":false,"label":"GROUNDED","groundedProbability":0.9919845,"accepted":true},
+    {"case":"unsupported","expectedPass":false,"label":"UNGROUNDED","groundedProbability":0.0069741234,"accepted":false}
+  ]
+}

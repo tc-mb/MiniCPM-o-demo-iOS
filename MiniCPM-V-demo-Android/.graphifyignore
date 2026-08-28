@@ -1,0 +1,27 @@
+# Generated outputs and local build state.
+graphify-out/
+app/build/
+build/
+.gradle/
+.gradle-user-home/
+.android/
+.android-user-home/
+.cxx/
+app/.cxx/
+
+# Binary UI variants and reference audio do not carry architecture knowledge.
+app/src/main/res/mipmap-*/ic_launcher*.webp
+app/src/main/assets/ref_audios/
+
+# Pure configuration/schema JSON produces no AST nodes; its meaning is captured
+# by AGENTS.md, Room migration code, manifests, and project documentation.
+.codex/hooks.json
+app/schemas/**/*.json
+tools/rag_guard/data/dataset_sources.json
+
+# Generated model/data artifacts are represented by manifests and source code.
+*.gguf
+*.onnx
+*.bin
+*.apk
+tools/rag_guard/data/generated/

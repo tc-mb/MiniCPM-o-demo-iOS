@@ -18,16 +18,43 @@
 .externalNativeBuild
 .cxx
 local.properties
+signing.local.properties
+environment.local.bat
 
 app/build/
 app/.cxx/
 .kotlin/
+.gradle-user-home/
+.android/
+.android-user-home/
+.gradle-local/
+.android-local/
+
+# Persist Graphify's reusable graph products, not machine-specific or rebuildable intermediates.
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/.graphify_analysis.json
+graphify-out/.graphify_ast.json
+graphify-out/.graphify_detect.json
+graphify-out/.graphify_extract.json
+graphify-out/.graphify_semantic.json
+graphify-out/.graphify_incremental.json
+graphify-out/cache/
+graphify-out/20??-??-??/
+
+# Local Codex hooks contain machine-specific executable paths.
+.codex/
 
 # Native libs produced by the buildGgmlCpu_v86 task (built per-machine).
 app/src/main/jniLibs/
 
 *.gguf
 *.bin
+
+# Python tooling caches.
+__pycache__/
+*.py[cod]
+tools/rag_guard/data/generated/
 
 app/src/main/cpp/build-llama/
 app/src/main/cpp/build-mtmd/

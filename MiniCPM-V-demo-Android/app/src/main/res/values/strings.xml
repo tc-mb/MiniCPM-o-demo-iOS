@@ -1,16 +1,87 @@
 <resources>
-    <string name="app_name">MiniCPM-V-demo</string>
-    <string name="app_title">MiniCPM-V</string>
-    <string name="app_title_text">MiniCPM</string>
-    <string name="welcome_title">Welcome to MiniCPM-V</string>
-    <string name="welcome_title_text">Welcome to MiniCPM</string>
+    <string name="back">返回</string>
+    <string name="app_name" translatable="false">MiniCPM-V-demo</string>
+    <string name="app_title" translatable="false">MiniCPM-V</string>
+    <string name="app_title_text" translatable="false">MiniCPM</string>
+    <string name="welcome_title" translatable="false">Welcome to MiniCPM-V</string>
+    <string name="welcome_title_text" translatable="false">Welcome to MiniCPM</string>
     <string name="welcome_desc">让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话互动、根据图片给出信息并进一步解读。</string>
+    <string name="welcome_desc_no_image">先上传图片或拍照，再开始视觉问答；普通文字问题也可以直接输入。</string>
     <string name="welcome_desc_text">让我协助你了解知识、获得灵感、提升效率，我可以进行多轮对话互动，回答你的各种问题。</string>
     <string name="suggestion_1">请描述图片中的内容。</string>
-    <string name="suggestion_2">Describe the image.</string>
+    <string name="suggestion_2" translatable="false">Describe the image.</string>
     <string name="suggestion_1_text">帮我写一首关于春天的诗</string>
-    <string name="suggestion_2_text">Explain AI in brief.</string>
+    <string name="suggestion_2_text" translatable="false">Explain AI in brief.</string>
     <string name="model_management">模型管理</string>
+    <string name="chat_settings">设置</string>
+    <string name="rag_knowledge_bases">知识库</string>
+    <string name="rag_settings_summary">创建知识库并从手机批量导入文档</string>
+    <string name="rag_knowledge_base_summary">选择知识库后可批量提交文档。正文会在后台复制、校验并加密保存。</string>
+    <string name="rag_knowledge_base_priority_notice">模型回答与知识库内容不一致时，将优先采用知识库中的答案。请确保导入的文档内容准确、有效。</string>
+    <string name="rag_create_knowledge_base">新建知识库</string>
+    <string name="rag_import_documents">导入文档</string>
+    <string name="rag_knowledge_base_name_hint">知识库名称</string>
+    <string name="rag_invalid_knowledge_base_name">名称无效，请输入 1–50 个安全字符</string>
+    <string name="rag_duplicate_knowledge_base_name">该知识库名称已存在</string>
+    <string name="rag_select_knowledge_base_first">请先选择或新建知识库</string>
+    <string name="rag_selected_name">✓ %1$s</string>
+    <string name="rag_documents_queued">已加入后台队列：%1$d/%2$d 个文档</string>
+    <string name="rag_import_notification_channel">知识库文档导入</string>
+    <string name="rag_import_notification_title">正在导入知识库文档</string>
+    <string name="rag_import_notification_body">正在处理知识库文档</string>
+    <string name="rag_document_stage_status">%1$s\n%2$s</string>
+    <string name="rag_document_stage_queued">等待后台处理</string>
+    <string name="rag_document_stage_copying">正在安全复制并加密文档</string>
+    <string name="rag_document_stage_parsing">正在解析文档内容</string>
+    <string name="rag_document_stage_ocr">正在识别文档文字</string>
+    <string name="rag_document_stage_chunking">正在整理知识片段</string>
+    <string name="rag_document_stage_embedding">正在生成向量索引</string>
+    <string name="rag_document_stage_indexing">正在完成知识库索引</string>
+    <string name="rag_document_stage_ready">导入完成</string>
+    <string name="rag_empty_knowledge_bases">还没有知识库\n点击下方按钮新建一个</string>
+    <string name="rag_delete_knowledge_base">删除知识库</string>
+    <string name="rag_delete_knowledge_base_confirm">确定删除“%1$s”吗？其中的文档和索引也会一并删除，此操作无法撤销。</string>
+    <string name="rag_knowledge_base_deleted">知识库已删除</string>
+    <string name="rag_conversation_title">当前对话 RAG</string>
+    <string name="rag_conversation_settings_summary">选择本对话可以检索的知识库</string>
+    <string name="rag_conversation_summary">每个对话单独保存设置。开启后，仅检索下方淡蓝色选中的知识库。</string>
+    <string name="rag_enable_for_conversation">在当前对话中启用知识库</string>
+    <string name="rag_save_conversation_selection">保存当前对话设置</string>
+    <string name="rag_conversation_enabled">当前对话已启用知识库</string>
+    <string name="rag_conversation_disabled">当前对话已关闭知识库</string>
+    <string name="rag_reply_selection_required">当前对话尚未选择知识库。请在设置中的“当前对话 RAG”里选择知识库。</string>
+    <string name="rag_reply_indexing">当前知识库仍在处理文档，请等待处理完成后再试。</string>
+    <string name="rag_reply_model_required">本地检索模型尚未就绪，请先完成知识库模型安装后再试。</string>
+    <string name="rag_reply_no_evidence">在当前对话选择的知识库中没有找到足够依据。你可以换一种问法，或检查文档是否已处理完成。</string>
+    <string name="rag_reply_unavailable">本地知识库暂时无法检索。请稍后重试，或在“当前对话 RAG”中关闭知识库后继续普通聊天。</string>
+    <string name="rag_document_processing">%1$s\n正在安全导入…</string>
+    <string name="rag_document_uploaded">%1$s\n导入完成</string>
+    <string name="rag_document_uploaded_action">%1$s\n导入完成 · 长按删除</string>
+    <string name="rag_document_failed">%1$s\n失败：%2$s</string>
+    <string name="rag_document_failed_dismiss">%1$s\n%2$s · 左滑删除</string>
+    <string name="rag_failed_import_swipe_description">%1$s，%2$s，向左滑动可删除此提示</string>
+    <string name="rag_delete_document">删除文档</string>
+    <string name="rag_delete_document_confirm">确认删除“%1$s”吗？文档、切块和向量将一并删除。</string>
+    <string name="rag_document_deleted">文档已删除</string>
+    <string name="rag_document_delete_failed">文档删除失败，请重试</string>
+    <string name="rag_knowledge_base_delete_failed">知识库删除失败，请重试</string>
+    <string name="rag_document_default_name">文档</string>
+    <string name="settings_model_summary">当前模型：%1$s</string>
+    <string name="settings_slice_summary">当前切片数：%1$d · 越高细节越清晰</string>
+    <string name="settings_clear_chat_summary">删除当前消息、图片缓存和模型上下文</string>
+    <string name="conversation_management">会话管理</string>
+    <string name="settings_conversation_summary">新建、切换或删除多个对话</string>
+    <string name="new_conversation">新建对话</string>
+    <string name="switch_conversation">切换</string>
+    <string name="delete_current_conversation">删除当前会话</string>
+    <string name="delete_conversation_confirm">确定删除“%1$s”及其中的消息吗？</string>
+    <string name="conversation_switched">已切换到“%1$s”</string>
+    <string name="message_actions">消息操作</string>
+    <string name="edit_message">编辑消息</string>
+    <string name="delete_message">删除这条消息</string>
+    <string name="edit_message_hint">修改内容后，此条之后的消息会被截断</string>
+    <string name="delete_message_confirm">只删除选中的这条消息，不会自动重新生成。是否继续？</string>
+    <string name="conversation_rebuild_failed">恢复会话上下文失败：%1$s</string>
     <string name="status_uninitialized">未初始化 - 请下载或加载模型</string>
     <string name="status_initializing">正在初始化...</string>
     <string name="status_initialized">已初始化 - 请加载模型</string>
@@ -23,10 +94,11 @@
     <string name="load_model">加载模型</string>
     <string name="hint_input">发消息</string>
     <string name="add_image">添加图片</string>
+    <string name="camera_capture">拍照</string>
     <string name="send">发送</string>
     <string name="stop_generating">终止生成</string>
     <string name="image_desc">图片</string>
-    <string name="disclaimer">Generated by AI, not our views. Do not remove this notice.</string>
+    <string name="disclaimer" translatable="false">Generated by AI, not our views. Do not remove this notice.</string>
     <string name="clear_chat">清空对话</string>
     <string name="clear_chat_confirm">确定要清空对话吗？</string>
     <string name="clear_chat_toast">对话已清空</string>
@@ -54,7 +126,19 @@
     <!-- MainActivity -->
     <string name="toast_load_model_first">请先加载模型</string>
     <string name="toast_wait_video">请等待视频处理完成</string>
+    <string name="toast_wait_image_preprocessing">请等待图片预处理完成</string>
+    <string name="toast_camera_failed">拍照失败: %1$s</string>
     <string name="toast_empty_input">请输入文字消息</string>
+    <string name="response_blocked_no_visual_context">当前对话没有可用图片，无法判断图片内容，请先上传或拍照。</string>
+    <string name="response_uncertain_visual_request">当前对话没有可用图片。如果你指的是图片内容，请先上传或拍照；如果这是普通文字问题，请补充说明。</string>
+    <string name="privacy_input_confirmation_label">检测到隐私信息，是否继续发送？</string>
+    <string name="privacy_input_reject">否，删除</string>
+    <string name="privacy_input_approve">是，继续发送</string>
+    <string name="response_privacy_output_confirmation">检测到回答可能包含隐私信息，内容已隐藏。是否确认显示？请明确回复“是”或“否”。</string>
+    <string name="response_privacy_cancelled">已取消，不会提交或显示该隐私内容。</string>
+    <string name="response_privacy_confirmation_required">请明确回复“是”或“否”。在确认前，隐私内容不会提交或显示。</string>
+    <string name="response_illegal_refusal">该请求涉及违法或高风险操作，我不能提供相关内容。</string>
+    <string name="response_safety_review">该请求的安全风险暂时无法确认，已停止处理。请换一种合法、明确的方式提问。</string>
     <string name="toast_clear_chat_failed">清空对话失败: %1$s</string>
     <string name="toast_model_load_failed">模型加载失败: %1$s</string>
     <string name="toast_image_failed">处理图片失败: %1$s</string>
@@ -62,9 +146,20 @@
     <string name="toast_unsupported_file">不支持的文件类型: %1$s</string>
     <string name="error_decode_image">无法解码图片</string>
     <string name="error_read_image">无法读取图片</string>
+    <string name="error_image_too_large">图片文件过大，最大 64 MB</string>
+    <string name="error_create_camera_file">无法创建拍照缓存文件</string>
+    <string name="image_preprocessing">图片预处理中…</string>
+    <string name="image_preprocessing_wait">图像预处理中，请耐心等待</string>
+    <string name="image_ready_view_original">图像已准备好，点击查看原图</string>
+    <string name="open_original_image">点击查看原图</string>
+    <string name="remove_pending_image">删除待发送图片</string>
+    <string name="original_image_title">原图</string>
+    <string name="original_image_unavailable">原图缓存已失效</string>
+    <string name="pending_image_ready">图片预处理完成</string>
     <string name="video_only_v46">视频理解仅在 MiniCPM-V-4.6 上可用，请前往"模型管理"切换模型</string>
     <string name="video_processing_progress">%1$s · 处理中 %2$d/%3$d</string>
     <string name="video_preprocessing_done">%1$s · 预处理 %2$.1fs</string>
+    <string name="visual_grounding_system_prompt">必须只根据本次对话中实际提供的图片或视频回答视觉问题。如果本次对话没有视觉内容，请明确说明无法查看图片，并请用户上传图片或拍照。禁止编造任何视觉细节。</string>
 
     <!-- Download prompt dialog -->
     <string name="download_prompt_title">需要下载模型</string>
@@ -121,6 +216,16 @@
 
     <!-- LlamaEngine download progress -->
     <string name="source_direct">直链</string>
+    <string name="rag_source_chip">%1$s · %2$s · %3$s</string>
+    <string name="rag_source_chip_description">来源 %1$s，文件 %2$s，位置 %3$s</string>
+    <string name="rag_source_detail_title">来源 %1$s</string>
+    <string name="rag_source_detail_body">文件：%1$s\n位置：%2$s\n\n归档摘录：\n%3$s</string>
+    <string name="rag_source_available_body">来源状态：当前原文可用\n文件：%1$s\n位置：%2$s\n\n当前索引原文：\n%3$s</string>
+    <string name="rag_source_deleted_body">来源状态：来源已删除，已保留回答时的归档摘录\n文件：%1$s\n位置：%2$s\n\n归档摘录：\n%3$s</string>
+    <string name="rag_source_unavailable_body">来源状态：当前索引不可用，已保留回答时的归档摘录\n文件：%1$s\n位置：%2$s\n\n归档摘录：\n%3$s</string>
+    <string name="rag_stage_retrieving">正在检索知识库…</string>
+    <string name="rag_stage_organizing">正在整理依据…</string>
+    <string name="rag_stage_generating">正在生成回答…</string>
     <string name="download_race_start">%1$s 多源 race 启动…</string>
     <string name="download_all_complete">所有模型文件下载完成!</string>
     <string name="download_verifying_existing">校验已存在的 %1$s …</string>
@@ -156,7 +261,7 @@
     <string name="tts_play_ref">试听</string>
     <string name="tts_clear_ref">清除</string>
     <string name="tts_recording">正在录制…</string>
-    <string name="tts_ref_recorded">已录制 %.1f秒, %d KB</string>
+    <string name="tts_ref_recorded">已录制 %1$.1f秒, %2$d KB</string>
     <string name="tts_params_label">推理参数</string>
     <string name="tts_cfg_label">CFG 引导强度</string>
     <string name="tts_timesteps_label">推理步数</string>

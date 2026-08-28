@@ -1,0 +1,12 @@
+{
+  "device": "V2359A",
+  "socModel": "MT6989",
+  "androidApi": 36,
+  "warmupRuns": 5,
+  "measuredRuns": 30,
+  "results": [
+    {"profile":"CPU","supported":true,"failureType":null,"openMs":1098.939077,"p50Ms":3.758385,"p95Ms":4.165,"pssDeltaKb":390805,"cosineToCpu":null,"outputNorm":0.99999994,"temperatureBeforeC":34.7,"temperatureAfterC":34.7},
+    {"profile":"NNAPI","supported":true,"failureType":null,"openMs":3210.083616,"p50Ms":72.333846,"p95Ms":74.606692,"pssDeltaKb":87324,"cosineToCpu":0.99999994,"outputNorm":0.99999994,"temperatureBeforeC":34.7,"temperatureAfterC":34.7},
+    {"profile":"NNAPI_FP16","supported":true,"failureType":null,"openMs":2475.920385,"p50Ms":37.798769,"p95Ms":38.457923,"pssDeltaKb":120970,"cosineToCpu":0.9969782,"outputNorm":1.0,"temperatureBeforeC":34.7,"temperatureAfterC":34.7}
+  ]
+}
