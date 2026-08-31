@@ -103,7 +103,8 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
             modelName: MiniCPMModelConst.voxcpm2_BaseLMFileName,
             modelUrl: MiniCPMModelConst.voxcpm2_BaseLMURLString,
             filename: MiniCPMModelConst.voxcpm2_BaseLMFileName,
-            backupModelUrl: MiniCPMModelConst.voxcpm2_BaseLMBackupURLString
+            backupModelUrl: MiniCPMModelConst.voxcpm2_BaseLMMSURLString,
+            extraModelUrls: [MiniCPMModelConst.voxcpm2_BaseLMBackupURLString]
         )
 
         acousticManager = MBModelDownloadHelperV2(
@@ -111,7 +112,8 @@ class MBVoxcpm2ModelDownloadManager: NSObject {
             modelName: MiniCPMModelConst.voxcpm2_AcousticFileName,
             modelUrl: MiniCPMModelConst.voxcpm2_AcousticURLString,
             filename: MiniCPMModelConst.voxcpm2_AcousticFileName,
-            backupModelUrl: MiniCPMModelConst.voxcpm2_AcousticBackupURLString
+            backupModelUrl: MiniCPMModelConst.voxcpm2_AcousticMSURLString,
+            extraModelUrls: [MiniCPMModelConst.voxcpm2_AcousticBackupURLString]
         )
 
         reconcileStatusFromDisk()

@@ -192,8 +192,8 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     'VoxCPM2-BaseLM-Q4_K_M.gguf',
     '',                                                          // no mmproj
     'VoxCPM2-Acoustic-F16.gguf',                                 // acousticFileName
-    null,                                                        // hfRepo (pending GGUF release)
-    null,                                                        // msRepo (pending GGUF release)
+    'tc-mb/MiniCPM-V-Apps-gguf',                                 // hfRepo
+    'zerg13/MiniCPM-V-Apps-gguf',                                // msRepo
     'main',
     'master',
     null,                                                        // ggufRemoteName

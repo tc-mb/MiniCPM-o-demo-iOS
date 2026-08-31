@@ -246,6 +246,9 @@ struct MiniCPMModelConst {
 
     /// VoxCPM2 BaseLM 下载地址（HuggingFace 主源）
     static let voxcpm2_BaseLMURLString = "https://huggingface.co/tc-mb/MiniCPM-V-Apps-gguf/resolve/main/VoxCPM2-BaseLM-Q4_K_M.gguf"
+
+    /// VoxCPM2 BaseLM 备用下载地址（ModelScope，国内直连）
+    static let voxcpm2_BaseLMMSURLString = "https://www.modelscope.cn/models/zerg13/MiniCPM-V-Apps-gguf/resolve/master/VoxCPM2-BaseLM-Q4_K_M.gguf"
     
     /// VoxCPM2 BaseLM 备用下载地址（华为云 OBS）
     static let voxcpm2_BaseLMBackupURLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-BaseLM-Q4_K_M.gguf"
@@ -261,6 +264,9 @@ struct MiniCPMModelConst {
 
     /// VoxCPM2 Acoustic 下载地址（HuggingFace 主源）
     static let voxcpm2_AcousticURLString = "https://huggingface.co/tc-mb/MiniCPM-V-Apps-gguf/resolve/main/VoxCPM2-Acoustic-F16.gguf"
+
+    /// VoxCPM2 Acoustic 备用下载地址（ModelScope，国内直连）
+    static let voxcpm2_AcousticMSURLString = "https://www.modelscope.cn/models/zerg13/MiniCPM-V-Apps-gguf/resolve/master/VoxCPM2-Acoustic-F16.gguf"
     
     /// VoxCPM2 Acoustic 备用下载地址（华为云 OBS）
     static let voxcpm2_AcousticBackupURLString = "https://data-transfer-huawei.obs.cn-north-4.myhuaweicloud.com/VoxCPM2-Acoustic-F16.gguf"

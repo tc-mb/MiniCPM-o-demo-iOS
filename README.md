@@ -232,5 +232,6 @@ VoxCPM2 supports 30+ languages and 9 Chinese dialects. It can generate speech fr
 #### Download Official GGUF Files
 
 * HuggingFace: [https://huggingface.co/tc-mb/MiniCPM-V-Apps-gguf](https://huggingface.co/tc-mb/MiniCPM-V-Apps-gguf)
+* ModelScope: [https://www.modelscope.cn/models/zerg13/MiniCPM-V-Apps-gguf](https://www.modelscope.cn/models/zerg13/MiniCPM-V-Apps-gguf)
 
 After downloading, place both `.gguf` files in the app's **Documents** directory (iOS) or in the per-model folder under `{ExternalFilesDir}/models/` (Android / HarmonyOS). You can also download them directly inside the app via **Model Manager**. Once models are downloaded, select VoxCPM2 and the app switches to the TTS interface automatically.

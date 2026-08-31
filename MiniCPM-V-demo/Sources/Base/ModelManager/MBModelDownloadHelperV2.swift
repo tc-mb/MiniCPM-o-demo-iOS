@@ -23,6 +23,9 @@ class MBModelDownloadHelperV2: NSObject {
 
     /// 模型备用下载地址
     public var backupModelUrl: String?
+
+    /// 额外下载源（与主源 / 备用源一起 race）
+    public var extraModelUrls: [String]
     
     /// 文件名（有扩展名）
     private var filename: String
@@ -54,11 +57,12 @@ class MBModelDownloadHelperV2: NSObject {
     ///   - modelName: 模型名字
     ///   - modelUrl: 模型下载 url 地址
     ///   - filename: 本地文件名
-    init(wrapper: MTMDWrapperExample, modelName: String, modelUrl: String, filename: String, backupModelUrl: String? = nil) {
+    init(wrapper: MTMDWrapperExample, modelName: String, modelUrl: String, filename: String, backupModelUrl: String? = nil, extraModelUrls: [String] = []) {
         self.mtmdWrapperExample = wrapper
         self.modelName = modelName
         self.modelUrl = modelUrl
         self.backupModelUrl = backupModelUrl
+        self.extraModelUrls = extraModelUrls
         self.filename = filename
         
         // 获取模型本地 url
@@ -114,6 +118,9 @@ extension MBModelDownloadHelperV2 {
         if !modelUrl.isEmpty { sources.append(modelUrl) }
         if let backup = backupModelUrl, !backup.isEmpty, backup != modelUrl {
             sources.append(backup)
+        }
+        for extra in extraModelUrls where !extra.isEmpty && !sources.contains(extra) {
+            sources.append(extra)
         }
 
         guard !sources.isEmpty else {

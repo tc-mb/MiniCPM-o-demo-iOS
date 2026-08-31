@@ -101,5 +101,8 @@ MiniCPM-V-demo-HarmonyOS/build-profile.json5
 # HarmonyOS hvigor 本地构建 state / cache / outputs（相当于 Gradle 的 .gradle/）。
 .hvigor/
 
+# Local release artefacts (APK / HAP copies). Never commit binaries.
+dist/
+
 # Prebuilt llama.xcframework variants (numbered copies)
 MiniCPM-V-demo/thirdparty/*_llama.xcframework/
